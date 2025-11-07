@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import ClientLayout from '@/components/layout/ClientLayout';
 import {
   Typography,
@@ -118,6 +118,9 @@ const MOCK_TASKS: Task[] = [
   },
 ];
 
+// Отключаем статическую генерацию
+export const dynamic = 'force-dynamic';
+
 export default function HomePage() {
   // Состояние
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -161,15 +164,19 @@ export default function HomePage() {
     loadTasks();
   }, []);
 
-  // Форматирование даты
-  const today = new Date();
-  const dateString = today.toLocaleDateString('ru-RU', {
-    day: 'numeric',
-    month: 'long',
-    weekday: 'long',
-  });
-  const [day, month, weekday] = dateString.split(' ');
-  const formattedDate = `${day} ${month}, ${weekday}`;
+  // Форматирование даты (безопасно для SSR)
+  const formattedDate = useMemo(() => {
+    if (typeof window === 'undefined') return '';
+
+    const today = new Date();
+    const dateString = today.toLocaleDateString('ru-RU', {
+      day: 'numeric',
+      month: 'long',
+      weekday: 'long',
+    });
+    const [day, month, weekday] = dateString.split(' ');
+    return `${day} ${month}, ${weekday}`;
+  }, []);
 
   // Обработчики
   const toggleTask = (taskId: number) => {
