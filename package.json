@@ -12,6 +12,8 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@maxhub/max-ui": "^0.1.12",
+    "lucide-react": "^0.552.0",
     "next": "^14.0.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -32,4 +34,3 @@
     "npm": ">=9.0.0"
   }
 }
-

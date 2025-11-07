@@ -64,27 +64,27 @@ C:\projects\TheOdd1sOut\
 │   │   │   ├── 📂 hooks/            # Хуки фичи
 │   │   │   ├── 📂 services/         # Сервисы фичи
 │   │   │   ├── 📂 types/            # Типы фичи
-│   │   │   └── 📄 index.ts          # Публичный API
+│   │   │   └── 📄 HomeIcon.tsx          # Публичный API
 │   │   │
 │   │   ├── 📂 accessibility/        # Функции доступности
 │   │   │   ├── 📂 components/       # VoiceControl, TextSize, etc.
 │   │   │   ├── 📂 hooks/            # useVoice, useAccessibility
-│   │   │   └── 📄 index.ts
+│   │   │   └── 📄 HomeIcon.tsx
 │   │   │
 │   │   ├── 📂 profile/              # Профиль пользователя
 │   │   │   ├── 📂 components/       # ProfileCard, EditProfile
 │   │   │   ├── 📂 hooks/            # useProfile
-│   │   │   └── 📄 index.ts
+│   │   │   └── 📄 HomeIcon.tsx
 │   │   │
 │   │   ├── 📂 chat/                 # Чат функционал
 │   │   │   ├── 📂 components/       # ChatList, Message
 │   │   │   ├── 📂 hooks/            # useChat
-│   │   │   └── 📄 index.ts
+│   │   │   └── 📄 HomeIcon.tsx
 │   │   │
 │   │   └── 📂 notifications/        # Уведомления
 │   │       ├── 📂 components/       # NotificationBell
 │   │       ├── 📂 hooks/            # useNotifications
-│   │       └── 📄 index.ts
+│   │       └── 📄 HomeIcon.tsx
 │   │
 │   ├── 📂 shared/                   ▼ ПЕРЕИСПОЛЬЗУЕМЫЕ РЕСУРСЫ
 │   │   ├── 📂 ui/                   # Базовые UI компоненты
@@ -125,7 +125,7 @@ C:\projects\TheOdd1sOut\
 │   ├── 📂 store/                    ▼ ZUSTAND STORES
 │   │   ├── 📄 userStore.ts          # Store пользователя
 │   │   ├── 📄 appStore.ts           # Store приложения
-│   │   └── 📄 index.ts              # Экспорт всех stores
+│   │   └── 📄 HomeIcon.tsx              # Экспорт всех stores
 │   │
 │   ├── 📂 types/                    ▼ TYPESCRIPT ТИПЫ
 │   │   ├── 📄 global.d.ts           # Глобальные типы
@@ -290,7 +290,7 @@ features/
     ├── hooks/         # Хуки фичи
     ├── services/      # API сервисы фичи
     ├── types/         # Типы фичи
-    └── index.ts       # Публичный API (что экспортируется)
+    └── HomeIcon.tsx       # Публичный API (что экспортируется)
 ```
 
 Каждая фича - это **независимый модуль** с собственной логикой.
