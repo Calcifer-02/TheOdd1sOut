@@ -7,14 +7,14 @@ import { usePathname } from 'next/navigation';
 
 export interface NavTabProps {
     href: string;
-    icon: () => JSX.Element;
+    icon: React.ReactNode;
     label: string;
     isActive?: boolean;
 }
 
 export function NavTab({
                            href,
-                           icon: Icon,
+                           icon,
                            label,
                            isActive,
                            ...props
@@ -27,7 +27,7 @@ export function NavTab({
     return (
         <ToolButton
             asChild
-            icon={<Icon/>}
+            icon={icon}
             appearance={activeAppearance}
             {...props}
         >

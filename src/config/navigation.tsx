@@ -10,33 +10,33 @@ import {
 export type NavItem = {
     href: string;
     label: string;
-    icon: () => JSX.Element;
+    icon: JSX.Element;
 };
 
 export const navItems: NavItem[] = [
     {
         href: '/',
         label: 'Главная',
-        icon: HomeIcon,
+        icon: <HomeIcon />,
     },
     {
         href: '/tasks',
         label: 'Задачи',
-        icon: ListTodoIcon,
+        icon: <ListTodoIcon />,
     },
     {
         href: '/focus',
         label: 'Фокус',
-        icon: BrainCircuitIcon,
+        icon: <BrainCircuitIcon />,
     },
     {
         href: '/mood',
         label: 'Состояние',
-        icon: SmileIcon,
+        icon: <SmileIcon />,
     },
     {
         href: '/settings',
         label: 'Настройки',
-        icon: Settings2Icon,
+        icon: <Settings2Icon />,
     },
 ];
