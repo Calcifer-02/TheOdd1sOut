@@ -1,10 +1,9 @@
 // src/config/navigation.tsx
 import {
     HomeIcon,
-    ListTodoIcon,
     BrainCircuitIcon,
     SmileIcon,
-    Settings2Icon,
+    UserCircleIcon,
 } from '@/components/icons';
 
 export type NavItem = {
@@ -20,11 +19,6 @@ export const navItems: NavItem[] = [
         icon: <HomeIcon />,
     },
     {
-        href: '/tasks',
-        label: 'Задачи',
-        icon: <ListTodoIcon />,
-    },
-    {
         href: '/focus',
         label: 'Фокус',
         icon: <BrainCircuitIcon />,
@@ -35,8 +29,10 @@ export const navItems: NavItem[] = [
         icon: <SmileIcon />,
     },
     {
-        href: '/settings',
-        label: 'Настройки',
-        icon: <Settings2Icon />,
+        href: '/profile',
+        label: 'Профиль',
+        icon: <UserCircleIcon />,
     },
 ];
+
+
