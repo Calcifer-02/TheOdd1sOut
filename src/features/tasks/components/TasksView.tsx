@@ -9,17 +9,18 @@ interface TasksViewProps {
     layoutMode: LayoutMode;
     onToggleTask: (taskId: number) => void;
     onReorderTasks?: (tasks: Task[]) => void;
+    onTaskClick?: (task: Task) => void;
 }
 
-export const TasksView = ({ tasks, layoutMode, onToggleTask, onReorderTasks }: TasksViewProps) => {
+export const TasksView = ({ tasks, layoutMode, onToggleTask, onReorderTasks, onTaskClick }: TasksViewProps) => {
     switch (layoutMode) {
         case 'list':
-            return <TaskList tasks={tasks} onToggleTask={onToggleTask} onReorderTasks={onReorderTasks} />;
+            return <TaskList tasks={tasks} onToggleTask={onToggleTask} onReorderTasks={onReorderTasks} onTaskClick={onTaskClick} />;
         case 'grid':
-            return <TaskGrid tasks={tasks} onToggleTask={onToggleTask} />;
+            return <TaskGrid tasks={tasks} onToggleTask={onToggleTask} onTaskClick={onTaskClick} />;
         case 'calendar':
-            return <TaskCalendar tasks={tasks} onToggleTask={onToggleTask} />;
+            return <TaskCalendar tasks={tasks} onToggleTask={onToggleTask} onTaskClick={onTaskClick} />;
         default:
-            return <TaskList tasks={tasks} onToggleTask={onToggleTask} onReorderTasks={onReorderTasks} />;
+            return <TaskList tasks={tasks} onToggleTask={onToggleTask} onReorderTasks={onReorderTasks} onTaskClick={onTaskClick} />;
     }
 };

@@ -21,9 +21,10 @@ interface TaskListProps {
     tasks: Task[];
     onToggleTask: (taskId: number) => void;
     onReorderTasks?: (tasks: Task[]) => void;
+    onTaskClick?: (task: Task) => void;
 }
 
-export const TaskList = ({ tasks, onToggleTask, onReorderTasks }: TaskListProps) => {
+export const TaskList = ({ tasks, onToggleTask, onReorderTasks, onTaskClick }: TaskListProps) => {
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: {
@@ -63,6 +64,7 @@ export const TaskList = ({ tasks, onToggleTask, onReorderTasks }: TaskListProps)
                             key={task.id}
                             task={task}
                             onToggleTask={onToggleTask}
+                            onTaskClick={onTaskClick}
                         />
                     ))}
                 </CellList>

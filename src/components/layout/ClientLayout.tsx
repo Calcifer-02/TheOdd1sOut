@@ -15,7 +15,7 @@ const MaxUI = dynamic(
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
     return (
-        <MaxUI>
+        <MaxUI colorScheme={'light'}>
             {children}
             <Navigation />
         </MaxUI>

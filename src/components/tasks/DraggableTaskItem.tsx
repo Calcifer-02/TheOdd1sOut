@@ -2,15 +2,17 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Task } from '@/types/task';
 import { PRIORITIES } from '@/shared/constants/tasks';
-import { CellSimple, Switch } from '@maxhub/max-ui';
+import { CellSimple } from '@maxhub/max-ui';
 import { User, GripVertical } from 'lucide-react';
+import { Checkbox } from '@/components/ui/Checkbox';
 
 interface DraggableTaskItemProps {
     task: Task;
     onToggleTask: (taskId: number) => void;
+    onTaskClick?: (task: Task) => void;
 }
 
-export const DraggableTaskItem = ({ task, onToggleTask }: DraggableTaskItemProps) => {
+export const DraggableTaskItem = ({ task, onToggleTask, onTaskClick }: DraggableTaskItemProps) => {
     const {
         attributes,
         listeners,
@@ -30,6 +32,7 @@ export const DraggableTaskItem = ({ task, onToggleTask }: DraggableTaskItemProps
     return (
         <div ref={setNodeRef} style={style}>
             <CellSimple
+                onClick={() => onTaskClick?.(task)}
                 before={
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <div
@@ -45,7 +48,7 @@ export const DraggableTaskItem = ({ task, onToggleTask }: DraggableTaskItemProps
                         >
                             <GripVertical size={20} color="#9CA3AF" />
                         </div>
-                        <Switch
+                        <Checkbox
                             checked={task.completed}
                             onChange={() => onToggleTask(task.id)}
                         />
@@ -69,7 +72,9 @@ export const DraggableTaskItem = ({ task, onToggleTask }: DraggableTaskItemProps
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         {task.deadline && (
                             <span style={{ fontSize: '14px', color: '#6B7280' }}>
-                                {task.deadline}
+                                {typeof task.deadline === 'string'
+                                    ? task.deadline
+                                    : new Date(task.deadline).toLocaleDateString('ru-RU')}
                             </span>
                         )}
                         <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
@@ -94,8 +99,19 @@ export const DraggableTaskItem = ({ task, onToggleTask }: DraggableTaskItemProps
                     textDecoration: task.completed ? 'line-through' : 'none',
                     opacity: task.completed ? 0.6 : 1,
                 }}
+                innerClassNames={{
+                    content: 'task-content-wrapper'
+                }}
             >
-                {task.title}
+                <div style={{
+                    maxWidth: '100%',
+                    wordWrap: 'break-word',
+                    overflowWrap: 'break-word',
+                    wordBreak: 'break-word',
+                    whiteSpace: 'normal',
+                }}>
+                    {task.title}
+                </div>
             </CellSimple>
         </div>
     );

@@ -13,11 +13,3 @@ export const PRIORITIES = {
 };
 
 export const TAGS = ['личное', 'работа', 'срочно'];
-
-export const REMINDER_OPTIONS = [
-    'Не установлено',
-    'За 15 минут',
-    'За 30 минут',
-    'За 1 час',
-    'За 1 день'
-];

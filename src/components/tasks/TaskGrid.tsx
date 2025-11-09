@@ -1,14 +1,16 @@
 import { Task } from '@/types/task';
 import { PRIORITIES } from '@/shared/constants/tasks';
-import { Switch, Typography } from '@maxhub/max-ui';
+import { Typography } from '@maxhub/max-ui';
 import { User } from 'lucide-react';
+import { Checkbox } from '@/components/ui/Checkbox';
 
 interface TaskGridProps {
     tasks: Task[];
     onToggleTask: (taskId: number) => void;
+    onTaskClick?: (task: Task) => void;
 }
 
-export const TaskGrid = ({ tasks, onToggleTask }: TaskGridProps) => {
+export const TaskGrid = ({ tasks, onToggleTask, onTaskClick }: TaskGridProps) => {
     const columns = {
         high: tasks.filter(t => t.priority === 'high'),
         medium: tasks.filter(t => t.priority === 'medium'),
@@ -55,29 +57,37 @@ export const TaskGrid = ({ tasks, onToggleTask }: TaskGridProps) => {
                         {columns[key as keyof typeof columns].map(task => (
                             <div
                                 key={task.id}
+                                onClick={() => onTaskClick?.(task)}
                                 style={{
                                     background: 'white',
                                     borderRadius: '8px',
                                     padding: '12px',
                                     border: '1px solid #E5E7EB',
                                     opacity: task.completed ? 0.6 : 1,
+                                    cursor: 'pointer',
                                 }}
                             >
                                 <div style={{ display: 'flex', alignItems: 'start', gap: '8px', marginBottom: '8px' }}>
-                                    <Switch
+                                    <Checkbox
                                         checked={task.completed}
                                         onChange={() => onToggleTask(task.id)}
                                     />
                                     <Typography.Body style={{
                                         flex: 1,
                                         textDecoration: task.completed ? 'line-through' : 'none',
+                                        wordWrap: 'break-word',
+                                        overflowWrap: 'break-word',
+                                        wordBreak: 'break-word',
+                                        whiteSpace: 'normal',
                                     }}>
                                         {task.title}
                                     </Typography.Body>
                                 </div>
                                 {task.deadline && (
                                     <Typography.Body style={{ fontSize: '12px', color: '#6B7280', marginBottom: '8px' }}>
-                                        {task.deadline}
+                                        {typeof task.deadline === 'string'
+                                            ? task.deadline
+                                            : new Date(task.deadline).toLocaleDateString('ru-RU')}
                                     </Typography.Body>
                                 )}
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

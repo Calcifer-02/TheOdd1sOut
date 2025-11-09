@@ -1,18 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Task, NewTaskFormData } from '@/types/task';
 import { Panel, Typography, IconButton, Input, Textarea, CellList, CellSimple, Button, Flex } from '@maxhub/max-ui';
-import { X, ChevronRight, CheckCircle2 } from 'lucide-react';
-import { ASSIGNEES, PRIORITIES, TAGS, REMINDER_OPTIONS } from '@/shared/constants/tasks';
+import { X, ChevronRight, Clock, Tag, User } from 'lucide-react';
+import { PRIORITIES } from '@/shared/constants/tasks';
 import { PriorityPicker } from './PriorityPicker';
 import { DeadlinePicker } from './DeadlinePicker';
-import { ReminderPicker } from './ReminderPicker';
 import { TagsPicker } from './TagsPicker';
 import { AssigneePicker } from './AssigneePicker';
+import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
+import { VoiceInputButton } from '@/components/ui/VoiceInputButton';
+import { aiTaskParser } from '@/services/aiTaskParser';
 
 interface NewTaskModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onCreateTask: (task: Omit<Task, 'id'>) => void;
+    onCreateTask: (task: Omit<Task, 'id'>) => Promise<Task | null>;
 }
 
 export const NewTaskModal = ({ isOpen, onClose, onCreateTask }: NewTaskModalProps) => {
@@ -24,14 +26,103 @@ export const NewTaskModal = ({ isOpen, onClose, onCreateTask }: NewTaskModalProp
         time: '',
         assignee: 'Я',
         tags: [],
-        reminder: '',
     });
 
     const [showPriorityPicker, setShowPriorityPicker] = useState(false);
     const [showDeadlinePicker, setShowDeadlinePicker] = useState(false);
-    const [showReminderPicker, setShowReminderPicker] = useState(false);
     const [showTagsPicker, setShowTagsPicker] = useState(false);
     const [showAssigneePicker, setShowAssigneePicker] = useState(false);
+    const [voiceError, setVoiceError] = useState<string | null>(null);
+    const [isAIProcessing, setIsAIProcessing] = useState(false);
+    const [useAI, setUseAI] = useState(true); // Флаг использования AI парсинга
+
+    // Голосовой ввод
+    const {
+        transcript,
+        isListening,
+        isSupported,
+        startListening,
+        stopListening,
+        resetTranscript,
+    } = useSpeechRecognition({
+        onResult: async (text) => {
+            if (useAI) {
+                // AI парсинг через backend
+                setIsAIProcessing(true);
+                try {
+                    const parsed = await aiTaskParser.parseTaskFromSpeech(text);
+
+                    // Заполняем все поля из AI
+                    setFormData(prev => ({
+                        ...prev,
+                        title: parsed.title,
+                        description: parsed.description || prev.description,
+                        priority: parsed.priority,
+                        deadline: parsed.deadline ? parseDateString(parsed.deadline) : prev.deadline,
+                        time: parsed.time || prev.time,
+                        assignee: parsed.assignee || prev.assignee,
+                        tags: parsed.tags || prev.tags,
+                    }));
+                } catch (error) {
+                    console.error('AI parsing failed:', error);
+                    // Фолбэк на простое заполнение title
+                    setFormData(prev => ({
+                        ...prev,
+                        title: text,
+                    }));
+                } finally {
+                    setIsAIProcessing(false);
+                }
+            } else {
+                // Простое заполнение без AI
+                setFormData(prev => ({
+                    ...prev,
+                    title: text,
+                }));
+            }
+        },
+        onError: (error) => {
+            setVoiceError(error);
+            setTimeout(() => setVoiceError(null), 3000);
+        },
+        lang: 'ru-RU',
+    });
+
+    // Обновляем title когда меняется transcript
+    useEffect(() => {
+        if (transcript && isListening) {
+            setFormData(prev => ({
+                ...prev,
+                title: transcript,
+            }));
+        }
+    }, [transcript, isListening]);
+
+    const handleVoiceStart = async () => {
+        setVoiceError(null);
+        await startListening();
+    };
+
+    const handleVoiceStop = () => {
+        stopListening();
+    };
+
+    // Парсинг строки даты в Date объект
+    const parseDateString = (dateStr: string): Date | undefined => {
+        try {
+            // Формат DD.MM.YYYY
+            const parts = dateStr.split('.');
+            if (parts.length === 3) {
+                const day = parseInt(parts[0]);
+                const month = parseInt(parts[1]) - 1; // месяцы с 0
+                const year = parseInt(parts[2]);
+                return new Date(year, month, day);
+            }
+            return undefined;
+        } catch {
+            return undefined;
+        }
+    };
 
     const resetForm = () => {
         setFormData({
@@ -42,18 +133,19 @@ export const NewTaskModal = ({ isOpen, onClose, onCreateTask }: NewTaskModalProp
             time: '',
             assignee: 'Я',
             tags: [],
-            reminder: '',
         });
+        resetTranscript();
     };
 
-    const handleCreateTask = () => {
+    const handleCreateTask = async () => {
         if (!formData.title.trim()) {
             alert('Введите название задачи');
             return;
         }
 
         const newTask: Omit<Task, 'id'> = {
-            title: formData.title,
+            title: formData.title.trim(),
+            description: formData.description?.trim() || '',
             completed: false,
             deadline: formData.deadline
                 ? `${formData.deadline.toLocaleDateString('ru-RU')}${formData.time ? `, ${formData.time}` : ''}`
@@ -63,7 +155,11 @@ export const NewTaskModal = ({ isOpen, onClose, onCreateTask }: NewTaskModalProp
             tags: formData.tags,
         };
 
-        onCreateTask(newTask);
+        console.log('Creating task:', newTask);
+
+
+        await onCreateTask(newTask);
+
         resetForm();
         onClose();
     };
@@ -125,13 +221,98 @@ export const NewTaskModal = ({ isOpen, onClose, onCreateTask }: NewTaskModalProp
                 </div>
 
                 <div style={{ padding: '16px' }}>
-                    <Input
-                        mode="primary"
-                        placeholder="Название задачи"
-                        value={formData.title}
-                        onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                        style={{ width: '100%', marginBottom: '16px' }}
-                    />
+                    {/* Уведомление об ошибке голосового ввода */}
+                    {voiceError && (
+                        <div style={{
+                            padding: '12px',
+                            marginBottom: '16px',
+                            background: '#FEE2E2',
+                            color: '#991B1B',
+                            borderRadius: '8px',
+                            fontSize: '14px',
+                        }}>
+                            {voiceError}
+                        </div>
+                    )}
+
+                    {/* Уведомление о прослушивании */}
+                    {isListening && (
+                        <div style={{
+                            padding: '12px',
+                            marginBottom: '16px',
+                            background: '#DBEAFE',
+                            color: '#1E40AF',
+                            borderRadius: '8px',
+                            fontSize: '14px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                        }}>
+                            <div style={{
+                                width: '8px',
+                                height: '8px',
+                                borderRadius: '50%',
+                                background: '#EF4444',
+                                animation: 'blink 1s ease-in-out infinite',
+                            }} />
+                            <style>{`
+                                @keyframes blink {
+                                    0%, 100% { opacity: 1; }
+                                    50% { opacity: 0.3; }
+                                }
+                            `}</style>
+                            Слушаю... Говорите название задачи
+                        </div>
+                    )}
+
+                    {/* Уведомление об AI обработке */}
+                    {isAIProcessing && (
+                        <div style={{
+                            padding: '12px',
+                            marginBottom: '16px',
+                            background: '#F3E8FF',
+                            color: '#6B21A8',
+                            borderRadius: '8px',
+                            fontSize: '14px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                        }}>
+                            <div style={{
+                                width: '16px',
+                                height: '16px',
+                                border: '2px solid #6B21A8',
+                                borderTopColor: 'transparent',
+                                borderRadius: '50%',
+                                animation: 'spin 1s linear infinite',
+                            }} />
+                            <style>{`
+                                @keyframes spin {
+                                    to { transform: rotate(360deg); }
+                                }
+                            `}</style>
+                            AI анализирует задачу и заполняет поля...
+                        </div>
+                    )}
+
+                    {/* Название задачи с кнопкой микрофона */}
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', marginBottom: '16px' }}>
+                        <Input
+                            mode="primary"
+                            placeholder="Название задачи"
+                            value={formData.title}
+                            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                            style={{ flex: 1 }}
+                        />
+                        {isSupported && (
+                            <VoiceInputButton
+                                isListening={isListening}
+                                isSupported={isSupported}
+                                onStart={handleVoiceStart}
+                                onStop={handleVoiceStop}
+                            />
+                        )}
+                    </div>
 
                     <Textarea
                         mode="primary"
@@ -188,23 +369,6 @@ export const NewTaskModal = ({ isOpen, onClose, onCreateTask }: NewTaskModalProp
                             }
                         />
 
-                        <CellSimple
-                            onClick={() => setShowReminderPicker(true)}
-                            before={
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <Bell size={20} color="#6B7280" />
-                                    <span>Напоминание</span>
-                                </div>
-                            }
-                            after={
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <Typography.Body style={{ color: '#6B7280' }}>
-                                        {formData.reminder || 'Не установлено'}
-                                    </Typography.Body>
-                                    <ChevronRight size={20} color="#9CA3AF" />
-                                </div>
-                            }
-                        />
 
                         <CellSimple
                             onClick={() => setShowTagsPicker(true)}
@@ -286,13 +450,6 @@ export const NewTaskModal = ({ isOpen, onClose, onCreateTask }: NewTaskModalProp
                 onTimeChange={(time) => setFormData(prev => ({ ...prev, time }))}
             />
 
-            <ReminderPicker
-                isOpen={showReminderPicker}
-                onClose={() => setShowReminderPicker(false)}
-                selectedReminder={formData.reminder}
-                onSelect={(reminder) => setFormData(prev => ({ ...prev, reminder }))}
-            />
-
             <TagsPicker
                 isOpen={showTagsPicker}
                 onClose={() => setShowTagsPicker(false)}
@@ -309,6 +466,3 @@ export const NewTaskModal = ({ isOpen, onClose, onCreateTask }: NewTaskModalProp
         </div>
     );
 };
-
-// Импортируем недостающие иконки
-import { Clock, Bell, Tag, User } from 'lucide-react';

@@ -1,6 +1,36 @@
 :root {
   --vk-blue: #0077ff;
   --vk-light-blue: #4986cc;
+
+  /* Светлая тема (по умолчанию) */
+  --background: #ffffff;
+  --background-secondary: #f9fafb;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --border: #e5e7eb;
+  --card-background: #ffffff;
+}
+
+/* Темная тема */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #000000;
+    --background-secondary: #1a1a1a;
+    --text-primary: #ffffff;
+    --text-secondary: #9ca3af;
+    --border: #2d2d2d;
+    --card-background: #1a1a1a;
+  }
+}
+
+/* Принудительная темная тема для тестирования */
+[data-theme="dark"] {
+  --background: #000000;
+  --background-secondary: #1a1a1a;
+  --text-primary: #ffffff;
+  --text-secondary: #9ca3af;
+  --border: #2d2d2d;
+  --card-background: #1a1a1a;
 }
 
 * {
@@ -13,6 +43,8 @@ html,
 body {
   max-width: 100vw;
   overflow-x: hidden;
+  background-color: var(--background);
+  color: var(--text-primary);
 }
 
 body {
@@ -26,4 +58,20 @@ a {
   color: inherit;
   text-decoration: none;
 }
+
+/* Исправление переноса текста в CellSimple */
+.CellSimple__content__SOk {
+  flex: 1;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.task-content-wrapper {
+  flex: 1;
+  min-width: 0;
+  max-width: 100%;
+}
+
+
 

@@ -1,17 +1,26 @@
 import { Task } from '@/types/task';
-import { CellList, CellSimple, Switch } from '@maxhub/max-ui';
+import { CellList, CellSimple } from '@maxhub/max-ui';
 import { Typography } from '@maxhub/max-ui';
 import { PRIORITIES } from '@/shared/constants/tasks';
+import { Checkbox } from '@/components/ui/Checkbox';
 
 interface TaskCalendarProps {
     tasks: Task[];
     onToggleTask: (taskId: number) => void;
+    onTaskClick?: (task: Task) => void;
 }
 
-export const TaskCalendar = ({ tasks, onToggleTask }: TaskCalendarProps) => {
-    const today = tasks.filter(t => t.deadline?.includes('Сегодня'));
-    const tomorrow = tasks.filter(t => t.deadline?.includes('Завтра'));
-    const overdue = tasks.filter(t => t.deadline?.includes('Вчера'));
+export const TaskCalendar = ({ tasks, onToggleTask, onTaskClick }: TaskCalendarProps) => {
+    // Вспомогательная функция для безопасной проверки строки deadline
+    const deadlineIncludesText = (deadline: string | Date | undefined, text: string): boolean => {
+        if (!deadline) return false;
+        const deadlineStr = typeof deadline === 'string' ? deadline : deadline.toLocaleDateString('ru-RU');
+        return deadlineStr.includes(text);
+    };
+
+    const today = tasks.filter(t => deadlineIncludesText(t.deadline, 'Сегодня'));
+    const tomorrow = tasks.filter(t => deadlineIncludesText(t.deadline, 'Завтра'));
+    const overdue = tasks.filter(t => deadlineIncludesText(t.deadline, 'Вчера'));
     const noDeadline = tasks.filter(t => !t.deadline);
 
     const sections = [
@@ -51,8 +60,9 @@ export const TaskCalendar = ({ tasks, onToggleTask }: TaskCalendarProps) => {
                             {section.tasks.map(task => (
                                 <CellSimple
                                     key={task.id}
+                                    onClick={() => onTaskClick?.(task)}
                                     before={
-                                        <Switch
+                                        <Checkbox
                                             checked={task.completed}
                                             onChange={() => onToggleTask(task.id)}
                                         />
@@ -74,8 +84,10 @@ export const TaskCalendar = ({ tasks, onToggleTask }: TaskCalendarProps) => {
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                             {task.deadline && (
                                                 <span style={{ fontSize: '14px', color: '#6B7280' }}>
-                          {task.deadline}
-                        </span>
+                                                    {typeof task.deadline === 'string'
+                                                        ? task.deadline
+                                                        : new Date(task.deadline).toLocaleDateString('ru-RU')}
+                                                </span>
                                             )}
                                             <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
                                                 {task.tags.map(tag => (
@@ -100,7 +112,15 @@ export const TaskCalendar = ({ tasks, onToggleTask }: TaskCalendarProps) => {
                                         opacity: task.completed ? 0.6 : 1,
                                     }}
                                 >
-                                    {task.title}
+                                    <div style={{
+                                        maxWidth: '100%',
+                                        wordWrap: 'break-word',
+                                        overflowWrap: 'break-word',
+                                        wordBreak: 'break-word',
+                                        whiteSpace: 'normal',
+                                    }}>
+                                        {task.title}
+                                    </div>
                                 </CellSimple>
                             ))}
                         </CellList>
