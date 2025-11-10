@@ -60,8 +60,8 @@ interface PrivacySettings {
 
 export default function SettingsPage() {
     const dispatch = useAppDispatch();
-    const currentTheme = useAppSelector((state) => state.settings.theme);
-    const reduxTaskSettings = useAppSelector((state) => state.settings.taskSettings);
+    const currentTheme = useAppSelector((state) => state.settings?.theme || 'system');
+    const reduxTaskSettings = useAppSelector((state) => state.settings?.taskSettings);
     const reduxProfile = useAppSelector((state) => state.settings?.profile);
 
     // Профиль пользователя - используем локальное состояние для формы
@@ -85,8 +85,17 @@ export default function SettingsPage() {
         time: 'morning'
     });
 
-    // Настройки задач - инициализируем из Redux
-    const [taskSettings, setTaskSettings] = useState<TaskSettings>(reduxTaskSettings);
+    // Настройки задач - инициализируем из Redux с fallback
+    const [taskSettings, setTaskSettings] = useState<TaskSettings>(
+        reduxTaskSettings || {
+            defaultPriority: 'medium',
+            autoArchive: false,
+            archiveDays: 30,
+            showCompletedTasks: true,
+            defaultView: 'list',
+            sortBy: 'date'
+        }
+    );
 
     // Настройки приватности
     const [privacy, setPrivacy] = useState<PrivacySettings>({

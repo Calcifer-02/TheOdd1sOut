@@ -19,13 +19,13 @@ interface NewTaskModalProps {
 }
 
 export const NewTaskModal = ({ isOpen, onClose, onCreateTask }: NewTaskModalProps) => {
-    // Получаем настройки из Redux
-    const taskSettings = useAppSelector((state) => state.settings.taskSettings);
+    // Получаем настройки из Redux с безопасным чтением
+    const taskSettings = useAppSelector((state) => state.settings?.taskSettings);
 
     const [formData, setFormData] = useState<NewTaskFormData>({
         title: '',
         description: '',
-        priority: taskSettings.defaultPriority, // Используем приоритет из настроек
+        priority: taskSettings?.defaultPriority || 'medium', // Используем приоритет из настроек с fallback
         deadline: undefined,
         time: '',
         assignee: 'Я',
@@ -132,7 +132,7 @@ export const NewTaskModal = ({ isOpen, onClose, onCreateTask }: NewTaskModalProp
         setFormData({
             title: '',
             description: '',
-            priority: taskSettings.defaultPriority, // Используем приоритет из настроек
+            priority: taskSettings?.defaultPriority || 'medium', // Используем приоритет из настроек с fallback
             deadline: undefined,
             time: '',
             assignee: 'Я',

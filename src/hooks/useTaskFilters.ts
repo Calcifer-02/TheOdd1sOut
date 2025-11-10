@@ -3,26 +3,34 @@ import { Task, LayoutMode, SortBy } from '@/types/task';
 import { useAppSelector } from '@/store/hooks';
 
 export const useTaskFilters = (tasks: Task[]) => {
-    // Получаем настройки из Redux store
-    const taskSettings = useAppSelector((state) => state.settings.taskSettings);
+    // Получаем настройки из Redux store с безопасным чтением
+    const taskSettings = useAppSelector((state) => state.settings?.taskSettings);
 
-    // Используем настройки из store как начальные значения
-    const [layoutMode, setLayoutMode] = useState<LayoutMode>(taskSettings.defaultView as LayoutMode);
-    const [sortBy, setSortBy] = useState<SortBy>(taskSettings.sortBy as SortBy);
+    // Используем настройки из store как начальные значения с fallback
+    const [layoutMode, setLayoutMode] = useState<LayoutMode>(
+        (taskSettings?.defaultView as LayoutMode) || 'list'
+    );
+    const [sortBy, setSortBy] = useState<SortBy>(
+        (taskSettings?.sortBy as SortBy) || 'date'
+    );
     const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
     const [selectedPriorities, setSelectedPriorities] = useState<string[]>([]);
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
     // Обновляем значения при изменении настроек в store
     useEffect(() => {
-        setLayoutMode(taskSettings.defaultView as LayoutMode);
-        setSortBy(taskSettings.sortBy as SortBy);
-    }, [taskSettings.defaultView, taskSettings.sortBy]);
+        if (taskSettings?.defaultView) {
+            setLayoutMode(taskSettings.defaultView as LayoutMode);
+        }
+        if (taskSettings?.sortBy) {
+            setSortBy(taskSettings.sortBy as SortBy);
+        }
+    }, [taskSettings?.defaultView, taskSettings?.sortBy]);
 
     const filteredTasks = useMemo(() => {
         let filtered = tasks.filter(task => {
             // Фильтр по выполненным задачам из настроек
-            if (!taskSettings.showCompletedTasks && task.completed) {
+            if (taskSettings?.showCompletedTasks === false && task.completed) {
                 return false;
             }
 
@@ -55,7 +63,7 @@ export const useTaskFilters = (tasks: Task[]) => {
                     return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
             }
         });
-    }, [tasks, selectedAssignees, selectedPriorities, selectedTags, taskSettings.showCompletedTasks, sortBy]);
+    }, [tasks, selectedAssignees, selectedPriorities, selectedTags, taskSettings, sortBy]);
 
     const toggleAssignee = (assignee: string) => {
         setSelectedAssignees(prev =>
