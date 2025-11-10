@@ -5,10 +5,19 @@
   /* Светлая тема (по умолчанию) */
   --background: #ffffff;
   --background-secondary: #f9fafb;
+  --surface: #ffffff;
   --text-primary: #111827;
   --text-secondary: #6b7280;
   --border: #e5e7eb;
   --card-background: #ffffff;
+  --hover: #f3f4f6;
+  --input-bg: #ffffff;
+
+  /* Цвета */
+  --primary: #0077ff;
+  --primary-light: #e6f2ff;
+  --success: #10b981;
+  --error: #ef4444;
 }
 
 /* Темная тема */
@@ -16,10 +25,19 @@
   :root {
     --background: #000000;
     --background-secondary: #1a1a1a;
+    --surface: #1a1a1a;
     --text-primary: #ffffff;
     --text-secondary: #9ca3af;
     --border: #2d2d2d;
     --card-background: #1a1a1a;
+    --hover: #2d2d2d;
+    --input-bg: #1a1a1a;
+
+    /* Цвета */
+    --primary: #0077ff;
+    --primary-light: #1a3a5c;
+    --success: #10b981;
+    --error: #ef4444;
   }
 }
 
@@ -27,10 +45,19 @@
 [data-theme="dark"] {
   --background: #000000;
   --background-secondary: #1a1a1a;
+  --surface: #1a1a1a;
   --text-primary: #ffffff;
   --text-secondary: #9ca3af;
   --border: #2d2d2d;
   --card-background: #1a1a1a;
+  --hover: #2d2d2d;
+  --input-bg: #1a1a1a;
+
+  /* Цвета */
+  --primary: #0077ff;
+  --primary-light: #1a3a5c;
+  --success: #10b981;
+  --error: #ef4444;
 }
 
 * {

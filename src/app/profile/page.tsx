@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useAppSelector } from '@/store/hooks';
 import { supabase } from '@/lib/supabase';
 import { UserCircleIcon, SearchIcon, Settings2Icon } from '@/components/icons';
 import { Task } from '@/types/task';
@@ -29,7 +30,13 @@ interface DailyStat {
 }
 
 export default function ProfilePage() {
-    const [userName, setUserName] = useState('Пользователь');
+
+    // Получаем данные профиля из Redux с безопасной деструктуризацией
+    const userProfile = useAppSelector((state) => state.settings?.profile);
+    const userName = userProfile?.name || 'Пользователь';
+    const userEmail = userProfile?.email || 'user@example.com';
+    const userAvatar = userProfile?.avatar || '';
+
     const [totalCompleted, setTotalCompleted] = useState(0);
     const [searchQuery, setSearchQuery] = useState('');
     const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
@@ -306,22 +313,27 @@ export default function ProfilePage() {
             <header className={styles.header}>
                 <div className={styles.profileInfo}>
                     <div className={styles.avatarWrapper}>
-                        <UserCircleIcon />
+                        {userAvatar ? (
+                            <img src={userAvatar} alt={userName} className={styles.avatar} />
+                        ) : (
+                            <UserCircleIcon />
+                        )}
                     </div>
                     <div className={styles.userInfo}>
                         <h1 className={styles.userName}>{userName}</h1>
+                        <p className={styles.userEmail}>{userEmail}</p>
                         <div className={styles.totalCompleted}>
                             Выполнено задач: <span className={styles.badge}>{totalCompleted}</span>
                         </div>
                     </div>
                 </div>
-                <button
+                <a
+                    href="/settings"
                     className={styles.settingsButton}
-                    onClick={() => window.location.href = '/settings'}
                     aria-label="Настройки"
                 >
                     <Settings2Icon />
-                </button>
+                </a>
             </header>
 
             {/* Основной контент */}

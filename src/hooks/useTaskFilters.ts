@@ -1,15 +1,31 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Task, LayoutMode, SortBy } from '@/types/task';
+import { useAppSelector } from '@/store/hooks';
 
 export const useTaskFilters = (tasks: Task[]) => {
-    const [layoutMode, setLayoutMode] = useState<LayoutMode>('list');
-    const [sortBy, setSortBy] = useState<SortBy>('deadline');
+    // Получаем настройки из Redux store
+    const taskSettings = useAppSelector((state) => state.settings.taskSettings);
+
+    // Используем настройки из store как начальные значения
+    const [layoutMode, setLayoutMode] = useState<LayoutMode>(taskSettings.defaultView as LayoutMode);
+    const [sortBy, setSortBy] = useState<SortBy>(taskSettings.sortBy as SortBy);
     const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
     const [selectedPriorities, setSelectedPriorities] = useState<string[]>([]);
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
+    // Обновляем значения при изменении настроек в store
+    useEffect(() => {
+        setLayoutMode(taskSettings.defaultView as LayoutMode);
+        setSortBy(taskSettings.sortBy as SortBy);
+    }, [taskSettings.defaultView, taskSettings.sortBy]);
+
     const filteredTasks = useMemo(() => {
-        return tasks.filter(task => {
+        let filtered = tasks.filter(task => {
+            // Фильтр по выполненным задачам из настроек
+            if (!taskSettings.showCompletedTasks && task.completed) {
+                return false;
+            }
+
             if (selectedAssignees.length > 0 && !selectedAssignees.includes(task.assignee)) {
                 return false;
             }
@@ -21,7 +37,25 @@ export const useTaskFilters = (tasks: Task[]) => {
             }
             return true;
         });
-    }, [tasks, selectedAssignees, selectedPriorities, selectedTags]);
+
+        // Сортировка согласно настройкам
+        return filtered.sort((a, b) => {
+            switch (sortBy) {
+                case 'priority':
+                    const priorityOrder = { high: 0, medium: 1, low: 2 };
+                    return priorityOrder[a.priority] - priorityOrder[b.priority];
+                case 'name':
+                    return a.title.localeCompare(b.title);
+                case 'date':
+                case 'deadline':
+                case 'createdAt':
+                default:
+                    if (!a.deadline) return 1;
+                    if (!b.deadline) return -1;
+                    return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
+            }
+        });
+    }, [tasks, selectedAssignees, selectedPriorities, selectedTags, taskSettings.showCompletedTasks, sortBy]);
 
     const toggleAssignee = (assignee: string) => {
         setSelectedAssignees(prev =>

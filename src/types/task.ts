@@ -19,7 +19,7 @@ export interface Assignee {
 }
 
 export type LayoutMode = 'list' | 'grid' | 'calendar';
-export type SortBy = 'deadline' | 'priority' | 'name' | 'createdAt';
+export type SortBy = 'date' | 'priority' | 'name' | 'deadline' | 'createdAt';
 
 export interface NewTaskFormData {
     title: string;

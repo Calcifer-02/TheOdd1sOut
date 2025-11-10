@@ -10,6 +10,7 @@ import { AssigneePicker } from './AssigneePicker';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { VoiceInputButton } from '@/components/ui/VoiceInputButton';
 import { aiTaskParser } from '@/services/aiTaskParser';
+import { useAppSelector } from '@/store/hooks';
 
 interface NewTaskModalProps {
     isOpen: boolean;
@@ -18,10 +19,13 @@ interface NewTaskModalProps {
 }
 
 export const NewTaskModal = ({ isOpen, onClose, onCreateTask }: NewTaskModalProps) => {
+    // Получаем настройки из Redux
+    const taskSettings = useAppSelector((state) => state.settings.taskSettings);
+
     const [formData, setFormData] = useState<NewTaskFormData>({
         title: '',
         description: '',
-        priority: 'medium',
+        priority: taskSettings.defaultPriority, // Используем приоритет из настроек
         deadline: undefined,
         time: '',
         assignee: 'Я',
@@ -128,7 +132,7 @@ export const NewTaskModal = ({ isOpen, onClose, onCreateTask }: NewTaskModalProp
         setFormData({
             title: '',
             description: '',
-            priority: 'medium',
+            priority: taskSettings.defaultPriority, // Используем приоритет из настроек
             deadline: undefined,
             time: '',
             assignee: 'Я',
