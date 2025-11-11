@@ -1,150 +1,63 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Brain, BarChart3, Lightbulb, TrendingUp, Clock } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { setAnswer, setCurrentQuestion, completeTest, resetTest, checkAndResetIfExpired } from '@/store/slices/moodSlice';
 import { useMaxUser } from '@/hooks/useMaxUser';
 import { saveMoodTestResult } from '@/services/moodTestService';
 import AIAdvice from '@/components/mood/AIAdvice';
+import { QUESTIONS, OPTIONS } from '@/shared/constants/moodTest';
+import { calculateScores, getStressLevel } from '@/utils/moodTest';
 import styles from './mood.module.css';
-
-interface Question {
-    id: number;
-  text: string;
-  subscale: 'stress' | 'coping';
-  reverse: boolean;
-}
-
-const questions: Question[] = [
-  {
-    id: 1,
-    text: 'Как часто за последний месяц вы испытывали беспокойство из-за непредвиденных событий?',
-    subscale: 'stress',
-    reverse: false
-  },
-  {
-    id: 2,
-    text: 'Как часто за последний месяц Вам казалось сложным контролировать важные события Вашей жизни?',
-    subscale: 'stress',
-    reverse: false
-  },
-  {
-    id: 3,
-    text: 'Как часто за последний месяц Вы испытывали нервное напряжение или стресс?',
-    subscale: 'stress',
-    reverse: false
-  },
-  {
-    id: 4,
-    text: 'Как часто за последний месяц Вы чувствовали уверенность в том, что справитесь с решением ваших личных проблем?',
-    subscale: 'coping',
-    reverse: true
-  },
-  {
-    id: 5,
-    text: 'Как часто за последний месяц Вы чувствовали, что все идет так, как Вы этого хотели?',
-    subscale: 'coping',
-    reverse: true
-  },
-  {
-    id: 6,
-    text: 'Как часто за последний месяц Вы думали, что не можете справиться с тем, что вам нужно сделать?',
-    subscale: 'stress',
-    reverse: false
-  },
-  {
-    id: 7,
-    text: 'Как часто за последний месяц Вы были в состоянии справиться с вашей раздражительностью?',
-    subscale: 'coping',
-    reverse: true
-  },
-  {
-    id: 8,
-    text: 'Как часто за последний месяц Вы чувствовали, что владеете ситуацией?',
-    subscale: 'coping',
-    reverse: true
-  },
-  {
-    id: 9,
-    text: 'Как часто за последний месяц Вы чувствовали раздражение из-за того, что происходящие события выходили из-под вашего контроля?',
-    subscale: 'stress',
-    reverse: false
-  },
-  {
-    id: 10,
-    text: 'Как часто за последний месяц вам казалось, что накопившиеся трудности достигли такого предела, что Вы не могли их контролировать?',
-    subscale: 'stress',
-    reverse: false
-  }
-];
-
-const options = [
-  { value: 1, label: 'Никогда' },
-  { value: 2, label: 'Почти никогда' },
-  { value: 3, label: 'Иногда' },
-  { value: 4, label: 'Довольно часто' },
-  { value: 5, label: 'Часто' }
-];
 
 export default function MoodPage() {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { user } = useMaxUser();
-
-  // Получаем состояние из Redux
   const moodState = useAppSelector((state) => state.mood);
   const { currentQuestion, answers, isComplete, result } = moodState;
-
-  // Локальное состояние для согласия на обработку данных
   const [hasConsent, setHasConsent] = useState(false);
-  const [showConsentScreen, setShowConsentScreen] = useState(true);
-
-  // Проверяем на истечение срока при загрузке компонента
+  const [showConsentScreen, setShowConsentScreen] = useState(false);
+  const [showWelcomeScreen, setShowWelcomeScreen] = useState(true);
+  const [hasInProgressTest, setHasInProgressTest] = useState(false);
   useEffect(() => {
     dispatch(checkAndResetIfExpired());
 
-    // Если тест уже начат (есть ответы), пропускаем экран согласия
-    if (Object.keys(answers).length > 0 || isComplete) {
+    // Проверяем, есть ли тест в процессе
+    const inProgress = Object.keys(answers).length > 0 && !isComplete;
+    setHasInProgressTest(inProgress);
+
+    // Если тест завершён, показываем результаты
+    if (isComplete) {
+      setShowWelcomeScreen(false);
       setShowConsentScreen(false);
-      setHasConsent(true);
     }
   }, [dispatch, answers, isComplete]);
 
-  const handleAnswerSelect = (questionId: number, value: number) => {
+  // Мемоизируем текущий вопрос
+  const currentQ = useMemo(() => QUESTIONS[currentQuestion], [currentQuestion]);
+
+  // Мемоизируем проверку наличия ответа
+  const hasAnswer = useMemo(() => answers[currentQ?.id] !== undefined, [answers, currentQ]);
+
+  // Мемоизируем прогресс
+  const progress = useMemo(() => ((currentQuestion + 1) / QUESTIONS.length) * 100, [currentQuestion]);
+
+  const handleAnswerSelect = useCallback((questionId: number, value: number) => {
     dispatch(setAnswer({ questionId, value }));
-  };
+  }, [dispatch]);
 
-  const calculateScores = () => {
-    let stressScore = 0;
-    let copingScore = 0;
-
-    questions.forEach(question => {
-      const answer = answers[question.id] || 0;
-
-      if (question.subscale === 'stress') {
-        stressScore += answer;
-      } else {
-        // Для субшкалы "Противодействие стрессу" инвертируем баллы
-        const invertedScore = 6 - answer;
-        copingScore += invertedScore;
-      }
-    });
-
-    const totalScore = stressScore + copingScore;
-
-    return { stressScore, copingScore, totalScore };
-  };
-
-  const handleNext = () => {
-    if (currentQuestion < questions.length - 1) {
+  const handleNext = useCallback(() => {
+    if (currentQuestion < QUESTIONS.length - 1) {
       dispatch(setCurrentQuestion(currentQuestion + 1));
     } else {
-      // Завершаем тест и сохраняем результаты
-      const scores = calculateScores();
+
+      const scores = calculateScores(QUESTIONS, answers);
       dispatch(completeTest(scores));
 
-      // Сохраняем результаты в БД, если пользователь авторизован
       if (user?.user_id) {
         const stressLevel =
           scores.totalScore <= 20 ? 'low' :
@@ -165,50 +78,116 @@ export default function MoodPage() {
         });
       }
     }
-  };
+  }, [currentQuestion, answers, dispatch, user]);
 
-  const handlePrevious = () => {
+  const handlePrevious = useCallback(() => {
     if (currentQuestion > 0) {
       dispatch(setCurrentQuestion(currentQuestion - 1));
     }
-  };
+  }, [currentQuestion, dispatch]);
 
-  const handlePause = () => {
-    // Просто возвращаемся на главную, состояние сохранено в Redux
+  const handlePause = useCallback(() => {
     router.push('/');
-  };
+  }, [router]);
 
-  const handleRetake = () => {
+  const handleRetake = useCallback(() => {
     dispatch(resetTest());
-  };
+  }, [dispatch]);
 
-  const getStressLevel = (score: number): { level: string; color: string; interpretation: string } => {
-    if (score <= 20) {
-      return {
-        level: 'Низкий уровень стресса',
-        color: 'scoreLow',
-        interpretation: 'Ваш уровень воспринимаемого стресса находится в пределах нормы. Вы хорошо справляетесь с повседневными ситуациями и эффективно контролируете свои эмоции. Продолжайте поддерживать здоровый баланс между работой и отдыхом.'
-      };
-    } else if (score <= 30) {
-      return {
-        level: 'Умеренный уровень стресса',
-        color: 'scoreMedium',
-        interpretation: 'Вы испытываете умеренный уровень стресса. Это нормальная реакция на жизненные обстоятельства, однако стоит обратить внимание на методы управления стрессом. Рекомендуется практиковать техники релаксации, регулярные физические упражнения и достаточный сон.'
-      };
-    } else {
-      return {
-        level: 'Высокий уровень стресса',
-        color: 'scoreHigh',
-        interpretation: 'Ваш уровень воспринимаемого стресса выше нормы. Это может негативно влиять на ваше физическое и психологическое здоровье. Рекомендуется обратиться к специалисту (психологу или психотерапевту) для получения профессиональной поддержки. Важно уделить внимание методам снижения стресса и самоподдержке.'
-      };
-    }
-  };
+  const handleStartNewTest = useCallback(() => {
+    dispatch(resetTest());
+    setShowWelcomeScreen(false);
+    setShowConsentScreen(true);
+    setHasInProgressTest(false);
+  }, [dispatch]);
 
-  const progress = ((currentQuestion + 1) / questions.length) * 100;
-  const currentQ = questions[currentQuestion];
-  const hasAnswer = answers[currentQ?.id] !== undefined;
+  const handleContinueTest = useCallback(() => {
+    setShowWelcomeScreen(false);
+    setShowConsentScreen(false);
+  }, []);
 
-  // Экран согласия на обработку данных
+
+  if (showWelcomeScreen) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.header}>
+          <h1 className={styles.title}>Тест психологического состояния</h1>
+          <p className={styles.subtitle}>
+            Шкала воспринимаемого стресса (Perceived Stress Scale)
+          </p>
+        </div>
+
+        <div className={styles.welcomeCard}>
+          <div className={styles.welcomeIcon}>
+            <Brain size={64} strokeWidth={1.5} />
+          </div>
+
+          <h2 className={styles.welcomeTitle}>
+            Добро пожаловать!
+          </h2>
+
+          <p className={styles.welcomeText}>
+            Этот тест поможет вам оценить уровень стресса за последний месяц.
+            Он состоит из 10 вопросов и займёт около 3-5 минут.
+          </p>
+
+          <div className={styles.welcomeFeatures}>
+            <div className={styles.featureItem}>
+              <BarChart3 size={32} className={styles.featureIcon} />
+              <span>Детальная аналитика</span>
+            </div>
+            <div className={styles.featureItem}>
+              <Lightbulb size={32} className={styles.featureIcon} />
+              <span>Персональные рекомендации</span>
+            </div>
+            <div className={styles.featureItem}>
+              <TrendingUp size={32} className={styles.featureIcon} />
+              <span>Отслеживание динамики</span>
+            </div>
+          </div>
+
+          {hasInProgressTest && (
+            <div className={styles.inProgressNotice}>
+              <Clock size={24} className={styles.noticeIcon} />
+              <p>У вас есть незавершённый тест. Вы можете продолжить с того места, где остановились.</p>
+            </div>
+          )}
+
+          <div className={styles.welcomeActions}>
+            {hasInProgressTest ? (
+              <>
+                <button
+                  className={`${styles.button} ${styles.buttonPrimary}`}
+                  onClick={handleContinueTest}
+                >
+                  Продолжить тест
+                </button>
+                <button
+                  className={`${styles.button} ${styles.buttonSecondary}`}
+                  onClick={handleStartNewTest}
+                >
+                  Начать заново
+                </button>
+              </>
+            ) : (
+              <button
+                className={`${styles.button} ${styles.buttonPrimary}`}
+                onClick={() => {
+                  setShowWelcomeScreen(false);
+                  setShowConsentScreen(true);
+                }}
+              >
+                Начать тест
+              </button>
+            )}
+            <Link href="/" className={`${styles.button} ${styles.buttonText}`}>
+              Вернуться на главную
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
   if (showConsentScreen) {
     return (
       <div className={styles.container}>
@@ -272,12 +251,12 @@ export default function MoodPage() {
           </div>
 
           <div className={styles.consentActions}>
-            <button
+            <Link
+              href="/"
               className={`${styles.button} ${styles.buttonSecondary}`}
-              onClick={() => router.push('/')}
             >
               Отмена
-            </button>
+            </Link>
             <button
               className={`${styles.button} ${styles.buttonPrimary}`}
               onClick={() => setShowConsentScreen(false)}
@@ -292,8 +271,7 @@ export default function MoodPage() {
   }
 
   if (isComplete) {
-    // Используем сохраненные результаты из Redux
-    const { stressScore, copingScore, totalScore } = result || calculateScores();
+    const { stressScore, copingScore, totalScore } = result || calculateScores(QUESTIONS, answers);
     const { level, color, interpretation } = getStressLevel(totalScore);
     return (
       <div className={styles.container}>
@@ -372,7 +350,7 @@ export default function MoodPage() {
 
       <div className={styles.testCard}>
         <div className={styles.progress}>
-          <span className={styles.progressText}>Вопрос {currentQuestion + 1} из {questions.length}</span>
+          <span className={styles.progressText}>Вопрос {currentQuestion + 1} из {QUESTIONS.length}</span>
           <div className={styles.progressBar}>
             <div
               className={styles.progressFill}
@@ -387,7 +365,7 @@ export default function MoodPage() {
         </h2>
 
         <div className={styles.options}>
-          {options.map(option => (
+          {OPTIONS.map(option => (
             <div
               key={option.value}
               className={`${styles.option} ${
@@ -414,7 +392,7 @@ export default function MoodPage() {
             onClick={handleNext}
             disabled={!hasAnswer}
           >
-            {currentQuestion === questions.length - 1 ? 'Завершить' : 'Далее'}
+            {currentQuestion === QUESTIONS.length - 1 ? 'Завершить' : 'Далее'}
           </button>
         </div>
 

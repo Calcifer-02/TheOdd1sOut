@@ -4,6 +4,7 @@ import createWebStorage from 'redux-persist/lib/storage/createWebStorage';
 import tasksReducer from './slices/tasksSlice';
 import settingsReducer from './slices/settingsSlice';
 import moodReducer from './slices/moodSlice';
+import pomodoroReducer from './slices/pomodoroSlice';
 
 // Создаем noop storage для SSR (серверного рендеринга)
 const createNoopStorage = () => {
@@ -28,13 +29,14 @@ const persistConfig = {
     key: 'root',
     version: 1,
     storage,
-    whitelist: ['tasks', 'settings', 'mood'], // Какие slices сохранять
+    whitelist: ['tasks', 'settings', 'mood', 'pomodoro'],
 };
 
 const rootReducer = combineReducers({
     tasks: tasksReducer,
     mood: moodReducer,
     settings: settingsReducer,
+    pomodoro: pomodoroReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

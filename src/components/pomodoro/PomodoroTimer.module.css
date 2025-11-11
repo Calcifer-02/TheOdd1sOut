@@ -1,0 +1,159 @@
+.timerCard {
+  border: 2px solid var(--border);
+  border-radius: 20px;
+  padding: 32px;
+  text-align: center;
+  margin-bottom: 24px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.timerCardIdle {
+  background: var(--card-background);
+}
+
+.timerCardFocus {
+  background: var(--primary-light);
+  border-color: var(--primary);
+}
+
+.timerCardBreak {
+  background: #d1fae5;
+  border-color: var(--success);
+}
+
+.imageContainer {
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.imageAnimated {
+  animation: bounce 2s infinite;
+}
+
+.mascotImage {
+  width: 230px;
+  height: 230px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.catImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 16px;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.status {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.statusIcon {
+  flex-shrink: 0;
+}
+
+.timerDisplay {
+  font-size: 72px;
+  font-weight: bold;
+  font-family: monospace;
+  margin-bottom: 16px;
+  color: var(--text-primary);
+}
+
+.progressBar {
+  width: 100%;
+  height: 12px;
+  background: var(--background);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.progressFill {
+  height: 100%;
+  transition: width 0.3s ease;
+  border-radius: 6px;
+}
+
+.progressFillFocus {
+  background: var(--primary);
+}
+
+.progressFillBreak {
+  background: var(--success);
+}
+
+.controls {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.button {
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 16px 32px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  min-width: 150px;
+  flex: 1;
+  max-width: 200px;
+}
+
+.button:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.buttonStart {
+  background: var(--primary);
+}
+
+.buttonPause {
+  background: #f59e0b;
+}
+
+.buttonReset {
+  background: var(--text-secondary);
+}
+
