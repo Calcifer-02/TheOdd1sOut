@@ -51,6 +51,7 @@ export async function POST(request: NextRequest) {
 
     // Используем user_id из body или из заголовков
     const finalUserId = user_id || (userId ? parseInt(userId) : null);
+    console.log('🎯 Final user_id to save:', finalUserId);
 
     const taskData = {
       title,
@@ -74,6 +75,12 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('❌ Supabase error:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 

@@ -9,16 +9,21 @@ export class TasksService {
 
     // Проверяем MAX API
     const maxApi = (window as any).MAX;
+    console.log('🔍 [TasksService] Checking MAX API:', maxApi);
+
     if (maxApi?.user?.user_id) {
+      console.log('✅ [TasksService] Found user_id from MAX:', maxApi.user.user_id);
       return maxApi.user.user_id.toString();
     }
 
     // Проверяем debug режим (localStorage)
     const debugUserId = localStorage.getItem('debug_user_id');
     if (debugUserId) {
+      console.log('✅ [TasksService] Found user_id from localStorage:', debugUserId);
       return debugUserId;
     }
 
+    console.warn('⚠️ [TasksService] No user_id found!');
     return null;
   }
 
@@ -50,20 +55,28 @@ export class TasksService {
   // Создать новую задачу
   static async createTask(data: Omit<Task, 'id'>): Promise<Task> {
     const userId = this.getUserId();
+    console.log('📝 [TasksService] Creating task with userId:', userId);
+
     const taskData = {
       ...data,
       ...(userId && { user_id: parseInt(userId) }),
     };
+
+    console.log('📤 [TasksService] Sending task data:', taskData);
 
     const response = await fetch(this.baseUrl, {
       method: 'POST',
       headers: this.getHeaders(),
       body: JSON.stringify(taskData),
     });
+
     if (!response.ok) {
       throw new Error('Failed to create task');
     }
-    return response.json();
+
+    const createdTask = await response.json();
+    console.log('✅ [TasksService] Task created:', createdTask);
+    return createdTask;
   }
 
   // Обновить задачу
