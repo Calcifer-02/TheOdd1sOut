@@ -103,6 +103,13 @@
     overflow-wrap: break-word;
 }
 
+.maxUsername {
+    margin: 0;
+    font-size: 12px;
+    color: #99A2AD;
+    font-style: italic;
+}
+
 .userId {
     margin: 0;
     font-size: 12px;

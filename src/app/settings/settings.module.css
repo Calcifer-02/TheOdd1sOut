@@ -766,3 +766,142 @@
     }
 }
 
+/* MAX Integration Styles */
+.maxUserInfo {
+    background: linear-gradient(135deg, #0077FF 0%, #005FCC 100%);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+    color: white;
+}
+
+.maxUserHeader {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.maxBadge {
+    background: rgba(255, 255, 255, 0.25);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.maxUserText {
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0.95;
+}
+
+.maxUserData {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.maxUserItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.maxUserItem:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.maxUserLabel {
+    font-size: 13px;
+    opacity: 0.85;
+}
+
+.maxUserValue {
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.loadMaxButton {
+    width: 100%;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.95);
+    color: #0077FF;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.loadMaxButton:hover {
+    background: white;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.loadMaxButton:active {
+    transform: translateY(0);
+}
+
+.fieldHint {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    margin-left: 8px;
+    font-style: italic;
+}
+
+.avatarPreview {
+    margin-top: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+    background: var(--surface);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+.avatarImage {
+    max-width: 120px;
+    max-height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive для MAX блока */
+@media (max-width: 640px) {
+    .maxUserInfo {
+        padding: 16px;
+    }
+
+    .maxUserData {
+        padding: 12px;
+    }
+
+    .maxUserItem {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .loadMaxButton {
+        font-size: 13px;
+        padding: 10px;
+    }
+
+    .fieldHint {
+        display: block;
+        margin-left: 0;
+        margin-top: 4px;
+    }
+}

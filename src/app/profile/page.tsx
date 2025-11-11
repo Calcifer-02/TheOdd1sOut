@@ -37,18 +37,24 @@ export default function ProfilePage() {
     const { user: maxUser, isLoading: isMaxUserLoading, error: maxUserError } = useMaxUser();
     const { webApp: webAppInstance } = useWebApp();
 
-    // Получаем данные профиля из Redux с безопасной деструктуризацией
+    // Получаем данные профиля из Redux (настройки пользователя)
     const userProfile = useAppSelector((state) => state.settings?.profile);
 
-    // Используем данные из MAX API, если доступны, иначе из Redux
-    const userName = maxUser
-        ? `${maxUser.first_name}${maxUser.last_name ? ' ' + maxUser.last_name : ''}`
-        : (userProfile?.name || 'Пользователь');
-    const userEmail = userProfile?.email || maxUser?.username || 'user@example.com';
-    const userAvatar = userProfile?.avatar || webAppInstance?.initDataUnsafe?.user?.photo_url || '';
+    // Приоритет: настройки пользователя (Redux) → MAX данные → значения по умолчанию
+    const userName = userProfile?.name ||
+        (maxUser ? `${maxUser.first_name}${maxUser.last_name ? ' ' + maxUser.last_name : ''}` : 'Пользователь');
+
+    const userEmail = userProfile?.email ||
+        (maxUser?.username ? maxUser.username : 'user@example.com');
+
+    const userAvatar = userProfile?.avatar ||
+        webAppInstance?.initDataUnsafe?.user?.photo_url || '';
+
+    // MAX данные (только для информации, не переопределяются настройками)
     const isBot = maxUser?.is_bot || false;
     const lastActivity = maxUser?.last_activity_time ? new Date(maxUser.last_activity_time) : null;
     const isPremium = webAppInstance?.initDataUnsafe?.user?.is_premium || false;
+    const maxUsername = maxUser?.username || null;
 
     const [totalCompleted, setTotalCompleted] = useState(0);
     const [searchQuery, setSearchQuery] = useState('');
@@ -339,8 +345,13 @@ export default function ProfilePage() {
                             {isPremium && <span className={styles.premiumBadge}>⭐ PREMIUM</span>}
                         </h1>
                         <p className={styles.userEmail}>
-                            {maxUser?.username ? `@${maxUser.username}` : userEmail}
+                            {userEmail}
                         </p>
+                        {maxUsername && (
+                            <p className={styles.maxUsername}>
+                                MAX: @{maxUsername}
+                            </p>
+                        )}
                         {maxUser && (
                             <p className={styles.userId}>ID: {maxUser.user_id}</p>
                         )}

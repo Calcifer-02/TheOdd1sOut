@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { setTheme, updateTaskSettings, updateProfile } from '@/store/slices/settingsSlice';
+import { useMaxUser } from '@/hooks/useMaxUser';
 import CustomSelect from '@/components/ui/CustomSelect';
 import {
     User,
@@ -63,6 +64,9 @@ export default function SettingsPage() {
     const currentTheme = useAppSelector((state) => state.settings?.theme || 'system');
     const reduxTaskSettings = useAppSelector((state) => state.settings?.taskSettings);
     const reduxProfile = useAppSelector((state) => state.settings?.profile);
+
+    // Получаем данные из MAX
+    const { user: maxUser } = useMaxUser();
 
     // Профиль пользователя - используем локальное состояние для формы
     const [profile, setProfile] = useState<UserProfile>(
@@ -172,6 +176,24 @@ export default function SettingsPage() {
             setShowSuccess(true);
             setTimeout(() => setShowSuccess(false), 3000);
         }, 500);
+    };
+
+    // Загрузить данные из MAX
+    const loadFromMax = () => {
+        if (maxUser) {
+            const maxName = `${maxUser.first_name}${maxUser.last_name ? ' ' + maxUser.last_name : ''}`;
+            const maxEmail = maxUser.username || profile.email;
+
+            if (confirm(`Заполнить профиль данными из MAX?\n\nИмя: ${maxName}\nUsername: ${maxEmail}`)) {
+                setProfile({
+                    name: maxName,
+                    email: maxEmail,
+                    avatar: profile.avatar // Аватар оставляем как есть
+                });
+            }
+        } else {
+            alert('Данные MAX недоступны. Убедитесь, что приложение запущено в мессенджере MAX.');
+        }
     };
 
     // Сброс настроек
@@ -311,8 +333,52 @@ export default function SettingsPage() {
                         <div className={styles.section}>
                             <h2 className={styles.sectionTitle}>Профиль пользователя</h2>
 
+                            {/* Информация о MAX пользователе */}
+                            {maxUser && (
+                                <div className={styles.maxUserInfo}>
+                                    <div className={styles.maxUserHeader}>
+                                        <span className={styles.maxBadge}>MAX</span>
+                                        <span className={styles.maxUserText}>
+                                            Данные из мессенджера
+                                        </span>
+                                    </div>
+                                    <div className={styles.maxUserData}>
+                                        <div className={styles.maxUserItem}>
+                                            <span className={styles.maxUserLabel}>Имя:</span>
+                                            <span className={styles.maxUserValue}>
+                                                {maxUser.first_name} {maxUser.last_name || ''}
+                                            </span>
+                                        </div>
+                                        {maxUser.username && (
+                                            <div className={styles.maxUserItem}>
+                                                <span className={styles.maxUserLabel}>Username:</span>
+                                                <span className={styles.maxUserValue}>@{maxUser.username}</span>
+                                            </div>
+                                        )}
+                                        <div className={styles.maxUserItem}>
+                                            <span className={styles.maxUserLabel}>ID:</span>
+                                            <span className={styles.maxUserValue}>{maxUser.user_id}</span>
+                                        </div>
+                                    </div>
+                                    <button
+                                        className={styles.loadMaxButton}
+                                        onClick={loadFromMax}
+                                        type="button"
+                                    >
+                                        Использовать данные MAX
+                                    </button>
+                                </div>
+                            )}
+
                             <div className={styles.formGroup}>
-                                <label className={styles.label}>Имя</label>
+                                <label className={styles.label}>
+                                    Имя
+                                    {maxUser && (
+                                        <span className={styles.fieldHint}>
+                                            (переопределяет данные из MAX)
+                                        </span>
+                                    )}
+                                </label>
                                 <input
                                     type="text"
                                     className={styles.input}
@@ -323,7 +389,14 @@ export default function SettingsPage() {
                             </div>
 
                             <div className={styles.formGroup}>
-                                <label className={styles.label}>Email</label>
+                                <label className={styles.label}>
+                                    Email
+                                    {maxUser && (
+                                        <span className={styles.fieldHint}>
+                                            (переопределяет username из MAX)
+                                        </span>
+                                    )}
+                                </label>
                                 <input
                                     type="email"
                                     className={styles.input}
@@ -342,6 +415,18 @@ export default function SettingsPage() {
                                     onChange={(e) => setProfile({ ...profile, avatar: e.target.value })}
                                     placeholder="https://example.com/avatar.jpg"
                                 />
+                                {profile.avatar && (
+                                    <div className={styles.avatarPreview}>
+                                        <img
+                                            src={profile.avatar}
+                                            alt="Avatar preview"
+                                            className={styles.avatarImage}
+                                            onError={(e) => {
+                                                e.currentTarget.style.display = 'none';
+                                            }}
+                                        />
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
