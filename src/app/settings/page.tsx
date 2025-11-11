@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { setTheme, updateTaskSettings, updateProfile } from '@/store/slices/settingsSlice';
-import { CustomSelect } from '@/components/ui/CustomSelect';
+import CustomSelect from '@/components/ui/CustomSelect';
 import {
     User,
     Palette,

@@ -4,7 +4,7 @@ import { Task } from '@/types/task';
 import { PRIORITIES } from '@/shared/constants/tasks';
 import { CellSimple } from '@maxhub/max-ui';
 import { User, GripVertical } from 'lucide-react';
-import { Checkbox } from '@/components/ui/Checkbox';
+import Checkbox from '@/components/ui/Checkbox';
 
 interface DraggableTaskItemProps {
     task: Task;

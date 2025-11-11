@@ -72,6 +72,27 @@
     color: #000000;
     word-wrap: break-word;
     overflow-wrap: break-word;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.botBadge {
+    font-size: 12px;
+    padding: 2px 8px;
+    background: #FFA500;
+    color: #ffffff;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+.premiumBadge {
+    font-size: 12px;
+    padding: 2px 8px;
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    color: #ffffff;
+    border-radius: 6px;
+    font-weight: 500;
 }
 
 .userEmail {
@@ -80,6 +101,36 @@
     color: #818C99;
     word-wrap: break-word;
     overflow-wrap: break-word;
+}
+
+.userId {
+    margin: 0;
+    font-size: 12px;
+    color: #99A2AD;
+    font-family: monospace;
+}
+
+.lastActivity {
+    margin: 0;
+    font-size: 12px;
+    color: #99A2AD;
+}
+
+.webAppInfo {
+    margin: 0;
+    font-size: 12px;
+    color: #0077FF;
+    font-weight: 500;
+}
+
+.errorMessage {
+    margin: 0;
+    font-size: 12px;
+    color: #FF3347;
+    background: #FFE5E7;
+    padding: 6px 10px;
+    border-radius: 6px;
+    max-width: fit-content;
 }
 
 .totalCompleted {

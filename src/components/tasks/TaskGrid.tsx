@@ -2,7 +2,7 @@ import { Task } from '@/types/task';
 import { PRIORITIES } from '@/shared/constants/tasks';
 import { Typography } from '@maxhub/max-ui';
 import { User } from 'lucide-react';
-import { Checkbox } from '@/components/ui/Checkbox';
+import Checkbox from '@/components/ui/Checkbox';
 
 interface TaskGridProps {
     tasks: Task[];

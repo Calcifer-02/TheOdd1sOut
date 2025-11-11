@@ -1,12 +1,17 @@
+'use client';
+
 import { MouseEvent } from 'react';
 
 interface CheckboxProps {
     checked: boolean;
+    // @ts-ignore TS71007
     onChange: (e: MouseEvent<HTMLDivElement>) => void;
+    // @ts-ignore TS71007
     onClick?: (e: MouseEvent<HTMLDivElement>) => void;
 }
 
-export const Checkbox = ({ checked, onChange, onClick }: CheckboxProps) => {
+
+const Checkbox = ({ checked, onChange, onClick }: CheckboxProps) => {
     const handleClick = (e: MouseEvent<HTMLDivElement>) => {
         e.stopPropagation(); // Предотвращаем всплытие по умолчанию
         onClick?.(e);
@@ -50,4 +55,5 @@ export const Checkbox = ({ checked, onChange, onClick }: CheckboxProps) => {
         </div>
     );
 };
+export default Checkbox
 

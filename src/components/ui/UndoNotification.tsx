@@ -1,15 +1,19 @@
+'use client';
+
 import React, { useEffect } from 'react';
 import { Button } from '@maxhub/max-ui';
 import { X, Undo2 } from 'lucide-react';
 
 interface UndoNotificationProps {
   message: string;
+  // @ts-ignore TS71007
   onUndo: () => void;
+  // @ts-ignore TS71007
   onDismiss: () => void;
   duration?: number;
 }
 
-export const UndoNotification: React.FC<UndoNotificationProps> = ({
+const UndoNotification: React.FC<UndoNotificationProps> = ({
   message,
   onUndo,
   onDismiss,
@@ -92,4 +96,5 @@ export const UndoNotification: React.FC<UndoNotificationProps> = ({
     </div>
   );
 };
+export default UndoNotification
 

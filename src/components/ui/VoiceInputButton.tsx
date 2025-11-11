@@ -1,14 +1,18 @@
+'use client';
+
 import React from 'react';
 import { Mic, MicOff } from 'lucide-react';
 
 interface VoiceInputButtonProps {
     isListening: boolean;
     isSupported: boolean;
+    // @ts-ignore TS71007
     onStart: () => void;
+    // @ts-ignore TS71007
     onStop: () => void;
 }
 
-export const VoiceInputButton: React.FC<VoiceInputButtonProps> = ({
+const VoiceInputButton: React.FC<VoiceInputButtonProps> = ({
     isListening,
     isSupported,
     onStart,
@@ -60,4 +64,5 @@ export const VoiceInputButton: React.FC<VoiceInputButtonProps> = ({
         </button>
     );
 };
+export default VoiceInputButton
 

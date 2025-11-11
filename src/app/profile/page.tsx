@@ -5,6 +5,8 @@ import { useAppSelector } from '@/store/hooks';
 import { supabase } from '@/lib/supabase';
 import { UserCircleIcon, SearchIcon, Settings2Icon } from '@/components/icons';
 import { Task } from '@/types/task';
+import { useMaxUser } from '@/hooks/useMaxUser';
+import { useWebApp } from '@/hooks/useWebApp';
 import styles from './profile.module.css';
 
 interface CompletedTask {
@@ -31,11 +33,22 @@ interface DailyStat {
 
 export default function ProfilePage() {
 
+    // Получаем данные из MAX WebApp Bridge
+    const { user: maxUser, isLoading: isMaxUserLoading, error: maxUserError } = useMaxUser();
+    const { webApp: webAppInstance } = useWebApp();
+
     // Получаем данные профиля из Redux с безопасной деструктуризацией
     const userProfile = useAppSelector((state) => state.settings?.profile);
-    const userName = userProfile?.name || 'Пользователь';
-    const userEmail = userProfile?.email || 'user@example.com';
-    const userAvatar = userProfile?.avatar || '';
+
+    // Используем данные из MAX API, если доступны, иначе из Redux
+    const userName = maxUser
+        ? `${maxUser.first_name}${maxUser.last_name ? ' ' + maxUser.last_name : ''}`
+        : (userProfile?.name || 'Пользователь');
+    const userEmail = userProfile?.email || maxUser?.username || 'user@example.com';
+    const userAvatar = userProfile?.avatar || webAppInstance?.initDataUnsafe?.user?.photo_url || '';
+    const isBot = maxUser?.is_bot || false;
+    const lastActivity = maxUser?.last_activity_time ? new Date(maxUser.last_activity_time) : null;
+    const isPremium = webAppInstance?.initDataUnsafe?.user?.is_premium || false;
 
     const [totalCompleted, setTotalCompleted] = useState(0);
     const [searchQuery, setSearchQuery] = useState('');
@@ -299,7 +312,7 @@ export default function ProfilePage() {
         };
     }, [completedTasks, currentTasks]);
 
-    if (loading) {
+    if (loading || isMaxUserLoading) {
         return (
             <div className={styles.container}>
                 <div className={styles.loading}>Загрузка...</div>
@@ -320,8 +333,32 @@ export default function ProfilePage() {
                         )}
                     </div>
                     <div className={styles.userInfo}>
-                        <h1 className={styles.userName}>{userName}</h1>
-                        <p className={styles.userEmail}>{userEmail}</p>
+                        <h1 className={styles.userName}>
+                            {userName}
+                            {isBot && <span className={styles.botBadge}>🤖 BOT</span>}
+                            {isPremium && <span className={styles.premiumBadge}>⭐ PREMIUM</span>}
+                        </h1>
+                        <p className={styles.userEmail}>
+                            {maxUser?.username ? `@${maxUser.username}` : userEmail}
+                        </p>
+                        {maxUser && (
+                            <p className={styles.userId}>ID: {maxUser.user_id}</p>
+                        )}
+                        {lastActivity && (
+                            <p className={styles.lastActivity}>
+                                Последняя активность: {lastActivity.toLocaleString('ru-RU')}
+                            </p>
+                        )}
+                        {webAppInstance && (
+                            <p className={styles.webAppInfo}>
+                                📱 {webAppInstance.platform} • v{webAppInstance.version} • {webAppInstance.colorScheme === 'dark' ? '🌙' : '☀️'}
+                            </p>
+                        )}
+                        {maxUserError && (
+                            <p className={styles.errorMessage}>
+                                ⚠️ {maxUserError.message}
+                            </p>
+                        )}
                         <div className={styles.totalCompleted}>
                             Выполнено задач: <span className={styles.badge}>{totalCompleted}</span>
                         </div>

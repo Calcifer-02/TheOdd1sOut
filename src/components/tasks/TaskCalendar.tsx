@@ -2,7 +2,7 @@ import { Task } from '@/types/task';
 import { CellList, CellSimple } from '@maxhub/max-ui';
 import { Typography } from '@maxhub/max-ui';
 import { PRIORITIES } from '@/shared/constants/tasks';
-import { Checkbox } from '@/components/ui/Checkbox';
+import Checkbox from '@/components/ui/Checkbox';
 
 interface TaskCalendarProps {
     tasks: Task[];

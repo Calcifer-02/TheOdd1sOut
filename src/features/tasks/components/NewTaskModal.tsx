@@ -8,7 +8,7 @@ import { DeadlinePicker } from './DeadlinePicker';
 import { TagsPicker } from './TagsPicker';
 import { AssigneePicker } from './AssigneePicker';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
-import { VoiceInputButton } from '@/components/ui/VoiceInputButton';
+import VoiceInputButton from '@/components/ui/VoiceInputButton';
 import { aiTaskParser } from '@/services/aiTaskParser';
 import { useAppSelector } from '@/store/hooks';
 

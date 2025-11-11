@@ -13,12 +13,13 @@ interface Option {
 
 interface CustomSelectProps {
     value: string;
+    // @ts-ignore TS71007
     onChange: (value: string) => void;
     options: Option[];
     disabled?: boolean;
 }
 
-export function CustomSelect({ value, onChange, options, disabled = false }: CustomSelectProps) {
+function CustomSelect({ value, onChange, options, disabled = false }: CustomSelectProps) {
     const selectedOption = options.find(opt => opt.value === value) || options[0];
 
     return (
@@ -62,4 +63,6 @@ export function CustomSelect({ value, onChange, options, disabled = false }: Cus
         </Listbox>
     );
 }
+
+export default CustomSelect
 

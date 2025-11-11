@@ -16,7 +16,7 @@ import { TasksSkeleton } from '@/components/tasks/TasksSkeleton';
 import { TasksEmptyState } from '@/components/tasks/TasksEmptyState';
 import { FilterPanel } from '@/features/tasks/components/FilterPanel';
 import { NewTaskModal } from '@/features/tasks/components/NewTaskModal';
-import { UndoNotification } from '@/components/ui/UndoNotification';
+import UndoNotification from '@/components/ui/UndoNotification';
 import { TaskDetailsModal } from '@/components/tasks/TaskDetailsModal';
 import { Task } from '@/types/task';
 

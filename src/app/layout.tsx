@@ -18,6 +18,10 @@ export default function RootLayout({
 }) {
   return (
       <html lang="ru">
+        <head>
+          {/* MAX Bridge - библиотека для взаимодействия с мини-приложением MAX */}
+          <script src="https://st.max.ru/js/max-web-app.js" async></script>
+        </head>
         <body className={styles.layout}>
             <StoreProvider>
                 <main className={styles.main}>
