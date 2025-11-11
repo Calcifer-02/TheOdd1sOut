@@ -68,11 +68,6 @@ export default function ProfilePage() {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'overview' | 'analytics' | 'mood'>('overview');
 
-    // Загрузка данных при монтировании или изменении user_id
-    useEffect(() => {
-        loadProfileData();
-    }, [maxUser?.user_id]);
-
     // Закрытие модалки по ESC
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
@@ -93,21 +88,21 @@ export default function ProfilePage() {
         };
     }, [isSearchModalOpen]);
 
-    const loadProfileData = async () => {
+    const loadProfileData = async (userId: number | undefined) => {
         try {
             setLoading(true);
-
-            // Используем user_id из MAX данных
-            const userId = maxUser?.user_id;
+            console.log('🔄 [ProfilePage] Loading profile data for user_id:', userId);
 
             if (!userId) {
-                console.log('User ID не найден, данные не будут загружены');
+                console.log('⚠️ [ProfilePage] User ID не найден, данные не будут загружены');
                 setCurrentTasks([]);
                 setCompletedTasks([]);
                 setDailyStats([]);
                 setTotalCompleted(0);
                 return;
             }
+
+            console.log('📊 [ProfilePage] Fetching tasks with filter: user_id.eq.' + userId + ' OR user_id.is.null');
 
             // Загрузка текущих задач для конкретного пользователя
             const { data: tasksData, error: tasksError } = await supabase
@@ -116,8 +111,13 @@ export default function ProfilePage() {
                 .or(`user_id.eq.${userId},user_id.is.null`)
                 .order('created_at', { ascending: false });
 
-            if (tasksError) throw tasksError;
-            setCurrentTasks(tasksData || []);
+            if (tasksError) {
+                console.error('❌ [ProfilePage] Error loading tasks:', tasksError);
+                setCurrentTasks([]);
+            } else {
+                console.log(`✅ [ProfilePage] Loaded ${tasksData?.length || 0} tasks:`, tasksData);
+                setCurrentTasks(tasksData || []);
+            }
 
             // Загрузка выполненных задач для конкретного пользователя
             const { data: completedData, error: completedError } = await supabase
@@ -127,9 +127,10 @@ export default function ProfilePage() {
                 .order('completed_at', { ascending: false });
 
             if (completedError) {
-                console.warn('Таблица completed_tasks не найдена:', completedError);
+                console.warn('⚠️ [ProfilePage] Таблица completed_tasks не найдена:', completedError);
                 setCompletedTasks([]);
             } else {
+                console.log(`✅ [ProfilePage] Loaded ${completedData?.length || 0} completed tasks:`, completedData);
                 setCompletedTasks(completedData || []);
                 setTotalCompleted((completedData || []).length);
             }
@@ -143,18 +144,25 @@ export default function ProfilePage() {
                 .limit(7);
 
             if (statsError) {
-                console.warn('Таблица daily_stats не найдена:', statsError);
+                console.warn('⚠️ [ProfilePage] Таблица daily_stats не найдена:', statsError);
                 setDailyStats([]);
             } else {
+                console.log(`✅ [ProfilePage] Loaded ${statsData?.length || 0} daily stats:`, statsData);
                 setDailyStats(statsData || []);
             }
 
         } catch (error) {
-            console.error('Ошибка загрузки данных профиля:', error);
+            console.error('❌ [ProfilePage] Ошибка загрузки данных профиля:', error);
         } finally {
             setLoading(false);
         }
     };
+
+    // Загрузка данных при монтировании или изменении user_id
+    useEffect(() => {
+        console.log('🔍 [ProfilePage] useEffect triggered, maxUser:', maxUser);
+        loadProfileData(maxUser?.user_id);
+    }, [maxUser?.user_id]);
 
     // Фильтрация задач по поиску
     const filteredTasks = useMemo(() => {
@@ -189,14 +197,21 @@ export default function ProfilePage() {
     // Расчет статистики для дня
     const todayStats = useMemo(() => {
         const today = new Date().toISOString().split('T')[0];
+        console.log('📊 [ProfilePage] Calculating todayStats for date:', today);
+        console.log('📊 [ProfilePage] dailyStats:', dailyStats);
+        console.log('📊 [ProfilePage] completedTasks:', completedTasks.length);
+
         const todayStat = dailyStats.find(s => s.date === today);
+        console.log('📊 [ProfilePage] todayStat found:', todayStat);
 
         if (todayStat) {
-            return {
+            const result = {
                 completed: todayStat.tasks_completed,
                 goal: todayStat.goal,
                 percentage: Math.round((todayStat.tasks_completed / todayStat.goal) * 100)
             };
+            console.log('✅ [ProfilePage] todayStats from daily_stats:', result);
+            return result;
         }
 
         const todayCompleted = completedTasks.filter(t => {
@@ -204,17 +219,20 @@ export default function ProfilePage() {
             return completedDate === today;
         }).length;
 
-        return {
+        const result = {
             completed: todayCompleted,
             goal: 5,
             percentage: Math.round((todayCompleted / 5) * 100)
         };
+        console.log('✅ [ProfilePage] todayStats from completedTasks:', result);
+        return result;
     }, [dailyStats, completedTasks]);
 
     // Расчет статистики для недели
     const weekStats = useMemo(() => {
         const oneWeekAgo = new Date();
         oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        console.log('📊 [ProfilePage] Calculating weekStats from:', oneWeekAgo);
 
         const weekCompleted = completedTasks.filter(t => {
             const completedDate = new Date(t.completed_at);
@@ -223,11 +241,13 @@ export default function ProfilePage() {
 
         const weekGoal = 25;
 
-        return {
+        const result = {
             completed: weekCompleted,
             goal: weekGoal,
             percentage: Math.round((weekCompleted / weekGoal) * 100)
         };
+        console.log('✅ [ProfilePage] weekStats:', result);
+        return result;
     }, [completedTasks]);
 
     // Уровень (простая формула на основе общего числа задач)

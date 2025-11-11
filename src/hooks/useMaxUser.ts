@@ -40,9 +40,28 @@ export function useMaxUser(): UseMaxUserReturn {
         return;
       }
 
+      // ПРИОРИТЕТ 1: Проверяем debug режим (localStorage)
+      const debugUserId = localStorage.getItem('debug_user_id');
+      if (debugUserId) {
+        console.log('🔧 [useMaxUser] Debug mode: using user_id from localStorage:', debugUserId);
+        const userData: MaxUser = {
+          user_id: parseInt(debugUserId),
+          first_name: 'Debug User',
+          last_name: null,
+          username: 'debug_user',
+          is_bot: false,
+          last_activity_time: Date.now(),
+        };
+        setUser(userData);
+        setIsLoading(false);
+        return;
+      }
+
+      // ПРИОРИТЕТ 2: MAX WebApp
       const maxWebApp = window.WebApp as MaxWebApp | undefined;
 
       if (!maxWebApp) {
+        console.warn('⚠️ [useMaxUser] MAX WebApp не доступен');
         setError(new Error('MAX WebApp не доступен. Убедитесь, что скрипт max-web-app.js подключен.'));
         setIsLoading(false);
         return;
@@ -54,6 +73,7 @@ export function useMaxUser(): UseMaxUserReturn {
       const webAppUser = maxWebApp.initDataUnsafe?.user;
 
       if (!webAppUser) {
+        console.warn('⚠️ [useMaxUser] Данные пользователя недоступны в WebApp');
         setError(new Error('Данные пользователя недоступны в WebApp'));
         setIsLoading(false);
         return;
@@ -71,11 +91,12 @@ export function useMaxUser(): UseMaxUserReturn {
           : Date.now(),
       };
 
+      console.log('✅ [useMaxUser] User loaded from MAX WebApp:', userData);
       setUser(userData);
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Failed to fetch user data');
       setError(error);
-      console.error('Error fetching MAX user:', error);
+      console.error('❌ [useMaxUser] Error fetching user:', error);
     } finally {
       setIsLoading(false);
     }

@@ -21,12 +21,10 @@ import UndoNotification from '@/components/ui/UndoNotification';
 import { TaskDetailsModal } from '@/components/tasks/TaskDetailsModal';
 import { Task } from '@/types/task';
 
-export const dynamic = 'force-dynamic';
-
+export default function TasksPage() {
     const { user } = useMaxUser();
     console.log('🔍 [TasksPage] Current user:', user);
 
-export default function TasksPage() {
     const { tasks, isLoading, toggleTask, createTask, reorderTasks, updateTask, useAPI, pendingDelete, cancelDelete, dismissNotification } = useTasks();
     const {
         layoutMode,
