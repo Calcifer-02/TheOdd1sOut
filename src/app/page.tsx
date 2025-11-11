@@ -8,6 +8,7 @@ import { Plus } from 'lucide-react';
 import { useTasks } from '@/hooks/useTasks';
 import { useTaskFilters } from '@/hooks/useTaskFilters';
 import { useShare } from '@/hooks/useShare';
+import { useMaxUser } from '@/hooks/useMaxUser';
 import { getFormattedDate } from '@/utils/date';
 
 import { TasksHeader } from '@/features/tasks/components/TasksHeader';
@@ -21,6 +22,9 @@ import { TaskDetailsModal } from '@/components/tasks/TaskDetailsModal';
 import { Task } from '@/types/task';
 
 export const dynamic = 'force-dynamic';
+
+    const { user } = useMaxUser();
+    console.log('🔍 [TasksPage] Current user:', user);
 
 export default function TasksPage() {
     const { tasks, isLoading, toggleTask, createTask, reorderTasks, updateTask, useAPI, pendingDelete, cancelDelete, dismissNotification } = useTasks();

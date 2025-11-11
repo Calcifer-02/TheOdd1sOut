@@ -5,11 +5,18 @@ export class TasksService {
 
   // Получить user_id из MAX API или debug режима
   private static getUserId(): string | null {
-    if (typeof window === 'undefined') return null;
+    if (typeof window === 'undefined') {
+      console.log('⚠️ [TasksService] window is undefined (SSR)');
+      return null;
+    }
 
     // Проверяем MAX API
     const maxApi = (window as any).MAX;
-    console.log('🔍 [TasksService] Checking MAX API:', maxApi);
+    console.log('🔍 [TasksService] Checking MAX API:', {
+      exists: !!maxApi,
+      hasUser: !!maxApi?.user,
+      userId: maxApi?.user?.user_id
+    });
 
     if (maxApi?.user?.user_id) {
       console.log('✅ [TasksService] Found user_id from MAX:', maxApi.user.user_id);
@@ -23,7 +30,7 @@ export class TasksService {
       return debugUserId;
     }
 
-    console.warn('⚠️ [TasksService] No user_id found!');
+    console.warn('⚠️ [TasksService] No user_id found! MAX:', !!maxApi, 'localStorage:', !!debugUserId);
     return null;
   }
 
