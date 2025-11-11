@@ -112,8 +112,9 @@ export default function SettingsPage() {
     const [activeSection, setActiveSection] = useState<string>('profile');
     const [isSaving, setIsSaving] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [isInitialized, setIsInitialized] = useState(false);
 
-    // Загрузка настроек из localStorage
+    // Загрузка настроек из localStorage (первым делом)
     useEffect(() => {
         const savedSettings = localStorage.getItem('userSettings');
         if (savedSettings) {
@@ -125,11 +126,39 @@ export default function SettingsPage() {
                 if (parsed.notifications) setNotifications(parsed.notifications);
                 if (parsed.taskSettings) setTaskSettings(parsed.taskSettings);
                 if (parsed.privacy) setPrivacy(parsed.privacy);
+                console.log('📦 Loaded settings from localStorage');
             } catch (error) {
                 console.error('Ошибка загрузки настроек:', error);
             }
         }
+        setIsInitialized(true);
     }, []); // Загружаем только один раз при монтировании
+
+    // Автозаполнение профиля данными из MAX (если профиль всё ещё пустой)
+    useEffect(() => {
+        if (!isInitialized || !maxUser) return;
+
+        // Проверяем, что профиль действительно пустой (значения по умолчанию)
+        const isDefaultProfile =
+            profile.name === 'Пользователь' &&
+            profile.email === 'user@example.com' &&
+            profile.avatar === '';
+
+        if (isDefaultProfile) {
+            const maxName = `${maxUser.first_name}${maxUser.last_name ? ' ' + maxUser.last_name : ''}`;
+            const maxEmail = maxUser.username || '';
+
+            console.log('🔵 Auto-filling profile with MAX data:', { maxName, maxEmail });
+
+            setProfile({
+                name: maxName,
+                email: maxEmail,
+                avatar: ''
+            });
+        } else {
+            console.log('✅ Profile already has data, skipping auto-fill');
+        }
+    }, [maxUser, isInitialized]); // Зависимость от isInitialized и maxUser
 
     // Применение темы
     useEffect(() => {
@@ -178,44 +207,6 @@ export default function SettingsPage() {
         }, 500);
     };
 
-    // Заполнить поля данными из MAX
-    const loadFromMax = () => {
-        if (maxUser) {
-            const maxName = `${maxUser.first_name}${maxUser.last_name ? ' ' + maxUser.last_name : ''}`;
-            const maxEmail = maxUser.username || '';
-
-            if (confirm(`Заполнить профиль данными из MAX?\n\nИмя: ${maxName}\nUsername: ${maxEmail ? '@' + maxEmail : 'не указан'}`)) {
-                // Заполняем поля данными из MAX
-                const maxProfile = {
-                    name: maxName,
-                    email: maxEmail,
-                    avatar: '' // Аватар оставляем пустым, так как в MAX API его нет
-                };
-
-                setProfile(maxProfile);
-
-                // Сохраняем в localStorage и Redux
-                const settings = {
-                    profile: maxProfile,
-                    notifications,
-                    taskSettings,
-                    privacy,
-                    savedAt: new Date().toISOString()
-                };
-
-                localStorage.setItem('userSettings', JSON.stringify(settings));
-                dispatch(updateProfile(maxProfile));
-
-                console.log('Profile filled with MAX data:', maxProfile);
-
-                // Показываем уведомление
-                setShowSuccess(true);
-                setTimeout(() => setShowSuccess(false), 3000);
-            }
-        } else {
-            alert('Данные MAX недоступны. Убедитесь, что приложение запущено в мессенджере MAX.');
-        }
-    };
 
     // Сброс настроек
     const resetSettings = () => {
@@ -354,50 +345,6 @@ export default function SettingsPage() {
                         <div className={styles.section}>
                             <h2 className={styles.sectionTitle}>Профиль пользователя</h2>
 
-                            {/* Информация о MAX пользователе */}
-                            {maxUser && (
-                                <div className={styles.maxUserInfo}>
-                                    <div className={styles.maxUserHeader}>
-                                        <span className={styles.maxBadge}>MAX</span>
-                                        <span className={styles.maxUserText}>
-                                            Данные из мессенджера
-                                        </span>
-                                    </div>
-                                    <div className={styles.maxUserData}>
-                                        <div className={styles.maxUserItem}>
-                                            <span className={styles.maxUserLabel}>Имя:</span>
-                                            <span className={styles.maxUserValue}>
-                                                {maxUser.first_name} {maxUser.last_name || ''}
-                                            </span>
-                                        </div>
-                                        {maxUser.username && (
-                                            <div className={styles.maxUserItem}>
-                                                <span className={styles.maxUserLabel}>Username:</span>
-                                                <span className={styles.maxUserValue}>@{maxUser.username}</span>
-                                            </div>
-                                        )}
-                                        <div className={styles.maxUserItem}>
-                                            <span className={styles.maxUserLabel}>ID:</span>
-                                            <span className={styles.maxUserValue}>{maxUser.user_id}</span>
-                                        </div>
-                                    </div>
-                                    <p style={{
-                                        fontSize: '12px',
-                                        opacity: 0.9,
-                                        margin: '12px 0',
-                                        lineHeight: 1.4
-                                    }}>
-                                        💡 Нажмите кнопку ниже, чтобы заполнить поля формы данными из MAX.
-                                    </p>
-                                    <button
-                                        className={styles.loadMaxButton}
-                                        onClick={loadFromMax}
-                                        type="button"
-                                    >
-                                        Заполнить данными из MAX
-                                    </button>
-                                </div>
-                            )}
 
                             <div className={styles.formGroup}>
                                 <label className={styles.label}>
