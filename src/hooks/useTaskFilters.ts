@@ -1,31 +1,32 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Task, LayoutMode, SortBy } from '@/types/task';
-import { useAppSelector } from '@/store/hooks';
+import { useAppSelector, useAppDispatch } from '@/store/hooks';
+import { updateTaskSettings } from '@/store/slices/settingsSlice';
 
 export const useTaskFilters = (tasks: Task[]) => {
-    // Получаем настройки из Redux store с безопасным чтением
+    const dispatch = useAppDispatch();
+
+    // Получаем настройки из Redux store
     const taskSettings = useAppSelector((state) => state.settings?.taskSettings);
 
-    // Используем настройки из store как начальные значения с fallback
-    const [layoutMode, setLayoutMode] = useState<LayoutMode>(
-        (taskSettings?.defaultView as LayoutMode) || 'list'
-    );
-    const [sortBy, setSortBy] = useState<SortBy>(
-        (taskSettings?.sortBy as SortBy) || 'date'
-    );
+    // Используем значения напрямую из Redux
+    const layoutMode = (taskSettings?.defaultView as LayoutMode) || 'list';
+    const sortBy = (taskSettings?.sortBy as SortBy) || 'date';
+
+    // Локальные фильтры (не сохраняются между сеансами)
     const [selectedAssignees, setSelectedAssignees] = useState<string[]>([]);
     const [selectedPriorities, setSelectedPriorities] = useState<string[]>([]);
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
-    // Обновляем значения при изменении настроек в store
-    useEffect(() => {
-        if (taskSettings?.defaultView) {
-            setLayoutMode(taskSettings.defaultView as LayoutMode);
-        }
-        if (taskSettings?.sortBy) {
-            setSortBy(taskSettings.sortBy as SortBy);
-        }
-    }, [taskSettings?.defaultView, taskSettings?.sortBy]);
+    // Функция для изменения layoutMode с сохранением в Redux
+    const setLayoutMode = useCallback((mode: LayoutMode) => {
+        dispatch(updateTaskSettings({ defaultView: mode }));
+    }, [dispatch]);
+
+    // Функция для изменения sortBy с сохранением в Redux
+    const setSortBy = useCallback((sort: SortBy) => {
+        dispatch(updateTaskSettings({ sortBy: sort }));
+    }, [dispatch]);
 
     const filteredTasks = useMemo(() => {
         let filtered = tasks.filter(task => {

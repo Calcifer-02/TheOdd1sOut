@@ -50,7 +50,7 @@ interface TaskSettings {
     archiveDays: number;
     showCompletedTasks: boolean;
     defaultView: 'list' | 'grid' | 'calendar';
-    sortBy: 'date' | 'priority' | 'name';
+    sortBy: 'date' | 'priority' | 'name' | 'deadline' | 'createdAt';
 }
 
 interface PrivacySettings {
@@ -132,7 +132,7 @@ export default function SettingsPage() {
             }
         }
         setIsInitialized(true);
-    }, []); // Загружаем только один раз при монтировании
+    }, []);
 
     // Автозаполнение профиля данными из MAX (если профиль всё ещё пустой)
     useEffect(() => {
@@ -610,7 +610,12 @@ export default function SettingsPage() {
                                 <label className={styles.label}>Вид отображения</label>
                                 <CustomSelect
                                     value={taskSettings.defaultView}
-                                    onChange={(value) => setTaskSettings({ ...taskSettings, defaultView: value as 'list' | 'grid' | 'calendar' })}
+                                    onChange={(value) => {
+                                        const newView = value as 'list' | 'grid' | 'calendar';
+                                        setTaskSettings({ ...taskSettings, defaultView: newView });
+                                        // Сразу сохраняем в Redux для синхронизации с главной страницей
+                                        dispatch(updateTaskSettings({ defaultView: newView }));
+                                    }}
                                     options={[
                                         { value: 'list', label: 'Список'},
                                         { value: 'grid', label: 'Сетка' },
@@ -623,7 +628,12 @@ export default function SettingsPage() {
                                 <label className={styles.label}>Сортировка</label>
                                 <CustomSelect
                                     value={taskSettings.sortBy}
-                                    onChange={(value) => setTaskSettings({ ...taskSettings, sortBy: value as 'date' | 'priority' | 'name' })}
+                                    onChange={(value) => {
+                                        const newSort = value as 'date' | 'priority' | 'name' | 'deadline' | 'createdAt';
+                                        setTaskSettings({ ...taskSettings, sortBy: newSort });
+                                        // Сразу сохраняем в Redux для синхронизации с главной страницей
+                                        dispatch(updateTaskSettings({ sortBy: newSort }));
+                                    }}
                                     options={[
                                         { value: 'date', label: 'По дате' },
                                         { value: 'priority', label: 'По приоритету' },

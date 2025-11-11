@@ -1,5 +1,6 @@
 export interface Task {
     id: number;
+    user_id?: number;  // Добавлено для привязки задач к пользователю
     title: string;
     description?: string;
     completed: boolean;

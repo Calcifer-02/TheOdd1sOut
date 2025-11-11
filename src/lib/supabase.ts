@@ -71,6 +71,43 @@ export type Database = {
         Insert: Omit<Database['public']['Tables']['daily_stats']['Row'], 'id' | 'created_at' | 'updated_at'>;
         Update: Partial<Database['public']['Tables']['daily_stats']['Insert']>;
       };
+      mood_test_results: {
+        Row: {
+          id: string;
+          user_id: number;
+          test_type: string;
+          total_score: number;
+          stress_score: number;
+          coping_score: number;
+          stress_level: 'low' | 'medium' | 'high';
+          answers: Record<string, number>;
+          completed_at: string;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['mood_test_results']['Row'], 'id' | 'created_at'>;
+        Update: Partial<Database['public']['Tables']['mood_test_results']['Insert']>;
+      };
+      ai_advice_cache: {
+        Row: {
+          id: string;
+          user_id: number;
+          total_score: number;
+          stress_score: number;
+          coping_score: number;
+          stress_level: 'low' | 'medium' | 'high';
+          trend: 'improving' | 'stable' | 'worsening' | 'insufficient_data' | null;
+          advice: Array<{
+            title: string;
+            description: string;
+            priority: 'high' | 'medium' | 'low';
+          }>;
+          source: 'ai' | 'fallback';
+          created_at: string;
+          expires_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['ai_advice_cache']['Row'], 'id' | 'created_at' | 'expires_at'>;
+        Update: Partial<Database['public']['Tables']['ai_advice_cache']['Insert']>;
+      };
     };
   };
 };

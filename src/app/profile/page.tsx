@@ -7,6 +7,7 @@ import { UserCircleIcon, SearchIcon, Settings2Icon } from '@/components/icons';
 import { Task } from '@/types/task';
 import { useMaxUser } from '@/hooks/useMaxUser';
 import { useWebApp } from '@/hooks/useWebApp';
+import MoodAnalytics from '@/components/profile/MoodAnalytics';
 import styles from './profile.module.css';
 
 interface CompletedTask {
@@ -20,6 +21,7 @@ interface CompletedTask {
     completed_at: string;
     original_created_at: string | null;
     original_deadline: string | null;
+    user_id: string | null;
 }
 
 interface DailyStat {
@@ -29,10 +31,10 @@ interface DailyStat {
     goal: number;
     created_at: string;
     updated_at: string;
+    user_id: string | null;
 }
 
 export default function ProfilePage() {
-
     // Получаем данные из MAX WebApp Bridge
     const { user: maxUser, isLoading: isMaxUserLoading, error: maxUserError } = useMaxUser();
     const { webApp: webAppInstance } = useWebApp();
@@ -64,12 +66,12 @@ export default function ProfilePage() {
     const [completedTasks, setCompletedTasks] = useState<CompletedTask[]>([]);
     const [dailyStats, setDailyStats] = useState<DailyStat[]>([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<'overview' | 'analytics'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'analytics' | 'mood'>('overview');
 
-    // Загрузка данных при монтировании
+    // Загрузка данных при монтировании или изменении user_id
     useEffect(() => {
         loadProfileData();
-    }, []);
+    }, [maxUser?.user_id]);
 
     // Закрытие модалки по ESC
     useEffect(() => {
@@ -82,7 +84,7 @@ export default function ProfilePage() {
 
         if (isSearchModalOpen) {
             document.addEventListener('keydown', handleEscape);
-            document.body.style.overflow = 'hidden'; // Блокируем прокрутку фона
+            document.body.style.overflow = 'hidden';
         }
 
         return () => {
@@ -95,23 +97,36 @@ export default function ProfilePage() {
         try {
             setLoading(true);
 
-            // Загрузка текущих задач
+            // Используем user_id из MAX данных
+            const userId = maxUser?.user_id;
+
+            if (!userId) {
+                console.log('User ID не найден, данные не будут загружены');
+                setCurrentTasks([]);
+                setCompletedTasks([]);
+                setDailyStats([]);
+                setTotalCompleted(0);
+                return;
+            }
+
+            // Загрузка текущих задач для конкретного пользователя
             const { data: tasksData, error: tasksError } = await supabase
                 .from('tasks')
                 .select('*')
+                .or(`user_id.eq.${userId},user_id.is.null`)
                 .order('created_at', { ascending: false });
 
             if (tasksError) throw tasksError;
             setCurrentTasks(tasksData || []);
 
-            // Загрузка выполненных задач
+            // Загрузка выполненных задач для конкретного пользователя
             const { data: completedData, error: completedError } = await supabase
                 .from('completed_tasks')
                 .select('*')
+                .or(`user_id.eq.${userId},user_id.is.null`)
                 .order('completed_at', { ascending: false });
 
             if (completedError) {
-                // Если таблица не существует, просто устанавливаем пустой массив
                 console.warn('Таблица completed_tasks не найдена:', completedError);
                 setCompletedTasks([]);
             } else {
@@ -119,10 +134,11 @@ export default function ProfilePage() {
                 setTotalCompleted((completedData || []).length);
             }
 
-            // Загрузка статистики
+            // Загрузка статистики для конкретного пользователя
             const { data: statsData, error: statsError } = await supabase
                 .from('daily_stats')
                 .select('*')
+                .or(`user_id.eq.${userId},user_id.is.null`)
                 .order('date', { ascending: false })
                 .limit(7);
 
@@ -257,18 +273,18 @@ export default function ProfilePage() {
             if (hasTasksOnDate) {
                 streak++;
             } else if (i > 0) {
-                break; // Прерываем серию
+                break;
             }
         }
 
         // Продуктивность по дням недели
-        const weekdayStats = [0, 0, 0, 0, 0, 0, 0]; // Вс-Сб
+        const weekdayStats = [0, 0, 0, 0, 0, 0, 0];
         completedTasks.forEach(task => {
             const day = new Date(task.completed_at).getDay();
             weekdayStats[day]++;
         });
 
-        // Среднее время выполнения (в часах)
+        // Среднее время выполнения
         let totalTimeHours = 0;
         let tasksWithTime = 0;
         completedTasks.forEach(task => {
@@ -276,7 +292,7 @@ export default function ProfilePage() {
                 const created = new Date(task.original_created_at).getTime();
                 const completed = new Date(task.completed_at).getTime();
                 const hours = (completed - created) / (1000 * 60 * 60);
-                if (hours > 0 && hours < 24 * 30) { // Игнорируем аномалии > 30 дней
+                if (hours > 0 && hours < 24 * 30) {
                     totalTimeHours += hours;
                     tasksWithTime++;
                 }
@@ -284,7 +300,7 @@ export default function ProfilePage() {
         });
         const avgCompletionTime = tasksWithTime > 0 ? totalTimeHours / tasksWithTime : 0;
 
-        // Эффективность (выполненные vs всего созданных)
+        // Эффективность
         const totalTasks = currentTasks.length + completedTasks.length;
         const efficiency = totalTasks > 0 ? (completedTasks.length / totalTasks) * 100 : 0;
 
@@ -301,7 +317,7 @@ export default function ProfilePage() {
             last7Days.push({
                 date: dateStr,
                 count,
-                dayName: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'][date.getDay()]
+                dayName: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'][date.getDay()]
             });
         }
 
@@ -386,7 +402,7 @@ export default function ProfilePage() {
 
             {/* Основной контент */}
             <div className={styles.content}>
-                {/* Поиск - кнопка открытия модального окна */}
+                {/* Поиск */}
                 <div className={styles.searchSection}>
                     <div
                         className={styles.searchBox}
@@ -417,12 +433,17 @@ export default function ProfilePage() {
                     >
                         Аналитика
                     </button>
+                    <button
+                        className={`${styles.tab} ${activeTab === 'mood' ? styles.tabActive : ''}`}
+                        onClick={() => setActiveTab('mood')}
+                    >
+                        Стресс
+                    </button>
                 </div>
 
                 {/* Статистика - Обзор */}
                 {activeTab === 'overview' && (
                     <div className={styles.statsGrid}>
-                        {/* День */}
                         <div className={styles.statCard}>
                             <h3 className={styles.statTitle}>День</h3>
                             <div className={styles.statContent}>
@@ -455,7 +476,6 @@ export default function ProfilePage() {
                             </div>
                         </div>
 
-                        {/* Уровень */}
                         <div className={styles.statCard}>
                             <h3 className={styles.statTitle}>Уровень</h3>
                             <div className={styles.statContent}>
@@ -466,14 +486,11 @@ export default function ProfilePage() {
                                     <p className={styles.statNumbers}>
                                         {totalCompleted} задач
                                     </p>
-                                    <p className={styles.statLabel}>
-                                        До {level + 1} уровня: {((level + 1) * 10) - totalCompleted}
-                                    </p>
+                                    <p className={styles.statLabel}>всего выполнено</p>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Неделя */}
                         <div className={styles.statCard}>
                             <h3 className={styles.statTitle}>Неделя</h3>
                             <div className={styles.statContent}>
@@ -508,164 +525,210 @@ export default function ProfilePage() {
                     </div>
                 )}
 
-                {/* Детальная аналитика */}
+                {/* Расширенная аналитика */}
                 {activeTab === 'analytics' && (
                     <div className={styles.analyticsContainer}>
-                        {/* Общая статистика */}
-                        <div className={styles.analyticsCard}>
-                            <h3 className={styles.analyticsCardTitle}>Общая статистика</h3>
-                            <div className={styles.statsRow}>
-                                <div className={styles.statItem}>
-                                    <div className={styles.statItemValue}>{analytics.totalTasks}</div>
-                                    <div className={styles.statItemLabel}>Всего задач</div>
-                                </div>
-                                <div className={styles.statItem}>
-                                    <div className={styles.statItemValue}>{totalCompleted}</div>
-                                    <div className={styles.statItemLabel}>Выполнено</div>
-                                </div>
-                                <div className={styles.statItem}>
-                                    <div className={styles.statItemValue}>{analytics.activeTasks}</div>
-                                    <div className={styles.statItemLabel}>Активных</div>
-                                </div>
-                                <div className={styles.statItem}>
-                                    <div className={styles.statItemValue}>{analytics.efficiency.toFixed(0)}%</div>
-                                    <div className={styles.statItemLabel}>Эффективность</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Серия и среднее время */}
-                        <div className={styles.analyticsRow}>
-                            <div className={styles.analyticsCard}>
-                                <h3 className={styles.analyticsCardTitle}>🔥 Серия</h3>
-                                <div className={styles.streakValue}>{analytics.streak}</div>
-                                <div className={styles.streakLabel}>
-                                    {analytics.streak === 1 ? 'день подряд' : analytics.streak < 5 ? 'дня подряд' : 'дней подряд'}
-                                </div>
-                            </div>
-                            <div className={styles.analyticsCard}>
-                                <h3 className={styles.analyticsCardTitle}>⏱️ Среднее время</h3>
-                                <div className={styles.streakValue}>
-                                    {analytics.avgCompletionTime > 24
-                                        ? `${Math.round(analytics.avgCompletionTime / 24)}д`
-                                        : `${Math.round(analytics.avgCompletionTime)}ч`
-                                    }
-                                </div>
-                                <div className={styles.streakLabel}>на выполнение</div>
-                            </div>
-                        </div>
-
-                        {/* График активности за 7 дней */}
-                        <div className={styles.analyticsCard}>
-                            <h3 className={styles.analyticsCardTitle}>Активность за неделю</h3>
-                            <div className={styles.activityChart}>
-                                {analytics.last7Days.map((day, index) => (
-                                    <div key={index} className={styles.activityDay}>
-                                        <div className={styles.activityBar}>
-                                            <div
-                                                className={styles.activityBarFill}
-                                                style={{
-                                                    height: `${Math.min((day.count / Math.max(...analytics.last7Days.map(d => d.count), 1)) * 100, 100)}%`,
-                                                    background: day.count > 0 ? '#0077FF' : '#E8EAED'
-                                                }}
-                                            />
-                                        </div>
-                                        <div className={styles.activityLabel}>{day.dayName}</div>
-                                        <div className={styles.activityCount}>{day.count}</div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Распределение по приоритетам */}
-                        <div className={styles.analyticsCard}>
-                            <h3 className={styles.analyticsCardTitle}>Распределение по приоритетам</h3>
-                            <div className={styles.priorityBars}>
-                                <div className={styles.priorityBar}>
-                                    <div className={styles.priorityInfo}>
-                                        <span className={`${styles.priorityDot} ${styles.high}`}></span>
-                                        <span className={styles.priorityName}>Высокий</span>
-                                        <span className={styles.priorityCount}>{analytics.priorityDistribution.high}</span>
-                                    </div>
-                                    <div className={styles.progressBar}>
-                                        <div
-                                            className={`${styles.progressBarFill} ${styles.high}`}
-                                            style={{
-                                                width: `${totalCompleted > 0 ? (analytics.priorityDistribution.high / totalCompleted) * 100 : 0}%`
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-                                <div className={styles.priorityBar}>
-                                    <div className={styles.priorityInfo}>
-                                        <span className={`${styles.priorityDot} ${styles.medium}`}></span>
-                                        <span className={styles.priorityName}>Средний</span>
-                                        <span className={styles.priorityCount}>{analytics.priorityDistribution.medium}</span>
-                                    </div>
-                                    <div className={styles.progressBar}>
-                                        <div
-                                            className={`${styles.progressBarFill} ${styles.medium}`}
-                                            style={{
-                                                width: `${totalCompleted > 0 ? (analytics.priorityDistribution.medium / totalCompleted) * 100 : 0}%`
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-                                <div className={styles.priorityBar}>
-                                    <div className={styles.priorityInfo}>
-                                        <span className={`${styles.priorityDot} ${styles.low}`}></span>
-                                        <span className={styles.priorityName}>Низкий</span>
-                                        <span className={styles.priorityCount}>{analytics.priorityDistribution.low}</span>
-                                    </div>
-                                    <div className={styles.progressBar}>
-                                        <div
-                                            className={`${styles.progressBarFill} ${styles.low}`}
-                                            style={{
-                                                width: `${totalCompleted > 0 ? (analytics.priorityDistribution.low / totalCompleted) * 100 : 0}%`
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Популярные теги */}
-                        {analytics.topTags.length > 0 && (
-                            <div className={styles.analyticsCard}>
-                                <h3 className={styles.analyticsCardTitle}>Популярные теги</h3>
-                                <div className={styles.topTagsList}>
-                                    {analytics.topTags.map(([tag, count], index) => (
-                                        <div key={tag} className={styles.topTagItem}>
-                                            <span className={styles.topTagRank}>#{index + 1}</span>
-                                            <span className={styles.topTagName}>{tag}</span>
-                                            <span className={styles.topTagCount}>{count}</span>
-                                        </div>
-                                    ))}
-                                </div>
+                        {!maxUser && (
+                            <div style={{
+                                padding: '2rem',
+                                textAlign: 'center',
+                                background: 'var(--card-background)',
+                                border: '1px solid var(--border)',
+                                borderRadius: '12px',
+                                marginBottom: '1rem'
+                            }}>
+                                <h3 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>
+                                    Данные не загружены
+                                </h3>
+                                <p style={{ color: 'var(--text-secondary)' }}>
+                                    Для просмотра аналитики необходимо авторизоваться
+                                </p>
                             </div>
                         )}
 
-                        {/* Продуктивность по дням недели */}
-                        <div className={styles.analyticsCard}>
-                            <h3 className={styles.analyticsCardTitle}>Продуктивность по дням недели</h3>
-                            <div className={styles.weekdayChart}>
-                                {['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'].map((day, index) => (
-                                    <div key={day} className={styles.weekdayBar}>
-                                        <div className={styles.weekdayBarContainer}>
-                                            <div
-                                                className={styles.weekdayBarFill}
-                                                style={{
-                                                    height: `${Math.min((analytics.weekdayStats[index] / Math.max(...analytics.weekdayStats, 1)) * 100, 100)}%`
-                                                }}
-                                            />
+                        {maxUser && (
+                            <>
+                                {/* Общая статистика */}
+                                <div className={styles.analyticsCard}>
+                                    <h3 className={styles.analyticsCardTitle}>Общая статистика</h3>
+                                    <div className={styles.statsRow}>
+                                        <div className={styles.statItem}>
+                                            <div className={styles.statItemValue}>{analytics.totalTasks}</div>
+                                            <div className={styles.statItemLabel}>Всего задач</div>
                                         </div>
-                                        <div className={styles.weekdayLabel}>{day}</div>
-                                        <div className={styles.weekdayCount}>{analytics.weekdayStats[index]}</div>
+                                        <div className={styles.statItem}>
+                                            <div className={styles.statItemValue}>{totalCompleted}</div>
+                                            <div className={styles.statItemLabel}>Выполнено</div>
+                                        </div>
+                                        <div className={styles.statItem}>
+                                            <div className={styles.statItemValue}>{analytics.activeTasks}</div>
+                                            <div className={styles.statItemLabel}>Активных</div>
+                                        </div>
+                                        <div className={styles.statItem}>
+                                            <div className={styles.statItemValue}>{analytics.efficiency.toFixed(0)}%</div>
+                                            <div className={styles.statItemLabel}>Эффективность</div>
+                                        </div>
                                     </div>
-                                ))}
-                            </div>
-                        </div>
+                                </div>
+
+                                {/* Серия и среднее время */}
+                                <div className={styles.analyticsRow}>
+                                    <div className={styles.analyticsCard}>
+                                        <h3 className={styles.analyticsCardTitle}>🔥 Серия</h3>
+                                        <div className={styles.streakValue}>{analytics.streak}</div>
+                                        <div className={styles.streakLabel}>
+                                            {analytics.streak === 1 ? 'день подряд' : analytics.streak < 5 ? 'дня подряд' : 'дней подряд'}
+                                        </div>
+                                    </div>
+                                    <div className={styles.analyticsCard}>
+                                        <h3 className={styles.analyticsCardTitle}>⏱️ Среднее время</h3>
+                                        <div className={styles.streakValue}>
+                                            {analytics.avgCompletionTime > 24
+                                                ? `${Math.round(analytics.avgCompletionTime / 24)}д`
+                                                : `${Math.round(analytics.avgCompletionTime)}ч`
+                                            }
+                                        </div>
+                                        <div className={styles.streakLabel}>на выполнение</div>
+                                    </div>
+                                </div>
+
+                                {/* График активности за 7 дней */}
+                                <div className={styles.analyticsCard}>
+                                    <h3 className={styles.analyticsCardTitle}>Активность за неделю</h3>
+                                    <div className={styles.activityChart}>
+                                        {analytics.last7Days.map((day, index) => (
+                                            <div key={index} className={styles.activityDay}>
+                                                <div className={styles.activityBar}>
+                                                    <div
+                                                        className={styles.activityBarFill}
+                                                        style={{
+                                                            height: `${Math.min((day.count / Math.max(...analytics.last7Days.map(d => d.count), 1)) * 100, 100)}%`,
+                                                            background: day.count > 0 ? '#0077FF' : '#E8EAED'
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div className={styles.activityLabel}>{day.dayName}</div>
+                                                <div className={styles.activityCount}>{day.count}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Распределение по приоритетам */}
+                                <div className={styles.analyticsCard}>
+                                    <h3 className={styles.analyticsCardTitle}>Распределение по приоритетам</h3>
+                                    <div className={styles.priorityBars}>
+                                        <div className={styles.priorityBar}>
+                                            <div className={styles.priorityInfo}>
+                                                <span className={`${styles.priorityDot} ${styles.high}`}></span>
+                                                <span className={styles.priorityName}>Высокий</span>
+                                                <span className={styles.priorityCount}>{analytics.priorityDistribution.high}</span>
+                                            </div>
+                                            <div className={styles.progressBar}>
+                                                <div
+                                                    className={`${styles.progressBarFill} ${styles.high}`}
+                                                    style={{
+                                                        width: `${totalCompleted > 0 ? (analytics.priorityDistribution.high / totalCompleted) * 100 : 0}%`
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className={styles.priorityBar}>
+                                            <div className={styles.priorityInfo}>
+                                                <span className={`${styles.priorityDot} ${styles.medium}`}></span>
+                                                <span className={styles.priorityName}>Средний</span>
+                                                <span className={styles.priorityCount}>{analytics.priorityDistribution.medium}</span>
+                                            </div>
+                                            <div className={styles.progressBar}>
+                                                <div
+                                                    className={`${styles.progressBarFill} ${styles.medium}`}
+                                                    style={{
+                                                        width: `${totalCompleted > 0 ? (analytics.priorityDistribution.medium / totalCompleted) * 100 : 0}%`
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className={styles.priorityBar}>
+                                            <div className={styles.priorityInfo}>
+                                                <span className={`${styles.priorityDot} ${styles.low}`}></span>
+                                                <span className={styles.priorityName}>Низкий</span>
+                                                <span className={styles.priorityCount}>{analytics.priorityDistribution.low}</span>
+                                            </div>
+                                            <div className={styles.progressBar}>
+                                                <div
+                                                    className={`${styles.progressBarFill} ${styles.low}`}
+                                                    style={{
+                                                        width: `${totalCompleted > 0 ? (analytics.priorityDistribution.low / totalCompleted) * 100 : 0}%`
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Продуктивность по дням недели */}
+                                <div className={styles.analyticsCard}>
+                                    <h3 className={styles.analyticsCardTitle}>Продуктивность по дням недели</h3>
+                                    <div className={styles.weekdayChart}>
+                                        {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map((day, index) => (
+                                            <div key={day} className={styles.weekdayBar}>
+                                                <div className={styles.weekdayBarContainer}>
+                                                    <div
+                                                        className={styles.weekdayBarFill}
+                                                        style={{
+                                                            height: `${Math.min((analytics.weekdayStats[index] / Math.max(...analytics.weekdayStats, 1)) * 100, 100)}%`
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div className={styles.weekdayLabel}>{day}</div>
+                                                <div className={styles.weekdayCount}>{analytics.weekdayStats[index]}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Популярные теги */}
+                                {analytics.topTags.length > 0 && (
+                                    <div className={styles.analyticsCard}>
+                                        <h3 className={styles.analyticsCardTitle}>Популярные теги</h3>
+                                        <div className={styles.topTagsList}>
+                                            {analytics.topTags.map(([tag, count], index) => (
+                                                <div key={tag} className={styles.topTagItem}>
+                                                    <span className={styles.topTagRank}>#{index + 1}</span>
+                                                    <span className={styles.topTagName}>{tag}</span>
+                                                    <span className={styles.topTagCount}>{count}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </>
+                        )}
                     </div>
+                )}
+
+                {/* Аналитика стресса */}
+                {activeTab === 'mood' && (
+                    <>
+                        {maxUser ? (
+                            <MoodAnalytics userId={maxUser.user_id} />
+                        ) : (
+                            <div style={{
+                                padding: '2rem',
+                                textAlign: 'center',
+                                background: 'var(--card-background)',
+                                border: '1px solid var(--border)',
+                                borderRadius: '12px'
+                            }}>
+                                <h3 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>
+                                    Данные не загружены
+                                </h3>
+                                <p style={{ color: 'var(--text-secondary)' }}>
+                                    Для просмотра аналитики стресса необходимо авторизоваться
+                                </p>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
 
@@ -778,7 +841,6 @@ export default function ProfilePage() {
                         </div>
 
                         <div className={styles.taskDetailBody}>
-                            {/* Статус */}
                             <div className={styles.detailSection}>
                                 <div className={styles.detailLabel}>Статус</div>
                                 <div className={styles.detailValue}>
@@ -790,7 +852,6 @@ export default function ProfilePage() {
                                 </div>
                             </div>
 
-                            {/* Приоритет */}
                             <div className={styles.detailSection}>
                                 <div className={styles.detailLabel}>Приоритет</div>
                                 <div className={styles.detailValue}>
@@ -801,7 +862,6 @@ export default function ProfilePage() {
                                 </div>
                             </div>
 
-                            {/* Описание */}
                             {selectedTask.description && (
                                 <div className={styles.detailSection}>
                                     <div className={styles.detailLabel}>Описание</div>
@@ -811,7 +871,6 @@ export default function ProfilePage() {
                                 </div>
                             )}
 
-                            {/* Исполнитель */}
                             <div className={styles.detailSection}>
                                 <div className={styles.detailLabel}>Исполнитель</div>
                                 <div className={styles.detailValue}>
@@ -819,7 +878,6 @@ export default function ProfilePage() {
                                 </div>
                             </div>
 
-                            {/* Теги */}
                             {selectedTask.tags && selectedTask.tags.length > 0 && (
                                 <div className={styles.detailSection}>
                                     <div className={styles.detailLabel}>Теги</div>
@@ -835,7 +893,6 @@ export default function ProfilePage() {
                                 </div>
                             )}
 
-                            {/* Дедлайн */}
                             {selectedTask.deadline && (
                                 <div className={styles.detailSection}>
                                     <div className={styles.detailLabel}>Дедлайн</div>
@@ -851,7 +908,6 @@ export default function ProfilePage() {
                                 </div>
                             )}
 
-                            {/* Дата создания */}
                             {selectedTask.created_at && (
                                 <div className={styles.detailSection}>
                                     <div className={styles.detailLabel}>Создано</div>
@@ -866,6 +922,7 @@ export default function ProfilePage() {
                                     </div>
                                 </div>
                             )}
+
                             {selectedTask.isCompleted && selectedTask.updated_at && (
                                 <div className={styles.detailSection}>
                                     <div className={styles.detailLabel}>Выполнено</div>
@@ -880,6 +937,15 @@ export default function ProfilePage() {
                                     </div>
                                 </div>
                             )}
+                        </div>
+
+                        <div className={styles.taskDetailFooter}>
+                            <button
+                                className={styles.closeDetailButton}
+                                onClick={() => setSelectedTask(null)}
+                            >
+                                Закрыть
+                            </button>
                         </div>
                     </div>
                 </div>

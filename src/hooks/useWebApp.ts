@@ -161,7 +161,14 @@ export function useWebApp(): UseWebAppReturn {
 
           // Инициализируем WebApp
           if (webAppInstance.ready) {
-            webAppInstance.ready();
+            try {
+              webAppInstance.ready();
+            } catch (err) {
+              // В режиме разработки (браузер) это нормально
+              if (process.env.NODE_ENV === 'development') {
+                console.warn('[WebApp] Ready event failed (normal in browser):', err);
+              }
+            }
           }
 
           setWebApp(webAppInstance);
@@ -169,8 +176,25 @@ export function useWebApp(): UseWebAppReturn {
           setError(null);
 
           // Раскрываем приложение на весь экран
+          console.log('📱 Expanding app to fullscreen...');
+          console.log('Before expand - isExpanded:', webAppInstance.isExpanded);
+          console.log('Before expand - viewportHeight:', webAppInstance.viewportHeight);
+
           if (webAppInstance.expand) {
             webAppInstance.expand();
+            console.log('✅ expand() called');
+
+            // Повторный вызов через небольшую задержку (для надёжности)
+            setTimeout(() => {
+              if (webAppInstance.expand) {
+                webAppInstance.expand();
+                console.log('✅ expand() called again (delayed)');
+                console.log('After expand - isExpanded:', webAppInstance.isExpanded);
+                console.log('After expand - viewportHeight:', webAppInstance.viewportHeight);
+              }
+            }, 300);
+          } else {
+            console.log('⚠️ expand() method not available');
           }
 
           console.log('MAX WebApp initialized:', {
@@ -178,7 +202,20 @@ export function useWebApp(): UseWebAppReturn {
             platform: webAppInstance.platform,
             colorScheme: webAppInstance.colorScheme,
             user: webAppInstance.initDataUnsafe?.user,
+            isExpanded: webAppInstance.isExpanded,
+            viewportHeight: webAppInstance.viewportHeight,
           });
+
+
+          if (webAppInstance.onEvent) {
+            webAppInstance.onEvent('viewportChanged', () => {
+              console.log('📐 Viewport changed:', {
+                isExpanded: webAppInstance.isExpanded,
+                viewportHeight: webAppInstance.viewportHeight,
+                viewportStableHeight: webAppInstance.viewportStableHeight,
+              });
+            });
+          }
         } catch (err) {
           const error = err instanceof Error ? err : new Error('Failed to initialize WebApp');
           setError(error);

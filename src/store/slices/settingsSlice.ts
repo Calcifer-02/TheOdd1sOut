@@ -8,7 +8,7 @@ interface TaskSettings {
     archiveDays: number;
     showCompletedTasks: boolean;
     defaultView: 'list' | 'grid' | 'calendar';
-    sortBy: 'date' | 'priority' | 'name';
+    sortBy: 'date' | 'priority' | 'name' | 'deadline' | 'createdAt';
 }
 
 interface UserProfile {
