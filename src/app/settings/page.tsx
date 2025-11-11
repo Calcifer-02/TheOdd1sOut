@@ -178,25 +178,25 @@ export default function SettingsPage() {
         }, 500);
     };
 
-    // Сбросить настройки профиля и использовать данные из MAX
+    // Заполнить поля данными из MAX
     const loadFromMax = () => {
         if (maxUser) {
             const maxName = `${maxUser.first_name}${maxUser.last_name ? ' ' + maxUser.last_name : ''}`;
-            const maxEmail = maxUser.username || 'user@example.com';
+            const maxEmail = maxUser.username || '';
 
-            if (confirm(`Сбросить настройки профиля и использовать данные из MAX?\n\nИмя: ${maxName}\nUsername: ${maxEmail}`)) {
-                // Очищаем кастомные настройки профиля
-                const emptyProfile = {
-                    name: '',
-                    email: '',
-                    avatar: ''
+            if (confirm(`Заполнить профиль данными из MAX?\n\nИмя: ${maxName}\nUsername: ${maxEmail ? '@' + maxEmail : 'не указан'}`)) {
+                // Заполняем поля данными из MAX
+                const maxProfile = {
+                    name: maxName,
+                    email: maxEmail,
+                    avatar: '' // Аватар оставляем пустым, так как в MAX API его нет
                 };
 
-                setProfile(emptyProfile);
+                setProfile(maxProfile);
 
-                // Сохраняем пустой профиль в localStorage и Redux
+                // Сохраняем в localStorage и Redux
                 const settings = {
-                    profile: emptyProfile,
+                    profile: maxProfile,
                     notifications,
                     taskSettings,
                     privacy,
@@ -204,9 +204,9 @@ export default function SettingsPage() {
                 };
 
                 localStorage.setItem('userSettings', JSON.stringify(settings));
-                dispatch(updateProfile(emptyProfile));
+                dispatch(updateProfile(maxProfile));
 
-                console.log('Profile reset, now using MAX data');
+                console.log('Profile filled with MAX data:', maxProfile);
 
                 // Показываем уведомление
                 setShowSuccess(true);
@@ -387,15 +387,14 @@ export default function SettingsPage() {
                                         margin: '12px 0',
                                         lineHeight: 1.4
                                     }}>
-                                        💡 По умолчанию используются данные из MAX. Вы можете изменить их ниже.
-                                        Чтобы вернуться к данным MAX, нажмите кнопку ниже.
+                                        💡 Нажмите кнопку ниже, чтобы заполнить поля формы данными из MAX.
                                     </p>
                                     <button
                                         className={styles.loadMaxButton}
                                         onClick={loadFromMax}
                                         type="button"
                                     >
-                                        Сбросить и использовать данные MAX
+                                        Заполнить данными из MAX
                                     </button>
                                 </div>
                             )}
@@ -405,7 +404,7 @@ export default function SettingsPage() {
                                     Имя
                                     {maxUser && (
                                         <span className={styles.fieldHint}>
-                                            (оставьте пустым для использования данных MAX)
+                                            (из MAX: {maxUser.first_name}{maxUser.last_name ? ' ' + maxUser.last_name : ''})
                                         </span>
                                     )}
                                 </label>
@@ -414,25 +413,25 @@ export default function SettingsPage() {
                                     className={styles.input}
                                     value={profile.name}
                                     onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                                    placeholder={maxUser ? `${maxUser.first_name}${maxUser.last_name ? ' ' + maxUser.last_name : ''}` : "Введите ваше имя"}
+                                    placeholder="Введите ваше имя"
                                 />
                             </div>
 
                             <div className={styles.formGroup}>
                                 <label className={styles.label}>
                                     Email / Username
-                                    {maxUser && (
+                                    {maxUser?.username && (
                                         <span className={styles.fieldHint}>
-                                            (оставьте пустым для использования данных MAX)
+                                            (из MAX: @{maxUser.username})
                                         </span>
                                     )}
                                 </label>
                                 <input
-                                    type="email"
+                                    type="text"
                                     className={styles.input}
                                     value={profile.email}
                                     onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                                    placeholder={maxUser?.username ? `@${maxUser.username}` : "email@example.com"}
+                                    placeholder="email@example.com"
                                 />
                             </div>
 
