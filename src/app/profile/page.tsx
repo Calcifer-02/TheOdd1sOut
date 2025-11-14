@@ -38,19 +38,42 @@ export default function ProfilePage() {
     // Получаем данные из MAX WebApp Bridge
     const { user: maxUser, isLoading: isMaxUserLoading, error: maxUserError } = useMaxUser();
     const { webApp: webAppInstance } = useWebApp();
-
-    // Получаем данные профиля из Redux (настройки пользователя)
     const userProfile = useAppSelector((state) => state.settings?.profile);
 
     // Приоритет: настройки пользователя (Redux) → MAX данные → значения по умолчанию
-    const userName = userProfile?.name ||
-        (maxUser ? `${maxUser.first_name}${maxUser.last_name ? ' ' + maxUser.last_name : ''}` : 'Пользователь');
+    const userName = useMemo(() => {
+        // Сначала пытаемся получить из MAX
+        if (maxUser) {
+            const maxName = `${maxUser.first_name || ''}${maxUser.last_name ? ' ' + maxUser.last_name : ''}`.trim();
+            if (maxName) return maxName;
+        }
+        if (userProfile?.name) return userProfile.name;
+        return 'Пользователь';
+    }, [maxUser, userProfile?.name]);
 
-    const userEmail = userProfile?.email ||
-        (maxUser?.username ? maxUser.username : 'user@example.com');
+    const userEmail = useMemo(() => {
+        // Сначала MAX username (обычно это username в Telegram)
+        if (maxUser?.username) return maxUser.username;
 
-    const userAvatar = userProfile?.avatar ||
-        webAppInstance?.initDataUnsafe?.user?.photo_url || '';
+        // Потом настройки
+        if (userProfile?.email) return userProfile.email;
+
+        // Дефолт
+        return 'user@example.com';
+    }, [maxUser?.username, userProfile?.email]);
+
+    const userAvatar = useMemo(() => {
+        // Сначала фото из MAX
+        if (webAppInstance?.initDataUnsafe?.user?.photo_url) {
+            return webAppInstance.initDataUnsafe.user.photo_url;
+        }
+
+        // Потом аватар из настроек
+        if (userProfile?.avatar) return userProfile.avatar;
+
+        // Пустая строка - будет показана иконка
+        return '';
+    }, [webAppInstance?.initDataUnsafe?.user?.photo_url, userProfile?.avatar]);
 
     // MAX данные (только для информации, не переопределяются настройками)
     const isBot = maxUser?.is_bot || false;
@@ -91,18 +114,13 @@ export default function ProfilePage() {
     const loadProfileData = async (userId: number | undefined) => {
         try {
             setLoading(true);
-            console.log('🔄 [ProfilePage] Loading profile data for user_id:', userId);
-
             if (!userId) {
-                console.log('⚠️ [ProfilePage] User ID не найден, данные не будут загружены');
                 setCurrentTasks([]);
                 setCompletedTasks([]);
                 setDailyStats([]);
                 setTotalCompleted(0);
                 return;
             }
-
-            console.log('📊 [ProfilePage] Fetching tasks with filter: user_id.eq.' + userId + ' OR user_id.is.null');
 
             // Загрузка текущих задач для конкретного пользователя
             const { data: tasksData, error: tasksError } = await supabase
@@ -112,10 +130,8 @@ export default function ProfilePage() {
                 .order('created_at', { ascending: false });
 
             if (tasksError) {
-                console.error('❌ [ProfilePage] Error loading tasks:', tasksError);
                 setCurrentTasks([]);
             } else {
-                console.log(`✅ [ProfilePage] Loaded ${tasksData?.length || 0} tasks:`, tasksData);
                 setCurrentTasks(tasksData || []);
             }
 
@@ -127,10 +143,8 @@ export default function ProfilePage() {
                 .order('completed_at', { ascending: false });
 
             if (completedError) {
-                console.warn('⚠️ [ProfilePage] Таблица completed_tasks не найдена:', completedError);
                 setCompletedTasks([]);
             } else {
-                console.log(`✅ [ProfilePage] Loaded ${completedData?.length || 0} completed tasks:`, completedData);
                 setCompletedTasks(completedData || []);
                 setTotalCompleted((completedData || []).length);
             }
@@ -144,15 +158,13 @@ export default function ProfilePage() {
                 .limit(7);
 
             if (statsError) {
-                console.warn('⚠️ [ProfilePage] Таблица daily_stats не найдена:', statsError);
                 setDailyStats([]);
             } else {
-                console.log(`✅ [ProfilePage] Loaded ${statsData?.length || 0} daily stats:`, statsData);
                 setDailyStats(statsData || []);
             }
 
         } catch (error) {
-            console.error('❌ [ProfilePage] Ошибка загрузки данных профиля:', error);
+            // handle or ignore
         } finally {
             setLoading(false);
         }
@@ -160,7 +172,6 @@ export default function ProfilePage() {
 
     // Загрузка данных при монтировании или изменении user_id
     useEffect(() => {
-        console.log('🔍 [ProfilePage] useEffect triggered, maxUser:', maxUser);
         loadProfileData(maxUser?.user_id);
     }, [maxUser?.user_id]);
 
@@ -197,21 +208,15 @@ export default function ProfilePage() {
     // Расчет статистики для дня
     const todayStats = useMemo(() => {
         const today = new Date().toISOString().split('T')[0];
-        console.log('📊 [ProfilePage] Calculating todayStats for date:', today);
-        console.log('📊 [ProfilePage] dailyStats:', dailyStats);
-        console.log('📊 [ProfilePage] completedTasks:', completedTasks.length);
 
         const todayStat = dailyStats.find(s => s.date === today);
-        console.log('📊 [ProfilePage] todayStat found:', todayStat);
 
         if (todayStat) {
-            const result = {
+            return {
                 completed: todayStat.tasks_completed,
                 goal: todayStat.goal,
                 percentage: Math.round((todayStat.tasks_completed / todayStat.goal) * 100)
             };
-            console.log('✅ [ProfilePage] todayStats from daily_stats:', result);
-            return result;
         }
 
         const todayCompleted = completedTasks.filter(t => {
@@ -219,20 +224,17 @@ export default function ProfilePage() {
             return completedDate === today;
         }).length;
 
-        const result = {
+        return {
             completed: todayCompleted,
             goal: 5,
             percentage: Math.round((todayCompleted / 5) * 100)
         };
-        console.log('✅ [ProfilePage] todayStats from completedTasks:', result);
-        return result;
     }, [dailyStats, completedTasks]);
 
     // Расчет статистики для недели
     const weekStats = useMemo(() => {
         const oneWeekAgo = new Date();
         oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-        console.log('📊 [ProfilePage] Calculating weekStats from:', oneWeekAgo);
 
         const weekCompleted = completedTasks.filter(t => {
             const completedDate = new Date(t.completed_at);
@@ -241,13 +243,11 @@ export default function ProfilePage() {
 
         const weekGoal = 25;
 
-        const result = {
+        return {
             completed: weekCompleted,
             goal: weekGoal,
             percentage: Math.round((weekCompleted / weekGoal) * 100)
         };
-        console.log('✅ [ProfilePage] weekStats:', result);
-        return result;
     }, [completedTasks]);
 
     // Уровень (простая формула на основе общего числа задач)
@@ -388,22 +388,15 @@ export default function ProfilePage() {
                                 MAX: @{maxUsername}
                             </p>
                         )}
-                        {maxUser && (
-                            <p className={styles.userId}>ID: {maxUser.user_id}</p>
-                        )}
                         {lastActivity && (
                             <p className={styles.lastActivity}>
                                 Последняя активность: {lastActivity.toLocaleString('ru-RU')}
                             </p>
                         )}
-                        {webAppInstance && (
-                            <p className={styles.webAppInfo}>
-                                📱 {webAppInstance.platform} • v{webAppInstance.version} • {webAppInstance.colorScheme === 'dark' ? '🌙' : '☀️'}
-                            </p>
-                        )}
+
                         {maxUserError && (
                             <p className={styles.errorMessage}>
-                                ⚠️ {maxUserError.message}
+                                {maxUserError.message}
                             </p>
                         )}
                         <div className={styles.totalCompleted}>

@@ -44,7 +44,7 @@ export default function PomodoroTimer({
         <div className={styles.mascotImage}>
           {mode === 'break' && (
             <Image
-              src="/images/pomodoro/catBreak.jpg"
+              src="/images/pomodoro/catBreak.gif"
               alt="Котик на перерыве"
               width={230}
               height={230}
