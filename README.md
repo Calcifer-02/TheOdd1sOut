@@ -27,8 +27,6 @@
 
 ### Предварительные требования
 - Node.js 18+ и npm 9+
-- Аккаунт в Supabase
-- API ключ Perplexity AI
 - Доступ к MAX API
 
 ### 1. Клонирование репозитория
@@ -109,10 +107,6 @@ npm run dev
 git clone https://github.com/Calcifer-02/TheOdd1sOut.git
 cd TheOdd1sOut
 
-# Копирование примера переменных окружения
-cp .env.example .env.local
-# Отредактируйте .env.local с вашими значениями
-
 # Запуск через Docker Compose
 docker-compose up -d
 
@@ -120,4 +114,5 @@ docker-compose up -d
 После запуска откройте браузер и перейдите по адресу:
 
 http://localhost:3000 - основное приложение
+
 
