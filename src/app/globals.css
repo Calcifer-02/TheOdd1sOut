@@ -2,7 +2,7 @@
     --vk-blue: #0077ff;
     --vk-light-blue: #4986cc;
 
-    /* Светлая тема (только) */
+    /* Светлая тема (по умолчанию) */
     --background: #ffffff;
     --background-secondary: #f9fafb;
     --surface: #ffffff;
@@ -20,7 +20,45 @@
     --error: #ef4444;
 }
 
-/* УДАЛЕНО: Все медиа-запросы и правила для темной темы */
+/* Темная тема */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background: #000000;
+        --background-secondary: #1a1a1a;
+        --surface: #1a1a1a;
+        --text-primary: #ffffff;
+        --text-secondary: #9ca3af;
+        --border: #2d2d2d;
+        --card-background: #1a1a1a;
+        --hover: #2d2d2d;
+        --input-bg: #1a1a1a;
+
+        /* Цвета */
+        --primary: #0077ff;
+        --primary-light: #1a3a5c;
+        --success: #10b981;
+        --error: #ef4444;
+    }
+}
+
+/* Принудительная темная тема для тестирования */
+[data-theme="dark"] {
+    --background: #000000;
+    --background-secondary: #1a1a1a;
+    --surface: #1a1a1a;
+    --text-primary: #ffffff;
+    --text-secondary: #9ca3af;
+    --border: #2d2d2d;
+    --card-background: #1a1a1a;
+    --hover: #2d2d2d;
+    --input-bg: #1a1a1a;
+
+    /* Цвета */
+    --primary: #0077ff;
+    --primary-light: #1a3a5c;
+    --success: #10b981;
+    --error: #ef4444;
+}
 
 * {
     box-sizing: border-box;
@@ -51,15 +89,19 @@ main {
     overflow-x: hidden;
     height: 100%;
     width: 100%;
+
 }
+
+[class*="layout_main"] {
+    background-color: white !important;
+}
+
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
     Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: var(--background) !important;
-    color: var(--text-primary) !important;
 }
 
 a {
@@ -79,18 +121,4 @@ a {
     flex: 1;
     min-width: 0;
     max-width: 100%;
-}
-
-/* Принудительно устанавливаем светлую тему для всех элементов */
-* {
-    background-color: var(--background) !important;
-    color: var(--text-primary) !important;
-}
-
-/* Дополнительная защита от темной темы */
-[data-theme],
-[class*="dark"],
-[class*="Dark"] {
-    background-color: var(--background) !important;
-    color: var(--text-primary) !important;
 }
