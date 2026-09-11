@@ -1,0 +1,163 @@
+{
+  "name": "<Имя проекта>",
+  "version": "0.1.0",
+  "methodology": {
+    "description": "Файл методологии проекта. Управляется trip."
+  },
+  "policies": {
+    "generic": {
+      "title": "Обычные изменения",
+      "description": "Работа над проектом: менять можно всё, кроме методологии — файла trip.json и содержимого папки trip/.",
+      "emblem": "shield",
+      "lockMode": "denylist",
+      "rules": {
+        "add": {
+          "deny": [
+            {
+              "type": "wildcard",
+              "pattern": "trip.json"
+            },
+            {
+              "type": "wildcard",
+              "pattern": "trip/**"
+            }
+          ]
+        },
+        "modify": {
+          "deny": [
+            {
+              "type": "wildcard",
+              "pattern": "trip.json"
+            },
+            {
+              "type": "wildcard",
+              "pattern": "trip/**"
+            }
+          ]
+        },
+        "delete": {
+          "deny": [
+            {
+              "type": "wildcard",
+              "pattern": "trip.json"
+            },
+            {
+              "type": "wildcard",
+              "pattern": "trip/**"
+            }
+          ]
+        },
+        "rename": {
+          "deny": [
+            {
+              "type": "wildcard",
+              "pattern": "trip.json"
+            },
+            {
+              "type": "wildcard",
+              "pattern": "trip/**"
+            }
+          ]
+        }
+      },
+      "lockZones": [
+        {
+          "type": "wildcard",
+          "pattern": "trip.json"
+        },
+        {
+          "type": "wildcard",
+          "pattern": "trip/**"
+        }
+      ],
+      "message": {
+        "validator": "msg.js"
+      },
+      "branch": {
+        "validator": "branch.js"
+      },
+      "changelog": {
+        "path": "CHANGELOG.md",
+        "baseRef": "main",
+        "validator": "changelog.js"
+      }
+    },
+    "policies-only": {
+      "title": "Только методология",
+      "description": "Правим методологию: разрешено менять лишь файл trip.json и содержимое папки trip/. Остальные файлы заблокированы на запись.",
+      "emblem": "shield-check",
+      "lockMode": "allowlist",
+      "rules": {
+        "add": {
+          "allow": [
+            {
+              "type": "wildcard",
+              "pattern": "trip.json"
+            },
+            {
+              "type": "wildcard",
+              "pattern": "trip/**"
+            }
+          ]
+        },
+        "modify": {
+          "allow": [
+            {
+              "type": "wildcard",
+              "pattern": "trip.json"
+            },
+            {
+              "type": "wildcard",
+              "pattern": "trip/**"
+            }
+          ]
+        },
+        "delete": {
+          "allow": [
+            {
+              "type": "wildcard",
+              "pattern": "trip.json"
+            },
+            {
+              "type": "wildcard",
+              "pattern": "trip/**"
+            }
+          ]
+        },
+        "rename": {
+          "allow": [
+            {
+              "type": "wildcard",
+              "pattern": "trip.json"
+            },
+            {
+              "type": "wildcard",
+              "pattern": "trip/**"
+            }
+          ]
+        }
+      },
+      "lockZones": [
+        {
+          "type": "wildcard",
+          "pattern": "trip.json"
+        },
+        {
+          "type": "wildcard",
+          "pattern": "trip/**"
+        }
+      ],
+      "message": {
+        "validator": "msg.js"
+      },
+      "branch": {
+        "validator": "branch.js"
+      },
+      "changelog": {
+        "path": "CHANGELOG.md",
+        "baseRef": "main",
+        "validator": "changelog.js"
+      }
+    }
+  }
+}
