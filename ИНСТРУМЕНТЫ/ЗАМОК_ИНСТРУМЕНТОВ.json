@@ -19,7 +19,7 @@
       "purpose": "Единый вход и git-хуки: тип и направление коммита, ссылка на требование, журнал изменений, имя ветки; реестр средств .trip/tools.",
       "requirement": "обязательное",
       "needed_from_gate": 0,
-      "version": "0.5.2",
+      "version": "0.5.3",
       "source": {
         "kind": "generic-package",
         "registry": "internal",
@@ -34,9 +34,9 @@
       "release_state": "выпускается: конвейер по метке v<версия>, публикация ручная",
       "already_installed_check": "trip --version",
       "sha256": {
-        "win-x64": "761e7112bdbae9655e5fd3361a3c1a816e53bd81d998157e4eeb4ab657a72191",
-        "linux-x64": "26e299a894475891b62b91bb221f8218000315771c8f0f26e2ede2cf39ab79fb",
-        "darwin-arm64": "a4048e6d19eed616ff2caf9db6a30dfa12fcdbc3213b141786c08a2e07260643"
+        "win-x64": "3c676686c0ba561f60ae487ec8d6e0f65772468b5f111dd6c518fb19812693ac",
+        "linux-x64": "f8f01b6b8fde1ade513a702b2a054cd2bc82fa831a65c8dae1d93166ff023b77",
+        "darwin-arm64": "c00bcf1d42ab83ef55f673800cb60863f60b53481fabf53d48ff1c488497d86f"
       },
       "gate": "коммиты, ветки, журнал изменений"
     },
@@ -119,8 +119,8 @@
       "id": "trip-cast",
       "label": "КАСТА",
       "purpose": "Контроль архитектурных свойств типизированных артефактов: проверка объявленных свойств кода.",
-      "requirement": "необязательное",
-      "needed_from_gate": 3,
+      "requirement": "рекомендуемое",
+      "needed_from_gate": 2,
       "version": "0.1.4",
       "source": {
         "kind": "generic-package",
@@ -142,7 +142,7 @@
         "darwin-arm64": "62f02f1b212ddad6b72c108e6d9753d4b4bd10600c7387510be3bb20c6163f0d",
         "darwin-x64": "a4fde71e363bc760b7b3348e40e6552a8427c8dc9e226c0b1f3aadf0d47ad8f2"
       },
-      "gate": "архитектурные свойства кода"
+      "gate": "проверка формы кода в конвейере: роли мест и границы областей"
     },
     {
       "id": "trip-trace-service",

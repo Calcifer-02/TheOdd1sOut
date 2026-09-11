@@ -1,0 +1,86 @@
+{
+  "schema": "trip.cast-agreement/v3",
+  "project": "<Имя проекта>",
+  "decisionRecord": "docs/ПАКЕТ_АНАЛИТИКИ/архитектурные_решения/ЗАПИСЬ_АРХИТЕКТУРНОГО_РЕШЕНИЯ_ADR-0001.md",
+  "scope": {
+    "include": [
+      "src/**"
+    ],
+    "exclude": [
+      "**/bin/**",
+      "**/obj/**",
+      "**/node_modules/**",
+      "**/dist/**"
+    ]
+  },
+  "languages": [
+    "typescript"
+  ],
+  "contexts": [
+    {
+      "id": "<имя-области>",
+      "owner": "<роль или человек, отвечающий за модель области>",
+      "decisionRecord": "docs/ПАКЕТ_АНАЛИТИКИ/архитектурные_решения/ЗАПИСЬ_АРХИТЕКТУРНОГО_РЕШЕНИЯ_ADR-0001.md",
+      "openZones": [
+        "<имя-области>-ports"
+      ]
+    }
+  ],
+  "zones": [
+    {
+      "id": "<имя-области>-contracts",
+      "role": "контракт данных",
+      "paths": [
+        "src/<имя-области>/contracts/**"
+      ],
+      "context": "<имя-области>"
+    },
+    {
+      "id": "<имя-области>-domain",
+      "role": "домен",
+      "paths": [
+        "src/<имя-области>/domain/**"
+      ],
+      "context": "<имя-области>"
+    },
+    {
+      "id": "<имя-области>-application",
+      "role": "приложение",
+      "paths": [
+        "src/<имя-области>/application/**"
+      ],
+      "context": "<имя-области>"
+    },
+    {
+      "id": "<имя-области>-ports",
+      "role": "порты",
+      "paths": [
+        "src/<имя-области>/ports/**"
+      ],
+      "context": "<имя-области>"
+    },
+    {
+      "id": "<имя-области>-adapters",
+      "role": "адаптеры",
+      "paths": [
+        "src/<имя-области>/adapters/**"
+      ],
+      "context": "<имя-области>"
+    },
+    {
+      "id": "entry",
+      "role": "вход",
+      "paths": [
+        "src/app/**"
+      ]
+    },
+    {
+      "id": "checks",
+      "role": "проверки",
+      "paths": [
+        "tests/**"
+      ]
+    }
+  ],
+  "deviations": []
+}

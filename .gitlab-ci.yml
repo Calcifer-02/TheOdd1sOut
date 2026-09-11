@@ -27,4 +27,5 @@ include:
   - local: .gitlab/ci/скелет.yml
   - local: .gitlab/ci/навыки.yml
   - local: .gitlab/ci/средства.yml
+  - local: .gitlab/ci/форма.yml
   - local: .gitlab/ci/документация.yml
