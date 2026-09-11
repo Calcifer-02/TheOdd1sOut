@@ -1,0 +1,321 @@
+{
+  "schema_version": 2,
+  "description": "Замок средств слоя B: что нужно проекту, откуда берётся и какой версии. Файл описывает получение готовых выпусков, а не копирование исходников инструментов в проект. Единая форма поставки: generic-пакет в реестре репозитория средства, закреплённая версия, отпечаток SHA-256 на каждый файл.",
+  "registries": {
+    "internal": {
+      "label": "Внутренний GitLab",
+      "base_url": "https://git-internal.imbalanced.tech",
+      "token_env": "TRIP_TOOLS_TOKEN",
+      "token_kind_env": "TRIP_TOOLS_TOKEN_KIND",
+      "token_kind_default": "deploy",
+      "note": "Токен развёртывания создаёт администратор один раз на группу TRIP: единственное право read_package_registry. Личные учётные записи участникам не нужны."
+    }
+  },
+  "install_root": ".trip/tools",
+  "tools": [
+    {
+      "id": "trip-cli",
+      "label": "trip",
+      "purpose": "Единый вход и git-хуки: тип и направление коммита, ссылка на требование, журнал изменений, имя ветки; реестр средств .trip/tools.",
+      "requirement": "обязательное",
+      "needed_from_gate": 0,
+      "version": "0.5.2",
+      "source": {
+        "kind": "generic-package",
+        "registry": "internal",
+        "project": "TRIP/tooling/trip",
+        "package": "trip-cli",
+        "files": {
+          "win-x64": "trip-cli-win-x64.tar.gz",
+          "linux-x64": "trip-cli-linux-x64.tar.gz",
+          "darwin-arm64": "trip-cli-darwin-arm64.tar.gz"
+        }
+      },
+      "release_state": "выпускается: конвейер по метке v<версия>, публикация ручная",
+      "already_installed_check": "trip --version",
+      "sha256": {
+        "win-x64": "761e7112bdbae9655e5fd3361a3c1a816e53bd81d998157e4eeb4ab657a72191",
+        "linux-x64": "26e299a894475891b62b91bb221f8218000315771c8f0f26e2ede2cf39ab79fb",
+        "darwin-arm64": "a4048e6d19eed616ff2caf9db6a30dfa12fcdbc3213b141786c08a2e07260643"
+      },
+      "gate": "коммиты, ветки, журнал изменений"
+    },
+    {
+      "id": "trip-doc-lint",
+      "label": "Линтер документации TRIP",
+      "purpose": "Гейт документации: вид артефакта, состав разделов, ссылки, форма записи.",
+      "requirement": "обязательное",
+      "needed_from_gate": 0,
+      "version": "0.1.10",
+      "source": {
+        "kind": "generic-package",
+        "registry": "internal",
+        "project": "TRIP/tooling/trip-doc-lint",
+        "package": "trip-doc-lint",
+        "files": {
+          "darwin-arm64": "trip-doc-lint-darwin-arm64.tar.gz",
+          "darwin-x64": "trip-doc-lint-darwin-x64.tar.gz",
+          "linux-x64": "trip-doc-lint-linux-x64.tar.gz",
+          "win-x64": "trip-doc-lint-win-x64.tar.gz"
+        }
+      },
+      "release_state": "выпускается: конвейер по метке release/<версия>, публикация ручная",
+      "already_installed_check": "trip-doc-lint --version",
+      "sha256": {
+        "darwin-arm64": "b44b01d6d81be04d643c714643b416b8062b33a0bbdd2b91460c9bbb652b25ed",
+        "darwin-x64": "448c9426df57ed9f0c8bdfbe0c0f1b658b6547d38060460a282bcd528a1e7ee6",
+        "linux-x64": "e6c1571999ffedb1ef0dd07d4a9dbcadcc2f4d9187efefcc0351eee45f828e72",
+        "win-x64": "a654604b7fc83f1b3818f2ed6a868a7c10ff2cca44eb6a89e90d6d86259e2ba8"
+      },
+      "gate": "документация проекта"
+    },
+    {
+      "id": "mcp-project-files",
+      "label": "MCP «Проектные файлы»",
+      "purpose": "Ограниченный файловый контур для агента: зоны, аудит структуры и ссылок, проверка имени ветки и направления коммита.",
+      "requirement": "рекомендуемое",
+      "needed_from_gate": 0,
+      "version": "<уточнить>",
+      "source": {
+        "kind": "generic-package",
+        "registry": "internal",
+        "project": "TRIP/doc",
+        "package": "trip-mcp",
+        "files": {
+          "any": "trip-mcp-project-files.tar.gz"
+        }
+      },
+      "release_state": "нет: живёт в репозитории методологии (Tooling/MCP_СЕРВЕРЫ/project-files), выпуск в реестр пакетов TRIP/doc не настроен",
+      "already_installed_check": "",
+      "sha256": {
+        "any": "<заполняется владельцем средства при выпуске>"
+      },
+      "gate": "структура репозитория, ссылки, ветки"
+    },
+    {
+      "id": "mcp-team-tester",
+      "label": "MCP «Командный тестировщик»",
+      "purpose": "Проверки, написанные по спецификации, а не по реализации: агент-проверяющий не видит исходный код.",
+      "requirement": "рекомендуемое",
+      "needed_from_gate": 3,
+      "version": "<уточнить>",
+      "source": {
+        "kind": "generic-package",
+        "registry": "internal",
+        "project": "TRIP/doc",
+        "package": "trip-mcp",
+        "files": {
+          "any": "trip-mcp-team-tester.tar.gz"
+        }
+      },
+      "release_state": "нет: живёт в репозитории методологии (Tooling/MCP_СЕРВЕРЫ/team-tester), выпуск в реестр пакетов TRIP/doc не настроен",
+      "already_installed_check": "",
+      "sha256": {
+        "any": "<заполняется владельцем средства при выпуске>"
+      },
+      "gate": "трассируемость проверок"
+    },
+    {
+      "id": "trip-cast",
+      "label": "КАСТА",
+      "purpose": "Контроль архитектурных свойств типизированных артефактов: проверка объявленных свойств кода.",
+      "requirement": "необязательное",
+      "needed_from_gate": 3,
+      "version": "0.1.4",
+      "source": {
+        "kind": "generic-package",
+        "registry": "internal",
+        "project": "TRIP/tooling/trip-cast",
+        "package": "trip-cast",
+        "files": {
+          "win-x64": "trip-cast-win-x64.tar.gz",
+          "linux-x64": "trip-cast-linux-x64.tar.gz",
+          "darwin-arm64": "trip-cast-darwin-arm64.tar.gz",
+          "darwin-x64": "trip-cast-darwin-x64.tar.gz"
+        }
+      },
+      "release_state": "выпускается: конвейер по метке v<версия>, публикация ручная",
+      "already_installed_check": "trip-cast --version",
+      "sha256": {
+        "win-x64": "06fcb743257d461ca4fd27a6b82d2e53a17d374938443788487b3ab5cc8cbc0a",
+        "linux-x64": "5c856eab113dadc43a29882d9c762c9c40f9f02997c0a4ddc8d6e77c715d2325",
+        "darwin-arm64": "62f02f1b212ddad6b72c108e6d9753d4b4bd10600c7387510be3bb20c6163f0d",
+        "darwin-x64": "a4fde71e363bc760b7b3348e40e6552a8427c8dc9e226c0b1f3aadf0d47ad8f2"
+      },
+      "gate": "архитектурные свойства кода"
+    },
+    {
+      "id": "trip-trace-service",
+      "label": "TRIP Trace Service",
+      "purpose": "Граф трассируемости требование-код-проверка по разметке @req, @ac, @tc.",
+      "requirement": "необязательное",
+      "needed_from_gate": 3,
+      "version": "0.1.2",
+      "source": {
+        "kind": "generic-package",
+        "registry": "internal",
+        "project": "TRIP/tooling/trip-trace-service",
+        "package": "trip-trace-service",
+        "files": {
+          "darwin-arm64": "trip-trace-service-darwin-arm64.tar.gz",
+          "darwin-x64": "trip-trace-service-darwin-x64.tar.gz",
+          "linux-x64": "trip-trace-service-linux-x64.tar.gz",
+          "win-x64": "trip-trace-service-win-x64.tar.gz"
+        }
+      },
+      "release_state": "выпускается: конвейер по метке v<версия>, публикация ручная",
+      "already_installed_check": "trip-trace --version",
+      "sha256": {
+        "darwin-arm64": "e1d67504b999d6ffbded4fc4f7a0e1deb14d3dbbf137901cf6427155614e07b7",
+        "darwin-x64": "92ef69530d3f33231a4187d3e620903ee9a885c706393ca92e2bd106bd16a0ac",
+        "linux-x64": "80e4ca6782e1473531a860898a0dffba359121ab298a440b43f2c78358ed8597",
+        "win-x64": "d5f89d6dd4738e1b924d1c21cbf9b7fc3b841e0af6aac91086db18029f676366"
+      },
+      "gate": "трассируемость требований"
+    },
+    {
+      "id": "trip-customs",
+      "label": "TRIP File Level Tooling",
+      "purpose": "Проверка изменений на уровне файла перед коммитом: политика и вызов проверок.",
+      "requirement": "необязательное",
+      "needed_from_gate": 3,
+      "version": "0.4.2",
+      "source": {
+        "kind": "generic-package",
+        "registry": "internal",
+        "project": "TRIP/tooling/trip-customs",
+        "package": "trip-customs",
+        "files": {
+          "darwin-arm64": "trip-customs-darwin-arm64.tar.gz",
+          "darwin-x64": "trip-customs-darwin-x64.tar.gz",
+          "linux-x64": "trip-customs-linux-x64.tar.gz",
+          "win-x64": "trip-customs-win-x64.tar.gz"
+        }
+      },
+      "release_state": "выпускается: конвейер по метке v<версия>, публикация ручная",
+      "already_installed_check": "",
+      "sha256": {
+        "darwin-arm64": "e48e40f2f52338af850c79a5c4bf04e5f8b0d8bfd8d25c2e25f0724363cabce7",
+        "darwin-x64": "1f91ee9fd0ae896406d7a5e51eabec191b07810b38c68cf199f637c8a2ea79ca",
+        "linux-x64": "21e9fb598d0d2b48280dae9df9b4f1eef010bb02396244751ae4789cc5630ea7",
+        "win-x64": "e8d9ce0c9532897bb3a981e340cabd2c069dcba93ad8f493c7d6f05e3c964eb1"
+      },
+      "gate": "изменения на уровне файла"
+    },
+    {
+      "id": "trip-shiva-connector",
+      "label": "Коннектор TRIP и трекера SHIVA",
+      "purpose": "Отражает реестры проекта в задачах корпоративного трекера: отчётность без второй ручной записи решений.",
+      "requirement": "необязательное",
+      "needed_from_gate": 1,
+      "version": "0.1.0",
+      "source": {
+        "kind": "generic-package",
+        "registry": "internal",
+        "project": "TRIP/tooling/trip-shiva-connector",
+        "package": "trip-shiva-connector",
+        "files": {
+          "any": "trip-shiva-connector-any.tar.gz"
+        }
+      },
+      "release_state": "выпускается: конвейер по метке v<версия>, публикация ручная",
+      "already_installed_check": "",
+      "sha256": {
+        "any": "1a56e6c687b6ecd895857037bb7c65c68b921e5248849496abb611234fb964e5"
+      },
+      "gate": "отчётность в трекере"
+    },
+    {
+      "id": "trip-bug-loop",
+      "label": "TRIP Bug Loop",
+      "purpose": "Кнопка отчёта о дефекте в продукте и связывание дефекта с требованием, критерием и проверкой. Служба поднимается у ведущего.",
+      "requirement": "необязательное",
+      "needed_from_gate": 4,
+      "version": "1.0.0",
+      "source": {
+        "kind": "generic-package",
+        "registry": "internal",
+        "project": "TRIP/tooling/trip-bug-loop",
+        "package": "trip-bug-loop",
+        "files": {
+          "any": "trip-bug-loop-bundle.tar.gz"
+        }
+      },
+      "release_state": "выпускается: бандл развёртывания по метке v<версия>, публикация ручная",
+      "already_installed_check": "",
+      "sha256": {
+        "any": "99fc56498bf801b8251a2b66af2d474c636e80de135f462cf534c66e4e92e335"
+      },
+      "gate": "дефекты"
+    },
+    {
+      "id": "trip-backend-inspector",
+      "label": "TRIP Backend Inspector",
+      "purpose": "Самостоятельная проверка API и backend-контрактов с неизменяемыми свидетельствами; Human Workbench в составе.",
+      "requirement": "необязательное",
+      "needed_from_gate": 4,
+      "version": "0.6.0",
+      "source": {
+        "kind": "generic-package",
+        "registry": "internal",
+        "project": "TRIP/tooling/backend-inspector",
+        "package": "trip-backend-inspector",
+        "files": {
+          "any": "trip-backend-inspector-bundle.tar.gz"
+        }
+      },
+      "release_state": "выпускается: бандл развёртывания по метке v<версия>, публикация ручная",
+      "already_installed_check": "",
+      "sha256": {
+        "any": "462743f67fb7a26d311d53b1a4b0901912e02b327f99ed7c031c0a972d5c67ed"
+      },
+      "gate": "инспекция программного стыка"
+    },
+    {
+      "id": "trip-frontend-inspector",
+      "label": "TRIP Frontend Inspector",
+      "purpose": "Самостоятельная детерминированная инспекция UI с неизменяемыми прогонами; Human Workbench в составе.",
+      "requirement": "необязательное",
+      "needed_from_gate": 4,
+      "version": "0.1.0",
+      "source": {
+        "kind": "generic-package",
+        "registry": "internal",
+        "project": "TRIP/tooling/frontend-inspector",
+        "package": "trip-frontend-inspector",
+        "files": {
+          "any": "trip-frontend-inspector-bundle.tar.gz"
+        }
+      },
+      "release_state": "выпускается: бандл развёртывания по метке v<версия>, публикация ручная",
+      "already_installed_check": "",
+      "sha256": {
+        "any": "6ce1d1d6ddb68f81d8c0b9b41ec958385f6f65b2be250f259aeae6d51e5aa8ca"
+      },
+      "gate": "инспекция интерфейса"
+    },
+    {
+      "id": "tripwire",
+      "label": "TRIPWIRE",
+      "purpose": "Обвязка безопасности: лестница вердиктов находок (candidate → verified-static → proven), детерминированный вердикт на хосте, неизменяемое свидетельство; питает Gate 6 (безопасность) и класс долга К13.",
+      "requirement": "необязательное",
+      "needed_from_gate": 6,
+      "version": "0.1.0",
+      "source": {
+        "kind": "generic-package",
+        "registry": "internal",
+        "project": "TRIP/tooling/tripwire",
+        "package": "tripwire",
+        "files": {
+          "any": "tripwire-any.tar.gz"
+        }
+      },
+      "release_state": "выпускается: bytecode-бандл по метке v<версия>, публикация ручная",
+      "already_installed_check": "",
+      "sha256": {
+        "any": "ddfb519b476aab1128568a12c15503636c3380329ab2d6e3660f9b29743f314a"
+      },
+      "gate": "безопасность"
+    }
+  ]
+}

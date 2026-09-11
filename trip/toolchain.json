@@ -1,0 +1,8 @@
+{
+  "trip": "0.5.1",
+  "assets": {
+    "msg.js": "sha256:7defb204e73af46b41fdf2aa87081588b3dada453a47c1eea57dd133f5a98bce",
+    "branch.js": "sha256:dbb72d6cfd7a5867f30da910009adebdf31b79755142be726b07594782e55a4b",
+    "changelog.js": "sha256:425a198eb92dd63e9ad86005d9bfcb96c4f94da939d532a0a45f5dd088d8a5a8"
+  }
+}
