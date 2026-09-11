@@ -1,0 +1,78 @@
+# Гейт документации проекта.
+#
+# Проверяет рабочие документы в docs/ линтером TRIP-артефактов: вид артефакта,
+# состав разделов, ссылки, форма записи. Образцы видов берутся из выданной
+# порции методологии, поэтому проверка не зависит от внешнего корпуса.
+# Настройка прогона — .trip-doc-lint.toml в корне репозитория.
+#
+# Средство берётся тремя путями, в порядке предпочтения:
+#   1) готовый выпуск из реестра пакетов — нужен TRIP_TOOLS_TOKEN;
+#   2) сборка из исходников — нужны TRIP_DOC_LINT_REPO и TRIP_DOC_LINT_REF;
+#   3) ни того, ни другого — задание сообщает, что гейт не настроен.
+#
+# Решение Advise (код 2) означает подсказки без блокеров: долг виден в журнале,
+# задание не роняется. Роняют задание Block (код 3) и ошибки запуска.
+
+документация:выпуск:
+  stage: проверка
+  image: $NODE_IMAGE
+  script:
+    - node ИНСТРУМЕНТЫ/скрипты/инструменты.mjs установить trip-doc-lint
+    - LINTER=$(find .trip/tools/trip-doc-lint -type f -name 'trip-doc-lint*' | head -n 1)
+    - test -n "$LINTER" || { echo "В выпуске не найден исполняемый файл линтера"; exit 1; }
+    - chmod +x "$LINTER"
+    - |
+      set +e
+      "$LINTER" check .
+      code=$?
+      set -e
+      if [ "$code" != "0" ] && [ "$code" != "2" ]; then exit "$code"; fi
+  rules:
+    - if: '$TRIP_TOOLS_TOKEN && ($CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH)'
+
+документация:исходники:
+  stage: проверка
+  image: rust:1.98.0-bookworm
+  variables:
+    CARGO_HOME: "$CI_PROJECT_DIR/.cache/cargo"
+    CARGO_TARGET_DIR: "$CI_PROJECT_DIR/.cache/target"
+  cache:
+    key: trip-doc-lint-build
+    paths:
+      - .cache/
+  script:
+    - git clone --depth 1 --branch "$TRIP_DOC_LINT_REF" "$TRIP_DOC_LINT_REPO" /tmp/trip-doc-lint
+    - cargo build --release --manifest-path /tmp/trip-doc-lint/Cargo.toml
+    - |
+      set +e
+      /tmp/trip-doc-lint/target/release/trip-doc-lint check .
+      code=$?
+      set -e
+      if [ "$code" != "0" ] && [ "$code" != "2" ]; then exit "$code"; fi
+  rules:
+    - if: '$TRIP_TOOLS_TOKEN'
+      when: never
+    - if: '$TRIP_DOC_LINT_REPO && ($CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH)'
+
+документация:не настроен:
+  stage: проверка
+  image: $NODE_IMAGE
+  allow_failure: true
+  script:
+    - 'echo "Гейт документации не настроен: нет ни TRIP_TOOLS_TOKEN, ни TRIP_DOC_LINT_REPO."'
+    - |
+      echo "Ветка: $CI_COMMIT_REF_NAME; защищена: ${CI_COMMIT_REF_PROTECTED:-false}"
+      if [ "${CI_COMMIT_REF_PROTECTED:-false}" != "true" ]; then
+        echo "Ветка не защищена, поэтому переменная с флагом Protected сюда не приходит по построению."
+        echo "Если переменная задана — снимите у неё Protected либо защитите ветку."
+      else
+        echo "Ветка защищена, значит дело не в Protected. Проверьте область видимости переменной"
+        echo "(Environments должно быть *) и уровень: группа проектов или сам проект."
+      fi
+      echo "Проверить, что задание её видит: пайплайн должен быть запущен ПОСЛЕ сохранения переменной."
+    - 'echo "Порядок настройки — у ведущего (ДЛЯ_АДМИНИСТРАТОРА/02_ДОСТУП_К_ИНСТРУМЕНТАМ.md в репозитории шаблона)."'
+    - exit 1
+  rules:
+    - if: '$TRIP_TOOLS_TOKEN || $TRIP_DOC_LINT_REPO'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'

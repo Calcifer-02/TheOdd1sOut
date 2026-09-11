@@ -1,0 +1,23 @@
+# Нормализация переводов строк: в репозитории всегда LF, независимо от ОS и autocrlf
+* text=auto eol=lf
+
+# Текстовые форматы проекта — явно LF
+*.md   text eol=lf
+*.json text eol=lf
+*.ts   text eol=lf
+*.vue  text eol=lf
+*.js   text eol=lf
+*.css  text eol=lf
+*.html text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+
+# Бинарные форматы — без нормализации и diff как текст
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.pdf  binary
+*.ico  binary
+*.zip  binary
+*.zip.part* binary
