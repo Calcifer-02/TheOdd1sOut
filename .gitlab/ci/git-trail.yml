@@ -54,7 +54,7 @@
     # git, а не автор.
     #
     # `--messages` появился в trip-cli 0.5.2 (R-092); версия закреплена замком
-    # средств, поэтому гейт и замок поднимаются одним изменением.
+    # средств, поэтому гейт и колёса поднимаются одним изменением.
     - '"$TRIP" verify --branch --messages --changelog --require-changelog --fixups --require-policy --base "$BASE"'
   rules:
     - if: '$TRIP_TOOLS_TOKEN && $CI_PIPELINE_SOURCE == "merge_request_event"'
