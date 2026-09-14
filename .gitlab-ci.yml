@@ -28,4 +28,5 @@ include:
   - local: .gitlab/ci/agent-skills.yml
   - local: .gitlab/ci/training-wheels.yml
   - local: .gitlab/ci/code-form.yml
+  - local: .gitlab/ci/code-lint.yml
   - local: .gitlab/ci/docs.yml

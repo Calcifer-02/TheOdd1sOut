@@ -128,6 +128,127 @@ const ОГОВОРКА_ГЕЙТА = `#
 # TRIP_GATE_STRICT. Правила ветки и коммита не калибруются по ходу проекта, а
 # след, снятый задним числом, уже не восстанавливается.`;
 
+const ГЕЙТ_ЛИНТЕРА = `# Гейт линтера кода стандартного стека (trip-lint).
+#
+# Запускает движки стека — ESLint и Prettier фронтенда, анализаторы .NET,
+# squawk для миграций PostgreSQL, встроенные проверки имён файлов, зависимостей
+# и комментариев — и сводит их в один отчёт с кодами выхода TRIP. Движки
+# ставятся в проекте: конвейер читает ту же конфигурацию, что и редактор автора.
+#
+# Задание запускается, только когда объявлен .trip-lint.toml: без него нечего
+# проверять, и молчаливое «зелено» было бы неправдой. Пока конфигурации нет,
+# работает задание «линтер кода:не объявлен» — оно сообщает пробел, а не выдаёт
+# его за пройденную проверку.
+#
+# Образ — SDK .NET с установкой Node.js: стандартный стек несёт обе части, а
+# движок без среды исполнения отвечает «не проверяли» (код 1). Проект без .NET
+# задаёт TRIP_LINT_IMAGE: node:22-bookworm-slim на группе или в проекте.
+#
+# Коды выхода средства: 0 — чисто; 2 — только предупреждения; 3 — находка-ошибка;
+# 1 — не проверили: движок не запустился, конфигурация негодна.
+#
+# TRIP_GATE_STRICT=1 переводит предупреждения в отказ. До этого предупреждения
+# видны в журнале задания и не роняют сборку: исходный уровень снимается на
+# корпусе проекта, а долг закрывается рассрочкой, а не выключением проверки.
+
+линтер кода:
+  stage: проверка
+  image: $TRIP_LINT_IMAGE
+  variables:
+    GIT_DEPTH: 0
+    TRIP_LINT_IMAGE: "mcr.microsoft.com/dotnet/sdk:10.0"
+    TRIP_LINT_NODE_VERSION: "22.23.2"
+  script:
+    - |
+      if ! command -v node >/dev/null 2>&1; then
+        curl -fsSL "https://nodejs.org/dist/v\${TRIP_LINT_NODE_VERSION}/node-v\${TRIP_LINT_NODE_VERSION}-linux-x64.tar.gz" | tar -xz -C /usr/local --strip-components=1
+      fi
+      node --version
+    - node ИНСТРУМЕНТЫ/скрипты/инструменты.mjs установить trip-lint
+    - test -f .trip/tools/trip-lint/bin/trip-lint.mjs || { echo "В выпуске не найден вход trip-lint"; exit 1; }
+    - |
+      # Движки ставятся в проекте: зависимости фронтенда и squawk-cli лежат в его package-lock.json.
+      FRONT=$(awk -F'"' '$0=="[frontend]"{s=1;next} substr($0,1,1)=="["{s=0} s && index($0,"root")==1{print $2;exit}' .trip-lint.toml)
+      for dir in "." "\${FRONT:-.}"; do
+        if [ -f "$dir/package-lock.json" ] && [ ! -d "$dir/node_modules" ]; then
+          npm --prefix "$dir" ci --no-audit --fund=false
+        fi
+      done
+    - |
+      # База сравнения для режима changed: целевая ветка запроса на слияние либо предыдущий коммит ветки.
+      BASE=""
+      if [ -n "\${CI_MERGE_REQUEST_TARGET_BRANCH_NAME:-}" ]; then
+        git fetch --quiet origin "$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
+        BASE="origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
+      elif [ -n "\${CI_COMMIT_BEFORE_SHA:-}" ] && [ "$CI_COMMIT_BEFORE_SHA" != "0000000000000000000000000000000000000000" ]; then
+        BASE="$CI_COMMIT_BEFORE_SHA"
+      fi
+      set +e
+      if [ -n "$BASE" ]; then
+        node .trip/tools/trip-lint/bin/trip-lint.mjs check --root . --base "$BASE"
+      else
+        node .trip/tools/trip-lint/bin/trip-lint.mjs check --root .
+      fi
+      code=$?
+      set -e
+      echo "код завершения линтера кода: $code"
+      case "$code" in
+        0) exit 0 ;;
+        2)
+          if [ "$TRIP_GATE_STRICT" = "1" ]; then
+            echo "Предупреждения линтера кода роняют задание: TRIP_GATE_STRICT=1."
+            exit 1
+          fi
+          echo "Предупреждения линтера кода: разберите их до следующей контрольной точки."
+          exit 0
+          ;;
+        *) exit "$code" ;;
+      esac
+  artifacts:
+    when: always
+    paths:
+      - .trip/lint-report.json
+    expire_in: 14 days
+  rules:
+    - if: '$TRIP_TOOLS_TOKEN && ($CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH)'
+      exists:
+        - .trip-lint.toml
+
+линтер кода:не объявлен:
+  stage: проверка
+  image: $NODE_IMAGE
+  allow_failure: true
+  script:
+    - 'echo "Линтер кода не запускается: конфигурация .trip-lint.toml не объявлена."'
+    - 'echo "Порядок: trip-lint init --root . --write, поставьте зависимости движков в проекте,"'
+    - 'echo "снимите исходный уровень в режиме observe и переведите проект в режим changed."'
+    - 'echo "Инструкция — ИНСТРУМЕНТЫ/ИНСТРУКЦИИ/trip-lint/README.md."'
+    # Красный намеренно: «не проверено» не равно «проверено». Отказ разрешён,
+    # конвейер от него не падает.
+    - exit 1
+  rules:
+    - exists:
+        - .trip-lint.toml
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+линтер кода:не настроен:
+  stage: проверка
+  image: $NODE_IMAGE
+  allow_failure: true
+  script:
+    - 'echo "Гейт линтера кода не настроен: нет TRIP_TOOLS_TOKEN, средство не установить."'
+    - 'echo "Конфигурация объявлена, но проверить её нечем — это пробел доступа, а не проекта."'
+    - 'echo "Порядок настройки — у ведущего; описан в ИНСТРУМЕНТЫ/README.md, раздел «Доступ без личных учётных записей»."'
+    - exit 1
+  rules:
+    - if: '$TRIP_TOOLS_TOKEN'
+      when: never
+    - exists:
+        - .trip-lint.toml
+      if: '$CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+`;
+
 // Отпечатки — sha256 самого архива выпуска, как их отдаёт реестр пакетов.
 const TRIP_CLI = {
   версия: '0.5.3',
@@ -136,6 +257,45 @@ const TRIP_CLI = {
     'linux-x64': 'f8f01b6b8fde1ade513a702b2a054cd2bc82fa831a65c8dae1d93166ff023b77',
     'darwin-arm64': 'c00bcf1d42ab83ef55f673800cb60863f60b53481fabf53d48ff1c488497d86f',
   },
+};
+
+// Линтер кода поставляется одним архивом для всех платформ: ключ файла — any.
+const TRIP_LINT = {
+  версия: '0.4.0',
+  отпечатки: {
+    any: '<из harvest.json после публикации 0.4.0>',
+  },
+};
+
+// Запись колёс для проекта, созданного до появления средства; версия и
+// отпечаток берутся из TRIP_LINT, чтобы один факт не жил в двух местах.
+const ЗАПИСЬ_TRIP_LINT = () => {
+  const запись = {
+    "id": "trip-lint",
+    "label": "Линтер кода стандартного стека",
+    "purpose": "Гейт кода стандартного стека: ESLint и Prettier фронтенда, анализаторы .NET, squawk для миграций PostgreSQL, встроенные проверки имён, зависимостей и комментариев — один отчёт с кодами выхода TRIP.",
+    "requirement": "рекомендуемое",
+    "needed_from_gate": 2,
+    "version": "0.4.0",
+    "source": {
+      "kind": "generic-package",
+      "registry": "internal",
+      "project": "TRIP/tooling/trip-lint",
+      "package": "trip-lint",
+      "files": {
+        "any": "trip-lint.tar.gz"
+      }
+    },
+    "release_state": "выпускается: конвейер по метке v<версия>, публикация ручная",
+    "already_installed_check": "trip-lint --version",
+    "sha256": {
+      "any": "<из harvest.json после публикации 0.4.0>"
+    },
+    "gate": "линтер кода стандартного стека в конвейере: оформление, имена, зависимости, комментарии, анализаторы .NET, миграции PostgreSQL"
+  };
+  запись.version = TRIP_LINT.версия;
+  запись.sha256 = { any: TRIP_LINT.отпечатки.any };
+  return запись;
 };
 
 // ── вспомогательное ─────────────────────────────────────────────────────────
@@ -346,6 +506,68 @@ const ПЕРЕИМЕНОВАНИЯ = [
       if (TRIP_CLI.отпечатки[платформа]) запись.sha256[платформа] = TRIP_CLI.отпечатки[платформа];
       else внимание.push(`колёса объявляет платформу ${платформа}, которой нет в выпуске — сверьте вручную`);
     }
+    писать(файл, `${JSON.stringify(колёса, null, 2)}\n`);
+  },
+);
+
+обновление(
+  'гейт линтера кода',
+  () => {
+    if (!есть('.gitlab/ci')) return 'в проекте нет каталога .gitlab/ci — конвейер описан иначе';
+    if (!есть('.gitlab/ci/code-lint.yml')) return 'нужно';
+    return читать('.gitlab/ci/code-lint.yml') === ГЕЙТ_ЛИНТЕРА ? 'применено' : 'нужно';
+  },
+  () => писать('.gitlab/ci/code-lint.yml', ГЕЙТ_ЛИНТЕРА),
+);
+
+обновление(
+  'подключение гейта линтера кода в .gitlab-ci.yml',
+  () => {
+    if (!есть('.gitlab-ci.yml')) return 'в проекте нет .gitlab-ci.yml';
+    const текст = читать('.gitlab-ci.yml');
+    if (текст.includes('.gitlab/ci/code-lint.yml')) return 'применено';
+    if (!текст.includes('include:')) return 'в .gitlab-ci.yml нет секции include — подключите гейт вручную';
+    return 'нужно';
+  },
+  () => {
+    const текст = читать('.gitlab-ci.yml');
+    const строка = '  - local: .gitlab/ci/code-lint.yml\n';
+    const после = '  - local: .gitlab/ci/code-form.yml\n';
+    писать(
+      '.gitlab-ci.yml',
+      текст.includes(после) ? текст.replace(после, после + строка) : текст.replace('include:\n', 'include:\n' + строка),
+    );
+  },
+);
+
+обновление(
+  `колёса средств: trip-lint ${TRIP_LINT.версия}`,
+  () => {
+    const файл = 'ИНСТРУМЕНТЫ/training-wheels.json';
+    if (!есть(файл)) return 'в проекте нет колёс средств';
+    const колёса = JSON.parse(читать(файл));
+    const средства = Array.isArray(колёса) ? колёса : колёса.tools;
+    const запись = средства?.find((с) => с.id === 'trip-lint');
+    if (!запись) return 'нужно';
+    if (запись.version === TRIP_LINT.версия) return 'применено';
+    if (сравнитьВерсии(запись.version, TRIP_LINT.версия) > 0) {
+      return `в колёсах версия ${запись.version} новее ${TRIP_LINT.версия} — понижать не буду`;
+    }
+    return 'нужно';
+  },
+  () => {
+    const файл = 'ИНСТРУМЕНТЫ/training-wheels.json';
+    const колёса = JSON.parse(читать(файл));
+    const средства = Array.isArray(колёса) ? колёса : колёса.tools;
+    let запись = средства.find((с) => с.id === 'trip-lint');
+    if (!запись) {
+      // Новое средство встаёт рядом с соседним гейтом кода, а не в конец списка.
+      запись = ЗАПИСЬ_TRIP_LINT();
+      const место = средства.findIndex((с) => с.id === 'trip-cast');
+      средства.splice(место >= 0 ? место + 1 : средства.length, 0, запись);
+    }
+    запись.version = TRIP_LINT.версия;
+    запись.sha256 = { ...запись.sha256, any: TRIP_LINT.отпечатки.any };
     писать(файл, `${JSON.stringify(колёса, null, 2)}\n`);
   },
 );
