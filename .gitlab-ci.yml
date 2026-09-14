@@ -16,6 +16,14 @@
 # TRIP_GATE_STRICT. Правила ветки и коммита не калибруются по ходу проекта, а
 # след, снятый задним числом, уже не восстанавливается.
 
+# Общие исполнители этого GitLab берут только помеченные задания: метка `test` —
+# docker-исполнители группы, образ задаётся заданием. Без метки задание висит
+# с сообщением «project doesn't have any runners online assigned to it».
+# Проект со своим исполнителем меняет метку здесь, а не в файлах гейтов.
+default:
+  tags:
+    - test
+
 stages:
   - проверка
 
@@ -28,4 +36,5 @@ include:
   - local: .gitlab/ci/agent-skills.yml
   - local: .gitlab/ci/training-wheels.yml
   - local: .gitlab/ci/code-form.yml
+  - local: .gitlab/ci/code-lint.yml
   - local: .gitlab/ci/docs.yml
