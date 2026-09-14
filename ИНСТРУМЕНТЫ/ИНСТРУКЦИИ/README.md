@@ -14,12 +14,12 @@
 
 | Средство | Версия (колёса) | Что лежит | Источник |
 |---|---|---|---|
-| trip-cli | 0.5.1 | [README](./trip-cli/README.md), [CHANGELOG](./trip-cli/CHANGELOG.md), [руководство пользователя](./trip-cli/РУКОВОДСТВО_ПОЛЬЗОВАТЕЛЯ.md), [модель политик](./trip-cli/МОДЕЛЬ_ПОЛИТИК.md) | выпуск; руководство и модель политик — из исходников, версия 0.5.1 |
-| trip-doc-lint | 0.1.6 | [README](./trip-doc-lint/README.md) (замысел и правила), [README выпуска](./trip-doc-lint/README_ВЫПУСКА.md) | исходники; выпуск несёт только короткую карточку |
-| trip-cast | 0.1.3 | [README](./trip-cast/README.md) | выпуск |
-| trip-trace-service | 0.1.0 | [README](./trip-trace-service/README.md) | выпуск |
+| trip-cli | 0.5.3 | [README](./trip-cli/README.md), [CHANGELOG](./trip-cli/CHANGELOG.md), [руководство пользователя](./trip-cli/РУКОВОДСТВО_ПОЛЬЗОВАТЕЛЯ.md), [модель политик](./trip-cli/МОДЕЛЬ_ПОЛИТИК.md) | выпуск; руководство и модель политик — из исходников, версия 0.5.1 |
+| trip-doc-lint | 0.1.10 | [README](./trip-doc-lint/README.md) (замысел и правила), [README выпуска](./trip-doc-lint/README_ВЫПУСКА.md) | исходники; выпуск несёт только короткую карточку |
+| trip-cast | 0.2.0 | [README](./trip-cast/README.md) | выпуск |
+| trip-trace-service | 0.1.2 | [README](./trip-trace-service/README.md) | выпуск |
 | trip-shiva-connector | 0.1.0 | [README](./trip-shiva-connector/README.md), [инструкция](./trip-shiva-connector/ИНСТРУКЦИЯ.md) | выпуск |
-| trip-customs (trip-file) | 0.4.1 | [README](./trip-customs/README.md) | исходники; выпуск инструкции не несёт |
+| trip-customs (trip-file) | 0.5.0 | [README](./trip-customs/README.md) | исходники; выпуск инструкции не несёт |
 | tripwire | 0.1.0 | [README](./tripwire/README.md), [развёртывание](./tripwire/РАЗВЁРТЫВАНИЕ.md) | выпуск |
 | trip-bug-loop | 1.0.0 | [развёртывание](./trip-bug-loop/РАЗВЁРТЫВАНИЕ.md) | выпуск (служба: для ведущего и эксплуатации) |
 | trip-backend-inspector | 0.6.0 | [развёртывание](./trip-backend-inspector/РАЗВЁРТЫВАНИЕ.md) | выпуск (служба) |
