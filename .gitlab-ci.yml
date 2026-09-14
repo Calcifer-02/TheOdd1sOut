@@ -23,9 +23,9 @@ variables:
   NODE_IMAGE: "node:22-bookworm-slim"
 
 include:
-  - local: .gitlab/ci/след.yml
-  - local: .gitlab/ci/скелет.yml
-  - local: .gitlab/ci/навыки.yml
-  - local: .gitlab/ci/средства.yml
-  - local: .gitlab/ci/форма.yml
-  - local: .gitlab/ci/документация.yml
+  - local: .gitlab/ci/git-trail.yml
+  - local: .gitlab/ci/skeleton.yml
+  - local: .gitlab/ci/agent-skills.yml
+  - local: .gitlab/ci/training-wheels.yml
+  - local: .gitlab/ci/code-form.yml
+  - local: .gitlab/ci/docs.yml
