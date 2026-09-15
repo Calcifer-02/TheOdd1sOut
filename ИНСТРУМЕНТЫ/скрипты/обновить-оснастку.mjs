@@ -251,11 +251,11 @@ const ГЕЙТ_ЛИНТЕРА = `# Гейт линтера кода станда
 
 // Отпечатки — sha256 самого архива выпуска, как их отдаёт реестр пакетов.
 const TRIP_CLI = {
-  версия: '0.6.0',
+  версия: '0.7.0',
   отпечатки: {
-    'win-x64': 'd648bf1ff3b2bfbc9cdc3e39d0f7f6532e70244dd012cbed35deef098a846f3b',
-    'linux-x64': 'ac8e2d7f65989d7268ac5665b91d0b015a37b22655e8daee1588e947491d7395',
-    'darwin-arm64': '781b889564193fd589c76681a3c24c4bfae6775ac9b57079e114ec9dbc662e0b',
+    'win-x64': 'f5993e9bca0cc675547811cca955ce275b514abc07beef4b888934274fb230e1',
+    'linux-x64': 'acad3d01a3500f4881fa35470300bbabd684430032e60af1f6396afb497da1f7',
+    'darwin-arm64': '21eeb31b9adade622fc4eb07b2fb6a33ad55abd23c51bb80ef97bf0a7e39320b',
   },
 };
 
