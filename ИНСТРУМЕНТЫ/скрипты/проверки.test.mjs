@@ -395,7 +395,7 @@ test('в шаблоне не осталось ссылок на прежние �
   };
   обойти('.gitlab');
   обойти('ИНСТРУМЕНТЫ');
-  кандидаты.push('.gitlab-ci.yml');
+  кандидаты.push('.gitlab-ci.yml', '.gitignore');
   for (const запись of readdirSync(КОРЕНЬ, { withFileTypes: true })) {
     if (запись.isFile() && запись.name.endsWith('.md')) кандидаты.push(запись.name);
   }
