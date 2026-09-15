@@ -14,11 +14,11 @@
 
 | Средство | Версия (ходунки) | Что лежит | Источник |
 |---|---|---|---|
-| trip-cli | 0.5.3 | [README](./trip-cli/README.md), [CHANGELOG](./trip-cli/CHANGELOG.md), [руководство пользователя](./trip-cli/РУКОВОДСТВО_ПОЛЬЗОВАТЕЛЯ.md), [модель политик](./trip-cli/МОДЕЛЬ_ПОЛИТИК.md) | выпуск; руководство и модель политик — из исходников, версия 0.5.1 |
+| trip-cli | 0.6.0 | [README](./trip-cli/README.md), [CHANGELOG](./trip-cli/CHANGELOG.md), [руководство пользователя](./trip-cli/РУКОВОДСТВО_ПОЛЬЗОВАТЕЛЯ.md), [модель политик](./trip-cli/МОДЕЛЬ_ПОЛИТИК.md) | выпуск; руководство и модель политик — из исходников, версия 0.5.3 |
 | trip-doc-lint | 0.1.10 | [README](./trip-doc-lint/README.md) (замысел и правила), [README выпуска](./trip-doc-lint/README_ВЫПУСКА.md) | исходники; выпуск несёт только короткую карточку |
 | trip-cast | 0.2.0 | [README](./trip-cast/README.md) | выпуск |
 | trip-lint | 0.5.1 | [README](./trip-lint/README.md), [руководство пользователя](./trip-lint/РУКОВОДСТВО_ПОЛЬЗОВАТЕЛЯ.md), [надстройка стека](./trip-lint/НАДСТРОЙКА_СТЕКА.md), [правила SQL](./trip-lint/ПРАВИЛА_SQL.md) | выпуск (README); руководство, надстройка и правила — исходники |
-| trip-trace-service | 0.1.2 | [README](./trip-trace-service/README.md) | выпуск |
+| trip-trace-service | 0.2.0 | [README](./trip-trace-service/README.md) | выпуск |
 | trip-shiva-connector | 0.1.0 | [README](./trip-shiva-connector/README.md), [инструкция](./trip-shiva-connector/ИНСТРУКЦИЯ.md) | выпуск |
 | trip-customs (trip-file) | 0.5.0 | [README](./trip-customs/README.md) | исходники; выпуск инструкции не несёт |
 | tripwire | 0.1.0 | [README](./tripwire/README.md), [развёртывание](./tripwire/РАЗВЁРТЫВАНИЕ.md) | выпуск |
