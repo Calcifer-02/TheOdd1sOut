@@ -396,6 +396,9 @@ test('в шаблоне не осталось ссылок на прежние �
   обойти('.gitlab');
   обойти('ИНСТРУМЕНТЫ');
   кандидаты.push('.gitlab-ci.yml');
+  for (const запись of readdirSync(КОРЕНЬ, { withFileTypes: true })) {
+    if (запись.isFile() && запись.name.endsWith('.md')) кандидаты.push(запись.name);
+  }
 
   for (const путь of кандидаты) {
     if (путь.endsWith('обновить-оснастку.mjs')) continue; // в нём и живёт таблица
