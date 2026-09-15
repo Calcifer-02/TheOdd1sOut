@@ -53,7 +53,7 @@
     # HEAD. Слияния при разборе сообщений пропускаются: их заголовок сочиняет
     # git, а не автор.
     #
-    # `--messages` появился в trip-cli 0.5.2 (R-092); версия закреплена замком
+    # `--messages` появился в trip-cli 0.5.2 (R-092); версия закреплена ходунками
     # средств, поэтому гейт и ходунки поднимаются одним изменением.
     - '"$TRIP" verify --branch --messages --changelog --require-changelog --fixups --require-policy --base "$BASE"'
   rules:
