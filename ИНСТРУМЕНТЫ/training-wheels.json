@@ -231,7 +231,7 @@
       "purpose": "Отражает реестры проекта в задачах корпоративного трекера: отчётность без второй ручной записи решений.",
       "requirement": "необязательное",
       "needed_from_gate": 1,
-      "version": "0.1.0",
+      "version": "0.2.0",
       "source": {
         "kind": "generic-package",
         "registry": "internal",
@@ -244,7 +244,7 @@
       "release_state": "выпускается: конвейер по метке v<версия>, публикация ручная",
       "already_installed_check": "",
       "sha256": {
-        "any": "1a56e6c687b6ecd895857037bb7c65c68b921e5248849496abb611234fb964e5"
+        "any": "8e9d1c8d95d7e4f97c3e003b9aaeb38f73c65e5355c909251531c94eff34ddc4"
       },
       "gate": "отчётность в трекере"
     },
