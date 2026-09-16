@@ -19,7 +19,7 @@
       "purpose": "Единый вход и git-хуки: тип и направление коммита, ссылка на требование, журнал изменений, имя ветки; реестр средств .trip/tools.",
       "requirement": "обязательное",
       "needed_from_gate": 0,
-      "version": "0.7.0",
+      "version": "0.7.1",
       "source": {
         "kind": "generic-package",
         "registry": "internal",
@@ -34,9 +34,9 @@
       "release_state": "выпускается: конвейер по метке v<версия>, публикация ручная",
       "already_installed_check": "trip --version",
       "sha256": {
-        "win-x64": "f5993e9bca0cc675547811cca955ce275b514abc07beef4b888934274fb230e1",
-        "linux-x64": "acad3d01a3500f4881fa35470300bbabd684430032e60af1f6396afb497da1f7",
-        "darwin-arm64": "21eeb31b9adade622fc4eb07b2fb6a33ad55abd23c51bb80ef97bf0a7e39320b"
+        "win-x64": "<из harvest.json после публикации 0.7.1>",
+        "linux-x64": "<из harvest.json после публикации 0.7.1>",
+        "darwin-arm64": "<из harvest.json после публикации 0.7.1>"
       },
       "gate": "коммиты, ветки, журнал изменений"
     },
@@ -121,7 +121,7 @@
       "purpose": "Контроль архитектурных свойств типизированных артефактов: проверка объявленных свойств кода.",
       "requirement": "рекомендуемое",
       "needed_from_gate": 2,
-      "version": "0.2.0",
+      "version": "0.2.1",
       "source": {
         "kind": "generic-package",
         "registry": "internal",
@@ -137,10 +137,10 @@
       "release_state": "выпускается: конвейер по метке v<версия>, публикация ручная",
       "already_installed_check": "trip-cast --version",
       "sha256": {
-        "win-x64": "576eb7da6e4990e3bba29a861accc38a2393eb2d503f8e98a760256aa769f230",
-        "linux-x64": "2b1264f8d996673c2509e063aaaf5113138d62a16a2c4f4b08e6550027dbaa9e",
-        "darwin-arm64": "62d77cd66a1b7317cc48aa41d16c733ff6bead5a92f9a4be8e950b077b9bcc0a",
-        "darwin-x64": "ca400be0ff2a28169c589547246dbdbc8752daa662f98ade37dfdc223c80e74c"
+        "win-x64": "<из harvest.json после публикации 0.2.1>",
+        "linux-x64": "<из harvest.json после публикации 0.2.1>",
+        "darwin-arm64": "<из harvest.json после публикации 0.2.1>",
+        "darwin-x64": "<из harvest.json после публикации 0.2.1>"
       },
       "gate": "проверка формы кода в конвейере: роли мест и границы областей"
     },
@@ -150,7 +150,7 @@
       "purpose": "Гейт кода стандартного стека: ESLint и Prettier фронтенда, анализаторы .NET, squawk для миграций PostgreSQL, встроенные проверки имён, зависимостей и комментариев — один отчёт с кодами выхода TRIP.",
       "requirement": "рекомендуемое",
       "needed_from_gate": 2,
-      "version": "0.5.1",
+      "version": "0.6.0",
       "source": {
         "kind": "generic-package",
         "registry": "internal",
@@ -163,7 +163,7 @@
       "release_state": "выпускается: конвейер по метке v<версия>, публикация ручная",
       "already_installed_check": "trip-lint --version",
       "sha256": {
-        "any": "bb6678467482e5910a3164f0f30a549f752d46d369985d8d4db82132efdce5c0"
+        "any": "<из harvest.json после публикации 0.6.0>"
       },
       "gate": "линтер кода стандартного стека в конвейере: оформление, имена, зависимости, комментарии, анализаторы .NET, миграции PostgreSQL"
     },
@@ -173,7 +173,7 @@
       "purpose": "Граф трассируемости требование-код-проверка по разметке @req, @ac, @tc.",
       "requirement": "необязательное",
       "needed_from_gate": 3,
-      "version": "0.2.0",
+      "version": "0.2.1",
       "source": {
         "kind": "generic-package",
         "registry": "internal",
@@ -189,10 +189,10 @@
       "release_state": "выпускается: конвейер по метке v<версия>, публикация ручная",
       "already_installed_check": "trip-trace --version",
       "sha256": {
-        "darwin-arm64": "81478b95adf4080b6b202b48a89cb9af96c70f2734e24472f2e03edf2e87bce6",
-        "darwin-x64": "53ab7de9846a89a6d134d2b77c3149cf4f03e5aa1514bf4190d6faeee00d45ef",
-        "linux-x64": "5bf7be082890d0faee35e2821205b43381422877690436eb6c429f3ce0293484",
-        "win-x64": "74d2ee240e4f1377545e32a905b98df3fa3f59e3e02332196ffab20985ebb297"
+        "darwin-arm64": "<из harvest.json после публикации 0.2.1>",
+        "darwin-x64": "<из harvest.json после публикации 0.2.1>",
+        "linux-x64": "<из harvest.json после публикации 0.2.1>",
+        "win-x64": "<из harvest.json после публикации 0.2.1>"
       },
       "gate": "трассируемость требований"
     },
@@ -323,7 +323,7 @@
       "purpose": "Обвязка безопасности: лестница вердиктов находок (candidate → verified-static → proven), детерминированный вердикт на хосте, неизменяемое свидетельство; питает Gate 6 (безопасность) и класс долга К13.",
       "requirement": "необязательное",
       "needed_from_gate": 6,
-      "version": "0.1.0",
+      "version": "0.2.0",
       "source": {
         "kind": "generic-package",
         "registry": "internal",
@@ -336,7 +336,7 @@
       "release_state": "выпускается: bytecode-бандл по метке v<версия>, публикация ручная",
       "already_installed_check": "",
       "sha256": {
-        "any": "ddfb519b476aab1128568a12c15503636c3380329ab2d6e3660f9b29743f314a"
+        "any": "<из harvest.json после публикации 0.2.0>"
       },
       "gate": "безопасность"
     }
