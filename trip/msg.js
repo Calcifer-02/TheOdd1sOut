@@ -77,10 +77,36 @@ var GIT_GENERATED = [
 // заплатка обязана исчезнуть при `git rebase --autosquash` до отправки.
 var AUTOSQUASH = /^(fixup|squash|amend)! /
 
-// Ссылка на требование засчитывается, только если требование существует.
-// Реестр требований — центральный артефакт каркаса: он отвечает, заведено ли
-// требование, а не похоже ли упоминание на идентификатор.
-var REQUIREMENT_PATTERN = /(?<![A-Za-zА-ЯЁа-яё0-9_-])R-\d+[a-z]?(?![A-Za-zА-ЯЁа-яё0-9_-]|\.(?!\s|$))/g
+// Ссылка засчитывается, только если то, на что она указывает, существует.
+// Реестр — центральный артефакт каркаса: он отвечает, заведено ли требование,
+// а не похоже ли упоминание на идентификатор.
+//
+// Разрешаются все виды, а не один только R (R-224). Сверка, знавшая лишь
+// требования, оставляла девять префиксов без источника: «AC-06», которого нет
+// ни в одном документе, проходил вечно — и этот путь был дешевле ссылки на
+// требование, потому что ссылка на требование сверялась, а ссылка на критерий
+// нет. Пустой набор вида по-прежнему означает «проверить нечем»: вид, ни разу
+// не встреченный в источниках, не судится.
+var REF_PATTERN_ALL = /(?<![A-Za-zА-ЯЁа-яё0-9_-])(?:R|DR|US|UC|Q|AR|ADR|AC|TC|BUG|ФЗ)-\d+[a-z]?(?![A-Za-zА-ЯЁа-яё0-9_-]|\.(?!\s|$))/g
+
+// Вид ссылки — префикс до дефиса. Для отказа он важнее номера: «не заведён
+// критерий AC-06» и «не заведено требование R-11» чинятся в разных файлах.
+var KIND_TITLES = {
+  R: 'требование',
+  DR: 'черновое требование',
+  US: 'пользовательская история',
+  UC: 'сценарий использования',
+  Q: 'открытый вопрос',
+  AR: 'риск',
+  ADR: 'архитектурное решение',
+  AC: 'критерий приёмки',
+  TC: 'тестовый сценарий',
+  BUG: 'запись о дефекте',
+  'ФЗ': 'практика фонда знаний',
+}
+
+// Что считается классом требования, когда политика не сказала иного.
+var DEFAULT_REQUIREMENT_KINDS = ['R', 'DR']
 
 // ── происхождение изменения (R-088 — R-091) ────────────────────────────────
 // Последний абзац сообщения называет, кто вёл изменение:
@@ -153,6 +179,41 @@ function registryCount() {
   return knownRequirements().length
 }
 
+// Вид идентификатора: префикс до первого дефиса, в прописном виде.
+function kindOf(id) {
+  var dash = id.indexOf('-')
+  return dash < 0 ? id.toUpperCase() : id.slice(0, dash).toUpperCase()
+}
+
+function kindTitle(kind) {
+  return owns(KIND_TITLES, kind) ? KIND_TITLES[kind] : 'идентификатор'
+}
+
+// Заведённые идентификаторы, разложенные по видам и приведённые к сравнимому
+// виду. Считается один раз: реестр за время одной проверки не меняется.
+var knownByKindCache = null
+function knownByKind() {
+  if (knownByKindCache) return knownByKindCache
+
+  var map = {}
+  var all = knownRequirements()
+  for (var i = 0; i < all.length; i++) {
+    var kind = kindOf(all[i])
+    if (!owns(map, kind)) map[kind] = []
+    map[kind].push(normalizeId(all[i]))
+  }
+
+  knownByKindCache = map
+  return map
+}
+
+// Сколько идентификаторов этого вида прочитано. Ноль означает «источника
+// этого вида нет», а не «таких не бывает».
+function knownCountOf(kind) {
+  var map = knownByKind()
+  return owns(map, kind) ? map[kind].length : 0
+}
+
 // Отказ обязан называть, по чему сверялись: иначе непонятно, ошибся автор
 // или проверка прочитала не тот файл.
 function registrySources() {
@@ -160,21 +221,88 @@ function registrySources() {
   return source || 'неизвестного источника'
 }
 
-// Идентификаторы требований из текста, которых нет ни в одном реестре.
-// Пустой реестр означает «проверить нечем»: нарушение не выдумывается.
-function unknownRequirements(text) {
-  var known = knownRequirements().map(normalizeId)
+// Все ссылки текста, разобранные по видам.
+function referencesOf(text) {
+  return String(text || '').match(REF_PATTERN_ALL) || []
+}
 
-  if (!known.length) return []
-
-  var found = text.match(REQUIREMENT_PATTERN) || []
+// Идентификаторы из текста, которых нет в источнике своего вида.
+//
+// Судится вид, а не текст целиком: вид, которого реестр не знает ни одним
+// представителем, пропускается — источника у него нет, и выдумывать по этому
+// поводу нарушение значило бы требовать от проекта завести документ, о котором
+// его никто не спрашивал. Вид, представленный хотя бы одним идентификатором,
+// проверяется полностью: раз источник есть, ссылка обязана в нём разрешаться.
+function unknownReferences(text) {
+  var found = referencesOf(text)
   var unknown = []
+
   for (var i = 0; i < found.length; i++) {
-    if (known.indexOf(normalizeId(found[i])) < 0 && unknown.indexOf(found[i]) < 0) {
-      unknown.push(found[i])
-    }
+    var id = found[i]
+    var kind = kindOf(id)
+    if (knownCountOf(kind) === 0) continue
+    if (knownByKind()[kind].indexOf(normalizeId(id)) >= 0) continue
+    if (unknown.indexOf(id) < 0) unknown.push(id)
   }
+
   return unknown
+}
+
+// Отказ называет вид каждой несуществующей ссылки: «критерий приёмки AC-06»
+// чинится не там, где «требование R-11».
+function unknownReferencesReport(text) {
+  var unknown = unknownReferences(text)
+  var parts = []
+  for (var i = 0; i < unknown.length; i++) {
+    parts.push(kindTitle(kindOf(unknown[i])) + ' ' + unknown[i])
+  }
+  return parts.join(', ')
+}
+
+// ── класс ссылки (R-223) ────────────────────────────────────────────────────
+// Обязательности ссылки недостаточно: словарь знает одиннадцать видов, и
+// десять из них позволяют вести работу мимо требования. Правило называет
+// места, где нужен именно класс требования.
+function referenceSpec() {
+  var raw = typeof referencePolicy === 'undefined' ? '' : referencePolicy || ''
+  if (!String(raw).trim()) return null
+
+  var parsed
+  try { parsed = JSON.parse(raw) } catch (e) { return null }
+  if (!parsed || typeof parsed !== 'object') return null
+
+  var kinds = Array.isArray(parsed.requirementKinds) && parsed.requirementKinds.length
+    ? parsed.requirementKinds
+    : DEFAULT_REQUIREMENT_KINDS
+  var scope = parsed.requirement && typeof parsed.requirement === 'object'
+    ? parsed.requirement
+    : null
+
+  return {
+    mode: String(parsed.mode || 'any').toLowerCase(),
+    kinds: kinds.map(function (k) { return String(k).toUpperCase() }),
+    directions: scope && Array.isArray(scope.directions) ? scope.directions : [],
+    types: scope && Array.isArray(scope.types) ? scope.types : [],
+  }
+}
+
+// Нужен ли классу требования этот коммит. Пустой список не ограничивает:
+// правило с двумя пустыми списками действует всюду — ровно как mode.
+function requirementDemanded(spec, type, direction) {
+  if (!spec) return false
+  if (spec.mode === 'requirement') return true
+  if (!spec.directions.length && !spec.types.length) return false
+  if (spec.directions.length && spec.directions.indexOf(direction) < 0) return false
+  if (spec.types.length && spec.types.indexOf(type) < 0) return false
+  return true
+}
+
+function hasRequirementReference(spec, text) {
+  var found = referencesOf(text)
+  for (var i = 0; i < found.length; i++) {
+    if (spec.kinds.indexOf(kindOf(found[i])) >= 0) return true
+  }
+  return false
 }
 
 // ── происхождение: разбор трейлеров ─────────────────────────────────────────
@@ -418,6 +546,7 @@ else {
     var scopeMatch = scope && scope.match(/^([a-z]+)(?:\/([a-z0-9][a-z0-9._-]*))?$/)
     var direction = scopeMatch ? scopeMatch[1] : null
     var refExempt = type === 'revert' || (type === 'chore' && direction === 'service')
+    var refSpec = referenceSpec()
 
     // BREAKING CHANGE объявляется либо «!» в заголовке, либо футером
     var hasBreakingFooter = lines.some(function (l) {
@@ -452,11 +581,18 @@ else {
       'ломающее изменение: опишите его в теле или футером «BREAKING CHANGE: ...»'
     else if (REQUIRE_REF && !refExempt && !REF_PATTERN.test(fullText))
       'нет ссылки на идентификатор трассируемости (R, DR, US, UC, Q, AR, ADR, AC, TC, BUG, ФЗ); без ссылки допустимы только chore(service) и revert'
-    else if (unknownRequirements(fullText).length)
-      'требование ' + unknownRequirements(fullText).join(', ') + ' не заведено в реестре. ' +
+    else if (!refExempt && requirementDemanded(refSpec, type, direction)
+             && !hasRequirementReference(refSpec, fullText))
+      'нужна ссылка класса требования (' + refSpec.kinds.join(', ') + '), ' +
+        'а не только критерий или сценарий. Здесь работа ведётся от требования: ' +
+        'критерий приёмки отвечает, как проверить, но не зачем делаем. ' +
+        'Назовите требование — или заведите его, если его ещё нет'
+    else if (unknownReferences(fullText).length)
+      'нет среди заведённых: ' + unknownReferencesReport(fullText) + '. ' +
         'Прочитано ' + registryCount() + ' идентификаторов из: ' + registrySources() + '. ' +
-        'Ссылка на несуществующее требование трассируемости не даёт — ' +
-        'заведите требование в реестре или исправьте номер'
+        'На вопрос, существует ли запись, отвечает реестр, а не похожесть ' +
+        'упоминания на идентификатор — заведите запись в источнике её вида ' +
+        'или исправьте номер'
     else if (originIssue) originIssue
     else true
   }

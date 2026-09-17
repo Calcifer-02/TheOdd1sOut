@@ -269,11 +269,11 @@ const ГЕЙТ_ЛИНТЕРА = `# Гейт линтера кода станда
 // даёт другой отпечаток при том же содержимом.
 const СРЕДСТВА_ШАБЛОНА = {
   'trip-cli': {
-    версия: '0.8.0',
+    версия: '0.9.0',
     отпечатки: {
-      'win-x64': '3358f92bbc79d8a48337552dd18148ca9f06f4f8245656c258a1f72f76be22f9',
-      'linux-x64': 'd248b96427f88ee4a17ea2fd3827c281b9f24a6523afc4eb57b5739a09a06657',
-      'darwin-arm64': 'b160257423b3cdd1a4a1e75b389b68682b170dd0ca3253bdc45a4e59703e8e68',
+      'win-x64': 'c06cede92206b3d384cc9193defc5b3332c2de2cb3d5b556797b72eda7b2bde2',
+      'linux-x64': 'f9caa5ee074dbd7f27dc7a72bae34c8b349f5bab2f648fb38db4ef28f9304a9b',
+      'darwin-arm64': '655bad4c0b7b874f6c768108f2ed1296dd26e25acd66ce094f00cf777289b4c9',
     },
   },
   'trip-doc-lint': {
