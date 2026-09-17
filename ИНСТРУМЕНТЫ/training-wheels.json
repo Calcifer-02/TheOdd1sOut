@@ -34,9 +34,9 @@
       "release_state": "выпускается: конвейер по метке v<версия>, публикация ручная",
       "already_installed_check": "trip --version",
       "sha256": {
-        "win-x64": "<из harvest.json после публикации 0.7.1>",
-        "linux-x64": "<из harvest.json после публикации 0.7.1>",
-        "darwin-arm64": "<из harvest.json после публикации 0.7.1>"
+        "win-x64": "09f50e9d5a9a3fc1bc23057087bfd8e00b7632520a7d1de4c5bef0c5492afbde",
+        "linux-x64": "3d97d4e5c0fc438fb4c0bb5618b4fd0b79083c5496d57534d9374cc231261ad3",
+        "darwin-arm64": "c9375e8dffc59b3344ab4e295d81d15c7c02d6b64824b6623ec2ddd8937450f7"
       },
       "gate": "коммиты, ветки, журнал изменений"
     },
@@ -137,10 +137,10 @@
       "release_state": "выпускается: конвейер по метке v<версия>, публикация ручная",
       "already_installed_check": "trip-cast --version",
       "sha256": {
-        "win-x64": "<из harvest.json после публикации 0.2.1>",
-        "linux-x64": "<из harvest.json после публикации 0.2.1>",
-        "darwin-arm64": "<из harvest.json после публикации 0.2.1>",
-        "darwin-x64": "<из harvest.json после публикации 0.2.1>"
+        "win-x64": "52d275e5c92a920db404e6adbc283e731233960e7d7d5e052d81298eb403fe4d",
+        "linux-x64": "77826974aedb84b6a3adab255e6c94029948950fd42ceb5e2038a70560770deb",
+        "darwin-arm64": "72561667c14af3777bf6bc1938aa4cd87f1ec8a12452f105c4df48cac0218d95",
+        "darwin-x64": "ec2085292486de32011af717e3d2bb531a3cd954f88181e2ad9db97e858b602a"
       },
       "gate": "проверка формы кода в конвейере: роли мест и границы областей"
     },
@@ -150,7 +150,7 @@
       "purpose": "Гейт кода стандартного стека: ESLint и Prettier фронтенда, анализаторы .NET, squawk для миграций PostgreSQL, встроенные проверки имён, зависимостей и комментариев — один отчёт с кодами выхода TRIP.",
       "requirement": "рекомендуемое",
       "needed_from_gate": 2,
-      "version": "0.6.0",
+      "version": "0.6.1",
       "source": {
         "kind": "generic-package",
         "registry": "internal",
@@ -163,7 +163,7 @@
       "release_state": "выпускается: конвейер по метке v<версия>, публикация ручная",
       "already_installed_check": "trip-lint --version",
       "sha256": {
-        "any": "<из harvest.json после публикации 0.6.0>"
+        "any": "037e5a475687730172ee3fbb42934211a42d41841e833cab4971bdbffc337269"
       },
       "gate": "линтер кода стандартного стека в конвейере: оформление, имена, зависимости, комментарии, анализаторы .NET, миграции PostgreSQL"
     },
@@ -189,10 +189,10 @@
       "release_state": "выпускается: конвейер по метке v<версия>, публикация ручная",
       "already_installed_check": "trip-trace --version",
       "sha256": {
-        "darwin-arm64": "<из harvest.json после публикации 0.2.1>",
-        "darwin-x64": "<из harvest.json после публикации 0.2.1>",
-        "linux-x64": "<из harvest.json после публикации 0.2.1>",
-        "win-x64": "<из harvest.json после публикации 0.2.1>"
+        "darwin-arm64": "f22b04262b7f4a972f1d469797a6a28743875fa3431b07f7b196c96435a8015f",
+        "darwin-x64": "9f3f805e229d731b0c79d472bc486ab67f461b57a58780ee32d21f4a6d925b5e",
+        "linux-x64": "a545d08c0c40cca75b7d7393c420fee799c1031633549b72f02ee25851b6e2cf",
+        "win-x64": "02d39bca82c1f0b045307877a53116ec615776c37baa0d309dd8ab59232349b0"
       },
       "gate": "трассируемость требований"
     },
@@ -336,7 +336,7 @@
       "release_state": "выпускается: bytecode-бандл по метке v<версия>, публикация ручная",
       "already_installed_check": "",
       "sha256": {
-        "any": "<из harvest.json после публикации 0.2.0>"
+        "any": "a2cfa4aefcf4564c896497a635fa2dad8d015ddc02fd8ed92c5dff6cb25826ef"
       },
       "gate": "безопасность"
     }
