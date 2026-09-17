@@ -8,7 +8,8 @@
 //   hotfix/<направление>[/<область>]/bug-<номер>-<краткое-имя>
 //   release/service/v<major>.<minor>
 //
-// Глобальная переменная: branch — имя ветки.
+// Глобальные переменные: branch — имя ветки; trunk — имя основной (защищённой)
+// ветки репозитория из trip.json, по умолчанию main.
 // Результат: true — имя валидно; строка — причина отказа.
 
 var BRANCH_TYPES = [
@@ -19,6 +20,11 @@ var BRANCH_TYPES = [
 ]
 var BRANCH_DIRECTIONS = ['analytics', 'development', 'qa', 'ux', 'client', 'service']
 var BRANCH_MAX_LENGTH = 120
+// Имя основной ветки задаёт репозиторий: корпоративная инфраструктура может
+// предписывать своё (например, dev/1.0), и вбитое здесь «main» защищало бы
+// отсутствующую ветку, а настоящую судило правилами рабочей. Старый валидатор
+// переменной не получает — умолчание оставляет его поведение прежним.
+var BRANCH_TRUNK = (typeof trunk === 'string' && trunk) ? trunk : 'main'
 var BRANCH_AREA_PATTERN = /^[a-z0-9][a-z0-9._-]*$/
 var BRANCH_NAME_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 var BRANCH_CANONICAL_TAIL =
@@ -59,8 +65,9 @@ var branchResult = (function () {
     return 'имя ветки длиннее ' + BRANCH_MAX_LENGTH +
       ' символов (сейчас ' + name.length + ')'
   }
-  if (name === 'main') {
-    return 'прямые коммиты в защищённую ветку main запрещены: создайте рабочую ветку'
+  if (name === BRANCH_TRUNK) {
+    return 'прямые коммиты в защищённую ветку ' + BRANCH_TRUNK +
+      ' запрещены: создайте рабочую ветку'
   }
   if (/^env\/(?:test|stage|prod)$/.test(name)) {
     return 'env/test, env/stage и env/prod являются указателями окружений и не рабочими ветками'
