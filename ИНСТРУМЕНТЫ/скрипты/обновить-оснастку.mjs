@@ -303,12 +303,12 @@ const СРЕДСТВА_ШАБЛОНА = {
     },
   },
   'trip-customs': {
-    версия: '0.5.0',
+    версия: '0.5.1',
     отпечатки: {
-      'darwin-arm64': '272e853898a38ad4489ad19fe155264b6e142e49ca39761400a3bdfca9b1d5e5',
-      'darwin-x64': 'cec4411a39927db3e35bb93952124773199de82abe94eb9191d10a610ea467de',
-      'linux-x64': '5649c1a84a12c6b20a6b68ee7ce5ab9ae032502160f9d145243976ec2361222d',
-      'win-x64': '0ede34fbe22816ec9ecc3cf899c9cce328f2b1df95eedda64efa028f70b0bf77',
+      'darwin-arm64': '28c0af401130d99676246fecd7a8b75545c10ef0115d277a87ad8573a6c168a6',
+      'darwin-x64': '73b154bf94ee6de64788d941adf0ab298a339a6e8492de71851c59153d8b84c4',
+      'linux-x64': 'bf599c73ecd39f9ee37b4bb4ae14521a2b07f55453da465a26a5378d6d1c88cf',
+      'win-x64': 'e94ae48d00475cf9faf605390e679a97dbb094a137faf4b3a197a50f87ad4e96',
     },
   },
   'trip-shiva-connector': {
