@@ -20,7 +20,7 @@
 | trip-lint | 0.6.1 | [README](./trip-lint/README.md), [руководство пользователя](./trip-lint/РУКОВОДСТВО_ПОЛЬЗОВАТЕЛЯ.md), [надстройка стека](./trip-lint/НАДСТРОЙКА_СТЕКА.md), [правила SQL](./trip-lint/ПРАВИЛА_SQL.md) | выпуск (README); руководство, надстройка и правила — исходники |
 | trip-trace-service | 0.2.1 | [README](./trip-trace-service/README.md) | выпуск |
 | trip-shiva-connector | 0.2.0 | [подключение](./trip-shiva-connector/ПОДКЛЮЧЕНИЕ.md) — одна страница для команды; [README](./trip-shiva-connector/README.md), [инструкция](./trip-shiva-connector/ИНСТРУКЦИЯ.md), [изменения](./trip-shiva-connector/CHANGELOG.md) | выпуск |
-| trip-customs (trip-file) | 0.5.0 | [README](./trip-customs/README.md) | исходники; выпуск инструкции не несёт |
+| trip-customs (trip-file) | 0.5.1 | [README](./trip-customs/README.md) | исходники; выпуск инструкции не несёт |
 | tripwire | 0.2.0 | [README](./tripwire/README.md), [развёртывание](./tripwire/РАЗВЁРТЫВАНИЕ.md) | выпуск |
 | trip-bug-loop | 1.0.0 | [развёртывание](./trip-bug-loop/РАЗВЁРТЫВАНИЕ.md) | выпуск (служба: для ведущего и эксплуатации) |
 | trip-backend-inspector | 0.6.0 | [развёртывание](./trip-backend-inspector/РАЗВЁРТЫВАНИЕ.md) | выпуск (служба) |
