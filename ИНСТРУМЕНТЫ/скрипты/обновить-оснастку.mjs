@@ -269,11 +269,11 @@ const ГЕЙТ_ЛИНТЕРА = `# Гейт линтера кода станда
 // даёт другой отпечаток при том же содержимом.
 const СРЕДСТВА_ШАБЛОНА = {
   'trip-cli': {
-    версия: '0.7.0',
+    версия: '0.7.1',
     отпечатки: {
-      'win-x64': 'f5993e9bca0cc675547811cca955ce275b514abc07beef4b888934274fb230e1',
-      'linux-x64': 'acad3d01a3500f4881fa35470300bbabd684430032e60af1f6396afb497da1f7',
-      'darwin-arm64': '21eeb31b9adade622fc4eb07b2fb6a33ad55abd23c51bb80ef97bf0a7e39320b',
+      'win-x64': '09f50e9d5a9a3fc1bc23057087bfd8e00b7632520a7d1de4c5bef0c5492afbde',
+      'linux-x64': '3d97d4e5c0fc438fb4c0bb5618b4fd0b79083c5496d57534d9374cc231261ad3',
+      'darwin-arm64': 'c9375e8dffc59b3344ab4e295d81d15c7c02d6b64824b6623ec2ddd8937450f7',
     },
   },
   'trip-doc-lint': {
@@ -286,36 +286,36 @@ const СРЕДСТВА_ШАБЛОНА = {
     },
   },
   'trip-cast': {
-    версия: '0.2.0',
+    версия: '0.2.1',
     отпечатки: {
-      'win-x64': '576eb7da6e4990e3bba29a861accc38a2393eb2d503f8e98a760256aa769f230',
-      'linux-x64': '2b1264f8d996673c2509e063aaaf5113138d62a16a2c4f4b08e6550027dbaa9e',
-      'darwin-arm64': '62d77cd66a1b7317cc48aa41d16c733ff6bead5a92f9a4be8e950b077b9bcc0a',
-      'darwin-x64': 'ca400be0ff2a28169c589547246dbdbc8752daa662f98ade37dfdc223c80e74c',
+      'win-x64': '52d275e5c92a920db404e6adbc283e731233960e7d7d5e052d81298eb403fe4d',
+      'linux-x64': '77826974aedb84b6a3adab255e6c94029948950fd42ceb5e2038a70560770deb',
+      'darwin-arm64': '72561667c14af3777bf6bc1938aa4cd87f1ec8a12452f105c4df48cac0218d95',
+      'darwin-x64': 'ec2085292486de32011af717e3d2bb531a3cd954f88181e2ad9db97e858b602a',
     },
   },
   'trip-lint': {
-    версия: '0.5.1',
+    версия: '0.6.1',
     отпечатки: {
-      'any': 'bb6678467482e5910a3164f0f30a549f752d46d369985d8d4db82132efdce5c0',
+      'any': '037e5a475687730172ee3fbb42934211a42d41841e833cab4971bdbffc337269',
     },
   },
   'trip-trace-service': {
-    версия: '0.2.0',
+    версия: '0.2.1',
     отпечатки: {
-      'darwin-arm64': '81478b95adf4080b6b202b48a89cb9af96c70f2734e24472f2e03edf2e87bce6',
-      'darwin-x64': '53ab7de9846a89a6d134d2b77c3149cf4f03e5aa1514bf4190d6faeee00d45ef',
-      'linux-x64': '5bf7be082890d0faee35e2821205b43381422877690436eb6c429f3ce0293484',
-      'win-x64': '74d2ee240e4f1377545e32a905b98df3fa3f59e3e02332196ffab20985ebb297',
+      'darwin-arm64': 'f22b04262b7f4a972f1d469797a6a28743875fa3431b07f7b196c96435a8015f',
+      'darwin-x64': '9f3f805e229d731b0c79d472bc486ab67f461b57a58780ee32d21f4a6d925b5e',
+      'linux-x64': 'a545d08c0c40cca75b7d7393c420fee799c1031633549b72f02ee25851b6e2cf',
+      'win-x64': '02d39bca82c1f0b045307877a53116ec615776c37baa0d309dd8ab59232349b0',
     },
   },
   'trip-customs': {
-    версия: '0.5.0',
+    версия: '0.5.1',
     отпечатки: {
-      'darwin-arm64': '272e853898a38ad4489ad19fe155264b6e142e49ca39761400a3bdfca9b1d5e5',
-      'darwin-x64': 'cec4411a39927db3e35bb93952124773199de82abe94eb9191d10a610ea467de',
-      'linux-x64': '5649c1a84a12c6b20a6b68ee7ce5ab9ae032502160f9d145243976ec2361222d',
-      'win-x64': '0ede34fbe22816ec9ecc3cf899c9cce328f2b1df95eedda64efa028f70b0bf77',
+      'darwin-arm64': '28c0af401130d99676246fecd7a8b75545c10ef0115d277a87ad8573a6c168a6',
+      'darwin-x64': '73b154bf94ee6de64788d941adf0ab298a339a6e8492de71851c59153d8b84c4',
+      'linux-x64': 'bf599c73ecd39f9ee37b4bb4ae14521a2b07f55453da465a26a5378d6d1c88cf',
+      'win-x64': 'e94ae48d00475cf9faf605390e679a97dbb094a137faf4b3a197a50f87ad4e96',
     },
   },
   'trip-shiva-connector': {
@@ -343,9 +343,9 @@ const СРЕДСТВА_ШАБЛОНА = {
     },
   },
   'tripwire': {
-    версия: '0.1.0',
+    версия: '0.2.0',
     отпечатки: {
-      'any': 'ddfb519b476aab1128568a12c15503636c3380329ab2d6e3660f9b29743f314a',
+      'any': 'a2cfa4aefcf4564c896497a635fa2dad8d015ddc02fd8ed92c5dff6cb25826ef',
     },
   },
 };
