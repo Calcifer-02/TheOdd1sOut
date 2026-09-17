@@ -1,8 +1,9 @@
 {
-  "trip": "0.5.1",
+  "trip": "0.9.0",
   "assets": {
-    "msg.js": "sha256:7defb204e73af46b41fdf2aa87081588b3dada453a47c1eea57dd133f5a98bce",
-    "branch.js": "sha256:dbb72d6cfd7a5867f30da910009adebdf31b79755142be726b07594782e55a4b",
-    "changelog.js": "sha256:425a198eb92dd63e9ad86005d9bfcb96c4f94da939d532a0a45f5dd088d8a5a8"
+    "msg.js": "sha256:00b5efd1c8a6bb739f3aeeac87bca3ba11db6ebfb66f87642ed8fe184cf9dd6e",
+    "branch.js": "sha256:e15b8dd17a215ff8ce8d355498000b4858a5d640f7debec4fd8970a7ff958e4a",
+    "changelog.js": "sha256:425a198eb92dd63e9ad86005d9bfcb96c4f94da939d532a0a45f5dd088d8a5a8",
+    "trace-policy.json": "sha256:98d971a63904ff56203caf65c257cef3224ac80b378799c42f5a650b61d97110"
   }
 }

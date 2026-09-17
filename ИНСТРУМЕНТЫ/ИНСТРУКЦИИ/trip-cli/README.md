@@ -333,8 +333,9 @@ trip verify --messages --base main
   вовсе там, где `trip init` не выполняли.
 
 `pre-commit` запускает команду с `--staged`, `commit-msg` — команду с
-`--message`, а `pre-push` — команду с `--require-changelog` и
-`${TRIP_BASE_REF:-main}` в качестве основания; `--commits` и `--messages`
+`--message`, а `pre-push` — команду с `--require-changelog` и `$TRIP_BASE_REF`
+в качестве основания; незаданная переменная означает пустое основание, и его
+называет сам trip по настройке `trunk` в `trip.json` (по умолчанию `main`); `--commits` и `--messages`
 предназначены для гейта запроса на слияние, где проверяется история, уже
 созданная в обход локальных hooks. В режиме
 `--require-changelog` и при проверке рабочего пакета используются доверенные
