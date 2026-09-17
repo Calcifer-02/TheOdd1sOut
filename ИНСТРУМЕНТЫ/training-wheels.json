@@ -19,7 +19,7 @@
       "purpose": "Единый вход и git-хуки: тип и направление коммита, ссылка на требование, журнал изменений, имя ветки; реестр средств .trip/tools.",
       "requirement": "обязательное",
       "needed_from_gate": 0,
-      "version": "0.7.1",
+      "version": "0.8.0",
       "source": {
         "kind": "generic-package",
         "registry": "internal",
@@ -34,9 +34,9 @@
       "release_state": "выпускается: конвейер по метке v<версия>, публикация ручная",
       "already_installed_check": "trip --version",
       "sha256": {
-        "win-x64": "09f50e9d5a9a3fc1bc23057087bfd8e00b7632520a7d1de4c5bef0c5492afbde",
-        "linux-x64": "3d97d4e5c0fc438fb4c0bb5618b4fd0b79083c5496d57534d9374cc231261ad3",
-        "darwin-arm64": "c9375e8dffc59b3344ab4e295d81d15c7c02d6b64824b6623ec2ddd8937450f7"
+        "win-x64": "3358f92bbc79d8a48337552dd18148ca9f06f4f8245656c258a1f72f76be22f9",
+        "linux-x64": "d248b96427f88ee4a17ea2fd3827c281b9f24a6523afc4eb57b5739a09a06657",
+        "darwin-arm64": "b160257423b3cdd1a4a1e75b389b68682b170dd0ca3253bdc45a4e59703e8e68"
       },
       "gate": "коммиты, ветки, журнал изменений"
     },
@@ -150,7 +150,7 @@
       "purpose": "Гейт кода стандартного стека: ESLint и Prettier фронтенда, анализаторы .NET, squawk для миграций PostgreSQL, встроенные проверки имён, зависимостей и комментариев — один отчёт с кодами выхода TRIP.",
       "requirement": "рекомендуемое",
       "needed_from_gate": 2,
-      "version": "0.6.1",
+      "version": "0.7.0",
       "source": {
         "kind": "generic-package",
         "registry": "internal",
@@ -163,7 +163,7 @@
       "release_state": "выпускается: конвейер по метке v<версия>, публикация ручная",
       "already_installed_check": "trip-lint --version",
       "sha256": {
-        "any": "037e5a475687730172ee3fbb42934211a42d41841e833cab4971bdbffc337269"
+        "any": "4e5884ee2b59151b10208d7ef1e5896cea91ede4a14d3c3139ad6a76c74abed7"
       },
       "gate": "линтер кода стандартного стека в конвейере: оформление, имена, зависимости, комментарии, анализаторы .NET, миграции PostgreSQL"
     },
@@ -323,7 +323,7 @@
       "purpose": "Обвязка безопасности: лестница вердиктов находок (candidate → verified-static → proven), детерминированный вердикт на хосте, неизменяемое свидетельство; питает Gate 6 (безопасность) и класс долга К13.",
       "requirement": "необязательное",
       "needed_from_gate": 6,
-      "version": "0.2.0",
+      "version": "0.2.1",
       "source": {
         "kind": "generic-package",
         "registry": "internal",
@@ -336,7 +336,7 @@
       "release_state": "выпускается: bytecode-бандл по метке v<версия>, публикация ручная",
       "already_installed_check": "",
       "sha256": {
-        "any": "a2cfa4aefcf4564c896497a635fa2dad8d015ddc02fd8ed92c5dff6cb25826ef"
+        "any": "6144f752f7b454bc57e80de4d5395c40ce18ffe913e6d8d2c0cc51e3fac1fe85"
       },
       "gate": "безопасность"
     }
