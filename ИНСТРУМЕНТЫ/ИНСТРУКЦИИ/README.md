@@ -14,14 +14,14 @@
 
 | Средство | Версия (ходунки) | Что лежит | Источник |
 |---|---|---|---|
-| trip-cli | 0.7.1 | [README](./trip-cli/README.md), [CHANGELOG](./trip-cli/CHANGELOG.md), [руководство пользователя](./trip-cli/РУКОВОДСТВО_ПОЛЬЗОВАТЕЛЯ.md), [модель политик](./trip-cli/МОДЕЛЬ_ПОЛИТИК.md) | выпуск; руководство и модель политик — из исходников, версия 0.7.0 |
+| trip-cli | 0.8.0 | [README](./trip-cli/README.md), [CHANGELOG](./trip-cli/CHANGELOG.md), [руководство пользователя](./trip-cli/РУКОВОДСТВО_ПОЛЬЗОВАТЕЛЯ.md), [модель политик](./trip-cli/МОДЕЛЬ_ПОЛИТИК.md) | выпуск; руководство и модель политик — из исходников, версия 0.7.0 |
 | trip-doc-lint | 0.1.10 | [README](./trip-doc-lint/README.md) (замысел и правила), [README выпуска](./trip-doc-lint/README_ВЫПУСКА.md) | исходники; выпуск несёт только короткую карточку |
 | trip-cast | 0.2.1 | [README](./trip-cast/README.md) | выпуск |
-| trip-lint | 0.6.1 | [README](./trip-lint/README.md), [руководство пользователя](./trip-lint/РУКОВОДСТВО_ПОЛЬЗОВАТЕЛЯ.md), [надстройка стека](./trip-lint/НАДСТРОЙКА_СТЕКА.md), [правила SQL](./trip-lint/ПРАВИЛА_SQL.md) | выпуск (README); руководство, надстройка и правила — исходники |
+| trip-lint | 0.7.0 | [README](./trip-lint/README.md), [руководство пользователя](./trip-lint/РУКОВОДСТВО_ПОЛЬЗОВАТЕЛЯ.md), [надстройка стека](./trip-lint/НАДСТРОЙКА_СТЕКА.md), [правила SQL](./trip-lint/ПРАВИЛА_SQL.md) | выпуск (README); руководство, надстройка и правила — исходники |
 | trip-trace-service | 0.2.1 | [README](./trip-trace-service/README.md) | выпуск |
 | trip-shiva-connector | 0.2.0 | [подключение](./trip-shiva-connector/ПОДКЛЮЧЕНИЕ.md) — одна страница для команды; [README](./trip-shiva-connector/README.md), [инструкция](./trip-shiva-connector/ИНСТРУКЦИЯ.md), [изменения](./trip-shiva-connector/CHANGELOG.md) | выпуск |
 | trip-customs (trip-file) | 0.5.1 | [README](./trip-customs/README.md) | исходники; выпуск инструкции не несёт |
-| tripwire | 0.2.0 | [README](./tripwire/README.md), [развёртывание](./tripwire/РАЗВЁРТЫВАНИЕ.md) | выпуск |
+| tripwire | 0.2.1 | [README](./tripwire/README.md), [развёртывание](./tripwire/РАЗВЁРТЫВАНИЕ.md) | выпуск |
 | trip-bug-loop | 1.0.0 | [развёртывание](./trip-bug-loop/РАЗВЁРТЫВАНИЕ.md) | выпуск (служба: для ведущего и эксплуатации) |
 | trip-backend-inspector | 0.6.0 | [развёртывание](./trip-backend-inspector/РАЗВЁРТЫВАНИЕ.md) | выпуск (служба) |
 | trip-frontend-inspector | 0.1.0 | [развёртывание](./trip-frontend-inspector/РАЗВЁРТЫВАНИЕ.md) | выпуск (служба) |
