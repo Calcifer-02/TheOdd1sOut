@@ -1,6 +1,7 @@
 {
   "name": "<Имя проекта>",
   "version": "0.1.0",
+  "trunk": "main",
   "methodology": {
     "description": "Файл методологии проекта. Управляется trip."
   },
@@ -78,7 +79,6 @@
       },
       "changelog": {
         "path": "CHANGELOG.md",
-        "baseRef": "main",
         "validator": "changelog.js"
       }
     },
@@ -155,7 +155,6 @@
       },
       "changelog": {
         "path": "CHANGELOG.md",
-        "baseRef": "main",
         "validator": "changelog.js"
       }
     }
