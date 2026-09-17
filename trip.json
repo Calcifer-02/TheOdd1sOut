@@ -7,7 +7,7 @@
   "policies": {
     "generic": {
       "title": "Обычные изменения",
-      "description": "Работа над проектом: менять можно всё, кроме методологии — файла trip.json и содержимого папки trip/.",
+      "description": "Работа над проектом: менять можно всё, кроме методологии — файла trip.json и содержимого папки trip/. Исключение — настройки средств самого проекта (trip/cast-agreement.json, trip/trace-policy.json): они принадлежат проекту, а не методологии, и правятся здесь.",
       "emblem": "shield",
       "lockMode": "denylist",
       "rules": {
@@ -18,8 +18,8 @@
               "pattern": "trip.json"
             },
             {
-              "type": "wildcard",
-              "pattern": "trip/**"
+              "type": "regexp",
+              "pattern": "^trip/(?!(?:cast-agreement\\.json|trace-policy\\.json)$).*"
             }
           ]
         },
@@ -30,8 +30,8 @@
               "pattern": "trip.json"
             },
             {
-              "type": "wildcard",
-              "pattern": "trip/**"
+              "type": "regexp",
+              "pattern": "^trip/(?!(?:cast-agreement\\.json|trace-policy\\.json)$).*"
             }
           ]
         },
@@ -42,8 +42,8 @@
               "pattern": "trip.json"
             },
             {
-              "type": "wildcard",
-              "pattern": "trip/**"
+              "type": "regexp",
+              "pattern": "^trip/(?!(?:cast-agreement\\.json|trace-policy\\.json)$).*"
             }
           ]
         },
@@ -54,8 +54,8 @@
               "pattern": "trip.json"
             },
             {
-              "type": "wildcard",
-              "pattern": "trip/**"
+              "type": "regexp",
+              "pattern": "^trip/(?!(?:cast-agreement\\.json|trace-policy\\.json)$).*"
             }
           ]
         }
@@ -66,8 +66,8 @@
           "pattern": "trip.json"
         },
         {
-          "type": "wildcard",
-          "pattern": "trip/**"
+          "type": "regexp",
+          "pattern": "^trip/(?!(?:cast-agreement\\.json|trace-policy\\.json)$).*"
         }
       ],
       "message": {
@@ -84,7 +84,7 @@
     },
     "policies-only": {
       "title": "Только методология",
-      "description": "Правим методологию: разрешено менять лишь файл trip.json и содержимое папки trip/. Остальные файлы заблокированы на запись.",
+      "description": "Правим методологию: разрешено менять лишь файл trip.json и содержимое папки trip/, кроме настроек средств проекта. Остальные файлы заблокированы на запись.",
       "emblem": "shield-check",
       "lockMode": "allowlist",
       "rules": {
@@ -95,8 +95,8 @@
               "pattern": "trip.json"
             },
             {
-              "type": "wildcard",
-              "pattern": "trip/**"
+              "type": "regexp",
+              "pattern": "^trip/(?!(?:cast-agreement\\.json|trace-policy\\.json)$).*"
             }
           ]
         },
@@ -107,8 +107,8 @@
               "pattern": "trip.json"
             },
             {
-              "type": "wildcard",
-              "pattern": "trip/**"
+              "type": "regexp",
+              "pattern": "^trip/(?!(?:cast-agreement\\.json|trace-policy\\.json)$).*"
             }
           ]
         },
@@ -119,8 +119,8 @@
               "pattern": "trip.json"
             },
             {
-              "type": "wildcard",
-              "pattern": "trip/**"
+              "type": "regexp",
+              "pattern": "^trip/(?!(?:cast-agreement\\.json|trace-policy\\.json)$).*"
             }
           ]
         },
@@ -131,8 +131,8 @@
               "pattern": "trip.json"
             },
             {
-              "type": "wildcard",
-              "pattern": "trip/**"
+              "type": "regexp",
+              "pattern": "^trip/(?!(?:cast-agreement\\.json|trace-policy\\.json)$).*"
             }
           ]
         }
@@ -143,8 +143,8 @@
           "pattern": "trip.json"
         },
         {
-          "type": "wildcard",
-          "pattern": "trip/**"
+          "type": "regexp",
+          "pattern": "^trip/(?!(?:cast-agreement\\.json|trace-policy\\.json)$).*"
         }
       ],
       "message": {
