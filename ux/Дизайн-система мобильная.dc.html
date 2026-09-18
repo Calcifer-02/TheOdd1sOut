@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; background: #DEDDE1; font-family: Montserrat, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: #1F5BFF; }
+  a:hover { color: #1741B8; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</helmet>
+<div style="min-height:100vh;padding:32px 16px 64px;display:flex;flex-direction:column;align-items:center;gap:24px">
+
+  <div style="width:100%;max-width:390px;display:flex;flex-direction:column;gap:10px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-family:Montserrat;font-weight:700;font-size:20px;line-height:24px;color:#FF4719;letter-spacing:-0.01em">ИМОЛТ</span>
+      <span style="width:1px;height:16px;background:#B4B4B8"></span>
+      <span style="font-family:Montserrat;font-weight:500;font-size:13px;line-height:18px;color:#4A4A4A">Мобильная дизайн-система · 390</span>
+    </div>
+    <h1 style="margin:0;font-family:Montserrat;font-weight:700;font-size:32px;line-height:38px;color:#111111;letter-spacing:-0.02em;text-wrap:pretty">Шкала, компоненты и правила для экрана 390</h1>
+    <p style="margin:0;font-family:Montserrat;font-weight:400;font-size:14px;line-height:20px;color:#4A4A4A">Поля 16 px, цели касания не меньше 44 × 44, горизонтальная прокрутка вместо переноса у вкладок, сортировки и чипов. Сводка выбора — нижняя панель 72 px.</p>
+  </div>
+
+  <div style="width:100%;max-width:390px;background:#EFEEF1;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:14px">
+    <div style="font-family:Montserrat;font-weight:700;font-size:11px;line-height:15px;letter-spacing:0.08em;text-transform:uppercase;color:#707070">01 · Типографика</div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <span style="font-family:Inter;font-weight:600;font-size:11px;line-height:15px;color:#848484">H1 · 32/38 · 700</span>
+        <span style="font-family:Montserrat;font-weight:700;font-size:32px;line-height:38px;color:#111111;letter-spacing:-0.02em">Калькулятор вывоза</span>
+      </div>
+      <div style="height:1px;background:#D7D7D9"></div>
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <span style="font-family:Inter;font-weight:600;font-size:11px;line-height:15px;color:#848484">H2 · 26/32 · 700</span>
+        <span style="font-family:Montserrat;font-weight:700;font-size:26px;line-height:32px;color:#111111;letter-spacing:-0.01em">Результаты</span>
+      </div>
+      <div style="height:1px;background:#D7D7D9"></div>
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <span style="font-family:Inter;font-weight:600;font-size:11px;line-height:15px;color:#848484">H3 · 20/26 · 700 &nbsp;·&nbsp; текст 14/20 &nbsp;·&nbsp; подпись 12/16</span>
+        <span style="font-family:Montserrat;font-weight:700;font-size:20px;line-height:26px;color:#111111">Площадка «Сабурово»</span>
+        <span style="font-family:Montserrat;font-weight:400;font-size:14px;line-height:20px;color:#111111">Перевозка и утилизация считаются отдельно, результат появляется сразу.</span>
+        <span style="font-family:Montserrat;font-weight:400;font-size:12px;line-height:16px;color:#707070">г. о. Красногорск · 38 км</span>
+      </div>
+      <div style="height:1px;background:#D7D7D9"></div>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <span style="font-family:Inter;font-weight:600;font-size:11px;line-height:15px;color:#848484">Числа · Inter · tabular-nums · итог в карточке 20/24, в панели 20/24</span>
+        <span style="font-family:Inter;font-weight:700;font-size:20px;line-height:24px;color:#111111;font-variant-numeric:tabular-nums">19&nbsp;520&nbsp;₽</span>
+        <span style="font-family:Inter;font-weight:700;font-size:17px;line-height:23px;color:#111111;font-variant-numeric:tabular-nums">1&nbsp;284&nbsp;500&nbsp;₽</span>
+        <span style="font-family:Inter;font-weight:700;font-size:15px;line-height:21px;color:#111111;font-variant-numeric:tabular-nums">47&nbsp;184&nbsp;000&nbsp;₽</span>
+        <span style="font-family:Montserrat;font-weight:400;font-size:12px;line-height:16px;color:#707070">Кегль понижается при росте разрядности: 20 → 17 → 15</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="width:100%;max-width:390px;background:#EFEEF1;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:16px">
+    <div style="font-family:Montserrat;font-weight:700;font-size:11px;line-height:15px;letter-spacing:0.08em;text-transform:uppercase;color:#707070">02 · Поля и кнопки</div>
+
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <span style="font-family:Inter;font-weight:600;font-size:11px;line-height:15px;color:#848484">Поле 56 px · пустое, фокус, ошибка</span>
+      <div style="height:56px;border:1px solid #D7D7D9;border-radius:12px;background:#FFFFFF;padding:0 16px;display:flex;align-items:center">
+        <span style="font-family:Montserrat;font-weight:400;font-size:16px;line-height:22px;color:#848484">Адрес вывоза</span>
+      </div>
+      <div style="height:56px;border:1px solid #111111;border-radius:12px;background:#FFFFFF;padding:0 16px;display:flex;flex-direction:column;justify-content:center;box-shadow:0 0 0 2px #EFEEF1,0 0 0 4px #1F5BFF">
+        <span style="font-family:Montserrat;font-weight:500;font-size:11px;line-height:14px;color:#848484">Адрес вывоза</span>
+        <span style="font-family:Montserrat;font-weight:400;font-size:16px;line-height:22px;color:#111111">Москва, ул. Годовикова, 9</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="height:56px;border:1px solid #D3321B;border-radius:12px;background:#FFFFFF;padding:0 16px;display:flex;flex-direction:column;justify-content:center">
+          <span style="font-family:Montserrat;font-weight:500;font-size:11px;line-height:14px;color:#848484">Адрес вывоза</span>
+          <span style="font-family:Montserrat;font-weight:400;font-size:16px;line-height:22px;color:#111111">Годовикова</span>
+        </div>
+        <span style="font-family:Montserrat;font-weight:400;font-size:12px;line-height:16px;color:#D3321B">Выберите адрес из подсказки</span>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <span style="font-family:Inter;font-weight:600;font-size:11px;line-height:15px;color:#848484">Объём с мерой · подпись пересчёта</span>
+      <div style="height:56px;border:1px solid #D7D7D9;border-radius:12px;background:#FFFFFF;padding:0 8px 0 16px;display:flex;align-items:center;gap:8px">
+        <span style="flex:1;min-width:0;display:flex;flex-direction:column">
+          <span style="font-family:Montserrat;font-weight:500;font-size:11px;line-height:14px;color:#848484">Объём</span>
+          <span style="font-family:Inter;font-weight:600;font-size:16px;line-height:22px;color:#111111;font-variant-numeric:tabular-nums">15</span>
+        </span>
+        <span style="display:flex;padding:3px;background:#F5F4F7;border-radius:999px;flex:none">
+          <span style="height:44px;padding:0 14px;display:flex;align-items:center;border-radius:999px;font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#707070">т</span>
+          <span style="height:44px;padding:0 14px;display:flex;align-items:center;border-radius:999px;background:#111111;font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#FFFFFF">м³</span>
+        </span>
+      </div>
+      <span style="font-family:Montserrat;font-weight:400;font-size:12px;line-height:16px;color:#707070">≈ 7,5 т при плотности 0,5 т/м³</span>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <span style="font-family:Inter;font-weight:600;font-size:11px;line-height:15px;color:#848484">Кнопки во всю ширину · главная 56, вторичная 52, отключённая, загрузка</span>
+      <button type="button" style="height:56px;width:100%;border:0;border-radius:999px;background:#E7F53D;font-family:Montserrat;font-weight:700;font-size:16px;line-height:24px;color:#111111;cursor:pointer;transition:background 150ms ease-out" style-hover="background:#DDEB2E">Рассчитать</button>
+      <button type="button" style="height:52px;width:100%;border:0;border-radius:999px;background:#111111;font-family:Montserrat;font-weight:500;font-size:15px;line-height:21px;color:#FFFFFF;cursor:pointer">Показать ещё 6</button>
+      <button type="button" disabled="disabled" style="height:56px;width:100%;border:0;border-radius:999px;background:#F0F3C8;font-family:Montserrat;font-weight:700;font-size:16px;line-height:24px;color:#9C9C9C;cursor:not-allowed">Рассчитать</button>
+      <button type="button" style="height:56px;width:100%;border:0;border-radius:999px;background:#E7F53D;display:flex;align-items:center;justify-content:center;cursor:progress">
+        <span style="width:22px;height:22px;border-radius:999px;border:2px solid rgba(17,17,17,0.25);border-top-color:#111111;animation:spin 700ms linear infinite;display:block"></span>
+      </button>
+      <button type="button" style="min-height:44px;border:0;background:none;font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#1F5BFF;text-decoration:underline;cursor:pointer;align-self:flex-start">Открыть справочник цен</button>
+    </div>
+  </div>
+
+  <div style="width:100%;max-width:390px;background:#EFEEF1;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:16px">
+    <div style="font-family:Montserrat;font-weight:700;font-size:11px;line-height:15px;letter-spacing:0.08em;text-transform:uppercase;color:#707070">03 · Прокручиваемые ряды</div>
+
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <span style="font-family:Inter;font-weight:600;font-size:11px;line-height:15px;color:#848484">Вкладки типов отходов</span>
+      <div style="display:flex;gap:4px;padding:4px;background:#F5F4F7;border-radius:999px;overflow-x:auto">
+        <span style="height:44px;padding:0 18px;display:flex;align-items:center;border-radius:999px;background:#FFFFFF;font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#111111;white-space:nowrap;flex:none">Лом бетона, 20 т</span>
+        <span style="height:44px;padding:0 18px;display:flex;align-items:center;border-radius:999px;font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#707070;white-space:nowrap;flex:none">Древесина, 7,5 т</span>
+        <span style="height:44px;padding:0 18px;display:flex;align-items:center;border-radius:999px;font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#707070;white-space:nowrap;flex:none">Грунт, 40 т</span>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <span style="font-family:Inter;font-weight:600;font-size:11px;line-height:15px;color:#848484">Сортировка · стрелка у активной</span>
+      <div style="display:flex;padding:3px;background:#F5F4F7;border-radius:999px;overflow-x:auto">
+        <span style="height:44px;padding:0 14px;display:flex;align-items:center;gap:6px;border-radius:999px;background:#111111;font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#FFFFFF;white-space:nowrap;flex:none">По итогу
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M6 10V2" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"/><path d="M2.8 5.2L6 2L9.2 5.2" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <span style="height:44px;padding:0 14px;display:flex;align-items:center;border-radius:999px;font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#707070;white-space:nowrap;flex:none">Перевозка</span>
+        <span style="height:44px;padding:0 14px;display:flex;align-items:center;border-radius:999px;font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#707070;white-space:nowrap;flex:none">Утилизация</span>
+        <span style="height:44px;padding:0 14px;display:flex;align-items:center;border-radius:999px;font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#707070;white-space:nowrap;flex:none">Расстояние</span>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <span style="font-family:Inter;font-weight:600;font-size:11px;line-height:15px;color:#848484">Чипы фильтров · 44 px на мобильном</span>
+      <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:2px">
+        <span style="height:44px;padding:0 16px;display:flex;align-items:center;border:1px solid #111111;border-radius:999px;background:#111111;font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#FFFFFF;white-space:nowrap;flex:none">до 50 км</span>
+        <span style="height:44px;padding:0 16px;display:flex;align-items:center;border:1px solid #D7D7D9;border-radius:999px;background:#FFFFFF;font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#111111;white-space:nowrap;flex:none">не менее 50 км</span>
+        <span style="height:44px;padding:0 16px;display:flex;align-items:center;border:1px solid #D7D7D9;border-radius:999px;background:#FFFFFF;font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#111111;white-space:nowrap;flex:none">сбросить</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="width:100%;max-width:390px;background:#EFEEF1;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:16px">
+    <div style="font-family:Montserrat;font-weight:700;font-size:11px;line-height:15px;letter-spacing:0.08em;text-transform:uppercase;color:#707070">04 · Карточка результата</div>
+
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <span style="font-family:Inter;font-weight:600;font-size:11px;line-height:15px;color:#848484">Выбранная · заливка accent/row-hover, без полосы слева</span>
+      <div style="background:#F8FDB5;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <span style="width:22px;height:22px;border-radius:6px;background:#111111;flex:none;margin-top:2px;display:flex;align-items:center;justify-content:center">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8.5L6.5 11.5L12.5 5" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+          <div style="flex:1;min-width:0">
+            <div style="font-family:Inter;font-weight:600;font-size:15px;line-height:21px;color:#111111">Площадка «Сабурово»</div>
+            <div style="font-family:Montserrat;font-weight:400;font-size:12px;line-height:16px;color:#707070">г. о. Красногорск · 38 км</div>
+          </div>
+          <div style="font-family:Inter;font-weight:700;font-size:20px;line-height:24px;color:#111111;font-variant-numeric:tabular-nums;flex:none">19&nbsp;520&nbsp;₽</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-left:34px">
+          <span style="display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 8px;border-radius:6px;background:#E6F4EC">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8.5L6.5 11.5L12.5 5" stroke="#1F8A4C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span style="font-family:Montserrat;font-weight:600;font-size:12px;line-height:16px;color:#1F8A4C">Активен</span>
+          </span>
+          <span style="font-family:Montserrat;font-weight:400;font-size:12px;line-height:16px;color:#707070">данные от 17.09</span>
+        </div>
+        <div style="height:1px;background:#E2E2E2"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+          <div style="display:flex;gap:14px;font-family:Inter;font-weight:600;font-size:13px;line-height:18px;color:#707070;font-variant-numeric:tabular-nums">
+            <span>перевозка 9&nbsp;120&nbsp;₽</span>
+            <span>утилизация 10&nbsp;400&nbsp;₽</span>
+          </div>
+          <span style="width:20px;height:20px;flex:none;display:flex;align-items:center;justify-content:center">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 2.5C7 2.5 4.8 4.8 4.8 7.7C4.8 11.6 10 17.5 10 17.5C10 17.5 15.2 11.6 15.2 7.7C15.2 4.8 13 2.5 10 2.5Z" stroke="#9C9C9C" stroke-width="1.5" stroke-linejoin="round"/><circle cx="10" cy="7.7" r="1.8" stroke="#9C9C9C" stroke-width="1.5"/></svg>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <span style="font-family:Inter;font-weight:600;font-size:11px;line-height:15px;color:#848484">Заблокированный · приглушена, флажок доступен</span>
+      <div style="background:#FFFFFF;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <span style="width:22px;height:22px;border-radius:6px;border:1px solid #D7D7D9;background:#FFFFFF;flex:none;margin-top:2px"></span>
+          <div style="flex:1;min-width:0">
+            <div style="font-family:Inter;font-weight:600;font-size:15px;line-height:21px;color:#707070">Полигон «Алексинский карьер»</div>
+            <div style="font-family:Montserrat;font-weight:400;font-size:12px;line-height:16px;color:#707070">г. о. Клин · 88 км</div>
+          </div>
+          <div style="font-family:Inter;font-weight:700;font-size:20px;line-height:24px;color:#707070;font-variant-numeric:tabular-nums;flex:none">33&nbsp;120&nbsp;₽</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-left:34px">
+          <span style="display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 8px;border-radius:6px;background:#FBE9E5">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="5.5" stroke="#D3321B" stroke-width="1.5"/><path d="M4.2 11.8L11.8 4.2" stroke="#D3321B" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <span style="font-family:Montserrat;font-weight:600;font-size:12px;line-height:16px;color:#D3321B">Заблокирован</span>
+          </span>
+          <span style="font-family:Montserrat;font-weight:400;font-size:12px;line-height:16px;color:#707070">данные от 17.09</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <span style="font-family:Inter;font-weight:600;font-size:11px;line-height:15px;color:#848484">Загрузка · скелет карточки</span>
+      <div style="background:#FFFFFF;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <span style="width:22px;height:22px;border-radius:6px;background:#EDEDEF;flex:none"></span>
+          <div style="flex:1;display:flex;flex-direction:column;gap:6px"><span style="height:16px;width:66%;border-radius:4px;background:#EDEDEF;display:block"></span><span style="height:12px;width:82%;border-radius:4px;background:#F5F4F7;display:block"></span></div>
+          <span style="width:86px;height:22px;border-radius:4px;background:#EDEDEF;flex:none"></span>
+        </div>
+        <span style="height:24px;width:120px;border-radius:6px;background:#EDEDEF;display:block"></span>
+        <div style="height:1px;background:#E2E2E2"></div>
+        <span style="height:16px;border-radius:4px;background:#F5F4F7;display:block"></span>
+      </div>
+    </div>
+  </div>
+
+  <div style="width:100%;max-width:390px;background:#EFEEF1;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:16px">
+    <div style="font-family:Montserrat;font-weight:700;font-size:11px;line-height:15px;letter-spacing:0.08em;text-transform:uppercase;color:#707070">05 · Панели, шторка, уведомления</div>
+
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <span style="font-family:Inter;font-weight:600;font-size:11px;line-height:15px;color:#848484">Нижняя панель выбора · 72 px</span>
+      <div style="height:72px;background:#FFFFFF;border-radius:12px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 -8px 24px rgba(17,17,17,0.12)">
+        <div style="display:flex;flex-direction:column;min-width:0">
+          <span style="font-family:Montserrat;font-weight:500;font-size:12px;line-height:16px;color:#707070">Выбрано 2 · перевозка 19 920 ₽</span>
+          <span style="font-family:Inter;font-weight:700;font-size:20px;line-height:24px;color:#111111;font-variant-numeric:tabular-nums">39&nbsp;320&nbsp;₽</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex:none">
+          <span style="width:48px;height:48px;border:1px solid #D7D7D9;border-radius:999px;background:#FFFFFF;display:flex;align-items:center;justify-content:center">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5 3.5H8L9.2 6.8L7.6 8C8.4 9.8 10.2 11.6 12 12.4L13.2 10.8L16.5 12V15C16.5 15.8 15.8 16.5 15 16.5C9.2 16.1 3.9 10.8 3.5 5C3.5 4.2 4.2 3.5 5 3.5Z" stroke="#111111" stroke-width="1.5" stroke-linejoin="round"/></svg>
+          </span>
+          <span style="height:48px;padding:0 20px;border-radius:999px;background:#E7F53D;display:flex;align-items:center;font-family:Montserrat;font-weight:700;font-size:14px;line-height:20px;color:#111111;white-space:nowrap">Скачать КП</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <span style="font-family:Inter;font-weight:600;font-size:11px;line-height:15px;color:#848484">Нижняя навигация · 64 px · активный пункт чёрный</span>
+      <div style="height:64px;background:#FFFFFF;border-radius:12px;border-top:1px solid #E2E2E2;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))">
+        <span style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px">
+          <svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="4" y="2.5" width="12" height="15" rx="2" stroke="#111111" stroke-width="1.5"/><path d="M7 6.5H13" stroke="#111111" stroke-width="1.5" stroke-linecap="round"/><path d="M7.2 10.6H7.3" stroke="#111111" stroke-width="1.8" stroke-linecap="round"/><path d="M10 10.6H10.1" stroke="#111111" stroke-width="1.8" stroke-linecap="round"/><path d="M12.8 10.6H12.9" stroke="#111111" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <span style="font-family:Montserrat;font-weight:600;font-size:11px;line-height:14px;color:#111111">Расчёт</span>
+        </span>
+        <span style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px">
+          <svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5 2.5H11.5L15.5 6.5V17.5H5V2.5Z" stroke="#9C9C9C" stroke-width="1.5" stroke-linejoin="round"/><path d="M11.2 2.8V6.8H15.2" stroke="#9C9C9C" stroke-width="1.5" stroke-linejoin="round"/></svg>
+          <span style="font-family:Montserrat;font-weight:500;font-size:11px;line-height:14px;color:#707070">КП</span>
+        </span>
+        <span style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px">
+          <svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="7" r="3" stroke="#9C9C9C" stroke-width="1.5"/><path d="M4 16.5C4 13.7 6.7 12 10 12C13.3 12 16 13.7 16 16.5" stroke="#9C9C9C" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span style="font-family:Montserrat;font-weight:500;font-size:11px;line-height:14px;color:#707070">Кабинет</span>
+        </span>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <span style="font-family:Inter;font-weight:600;font-size:11px;line-height:15px;color:#848484">Шторка маршрута · вместо всплывающего окна на мобильном</span>
+      <div style="background:#FFFFFF;border-radius:20px 20px 12px 12px;overflow:hidden;box-shadow:0 -8px 24px rgba(17,17,17,0.12)">
+        <div style="position:relative;height:130px;background:#EDEDEF">
+          <svg width="358" height="130" viewBox="0 0 358 130" fill="none" aria-hidden="true" style="display:block;width:100%">
+            <rect width="358" height="130" fill="#EDEDEF"/>
+            <path d="M0 36H358" stroke="#E2E2E2" stroke-width="9"/>
+            <path d="M0 98H358" stroke="#E2E2E2" stroke-width="9"/>
+            <path d="M118 0V130" stroke="#E2E2E2" stroke-width="9"/>
+            <path d="M254 0V130" stroke="#E2E2E2" stroke-width="9"/>
+            <path d="M54 104C112 104 136 52 206 41C258 33 288 30 320 30" stroke="#111111" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="54" cy="104" r="7" fill="#111111"/>
+            <circle cx="320" cy="30" r="7" fill="#111111"/>
+          </svg>
+          <span style="position:absolute;left:14px;bottom:10px;font-family:'Courier New',monospace;font-size:11px;line-height:14px;color:#707070;background:rgba(255,255,255,0.85);padding:2px 6px;border-radius:4px">мини-карта · заглушка</span>
+        </div>
+        <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
+          <span style="font-family:Inter;font-weight:600;font-size:18px;line-height:24px;color:#111111;font-variant-numeric:tabular-nums">45&nbsp;км · ~1&nbsp;ч 10&nbsp;мин</span>
+          <span style="font-family:Montserrat;font-weight:400;font-size:13px;line-height:18px;color:#707070">ул. Годовикова, 9 → Комплекс переработки «Восток»</span>
+          <span style="height:48px;border-radius:999px;background:#111111;display:flex;align-items:center;justify-content:center;font-family:Montserrat;font-weight:500;font-size:16px;line-height:24px;color:#FFFFFF">Открыть в Яндекс.Картах</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <span style="font-family:Inter;font-weight:600;font-size:11px;line-height:15px;color:#848484">Уведомления и статусы</span>
+      <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:12px;background:#FFF4E0">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" style="flex:none"><circle cx="10" cy="10" r="7" stroke="#B7791F" stroke-width="1.5"/><path d="M10 6.4V10.4L12.6 12" stroke="#B7791F" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <span style="font-family:Montserrat;font-weight:500;font-size:13px;line-height:18px;color:#8A5B12">Цены и статусы на 17.09.2026. По «Лесной» данные от 03.09</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:12px;background:#FBE9E5">
+        <div style="display:flex;align-items:flex-start;gap:10px">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" style="flex:none"><circle cx="10" cy="10" r="7" stroke="#D3321B" stroke-width="1.5"/><path d="M10 6.2V10.6" stroke="#D3321B" stroke-width="1.5" stroke-linecap="round"/><path d="M10 13.4V13.5" stroke="#D3321B" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <span style="font-family:Montserrat;font-weight:500;font-size:13px;line-height:18px;color:#A4260F">Не удалось рассчитать расстояния</span>
+        </div>
+        <span style="height:44px;border:1px solid #D3321B;border-radius:999px;display:flex;align-items:center;justify-content:center;font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#A4260F">Повторить</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <span style="display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 8px;border-radius:6px;background:#E6F4EC">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8.5L6.5 11.5L12.5 5" stroke="#1F8A4C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span style="font-family:Montserrat;font-weight:600;font-size:12px;line-height:16px;color:#1F8A4C">Активен</span>
+        </span>
+        <span style="display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 8px;border-radius:6px;background:#FBE9E5">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="5.5" stroke="#D3321B" stroke-width="1.5"/><path d="M4.2 11.8L11.8 4.2" stroke="#D3321B" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span style="font-family:Montserrat;font-weight:600;font-size:12px;line-height:16px;color:#D3321B">Заблокирован</span>
+        </span>
+        <span style="display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 8px;border-radius:6px;background:#FFF4E0">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="5.5" stroke="#B7791F" stroke-width="1.5"/><path d="M8 5.2V8.4L10.2 9.8" stroke="#B7791F" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span style="font-family:Montserrat;font-weight:600;font-size:12px;line-height:16px;color:#B7791F">Данные устарели</span>
+        </span>
+        <span style="display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 8px;border-radius:6px;background:#EDEDEF">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="5.5" stroke="#707070" stroke-width="1.5"/><path d="M8 5.4V5.5" stroke="#707070" stroke-width="1.6" stroke-linecap="round"/><path d="M8 7.4V10.6" stroke="#707070" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span style="font-family:Montserrat;font-weight:600;font-size:12px;line-height:16px;color:#707070">Не подтверждён</span>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div style="width:100%;max-width:390px;background:#111111;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:10px">
+    <div style="font-family:Montserrat;font-weight:700;font-size:11px;line-height:15px;letter-spacing:0.08em;text-transform:uppercase;color:#848484">Правила мобильной версии</div>
+    <div style="font-family:Montserrat;font-weight:400;font-size:13px;line-height:20px;color:#FFFFFF">Одно лаймовое действие на экран. Таблица превращается в карточки, сводка — в нижнюю панель 72 px. Выбранная карточка заливается accent/row-hover: полоса выделения слева остаётся только в десктопной таблице, где фон строки отдан наведению. Маршрут открывается шторкой снизу, не модальным окном. Ряды вкладок, сортировки и чипов прокручиваются по горизонтали и не переносятся. Цели касания не меньше 44 × 44. Итог понижает кегль при росте разрядности, а не переносится на вторую строку.</div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:460,&quot;height&quot;:1000}}"></script>
+</body>
+</html>
