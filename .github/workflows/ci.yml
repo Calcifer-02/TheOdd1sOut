@@ -77,3 +77,34 @@ jobs:
         run: |
           docker compose ps
           docker compose logs --tail 80
+
+  sonar:
+    name: Статический анализ SonarQube
+    runs-on: ubuntu-latest
+    # Токен доступен только в самом репозитории: у запросов на слияние из
+    # ответвлений секретов нет, и задание там не запускается.
+    if: github.event_name != 'pull_request'
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      SONAR_HOST: https://sonar.imbalanced.tech
+      SONAR_PROJECT: mcdis.imolt.project
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Сканеру нужна история для привязки находок к авторам изменений.
+          fetch-depth: 0
+
+      # Без токена задание останавливается с внятным сообщением, а не
+      # проходит зелёным: зелёный прогон без анализа выдаёт пробел
+      # за пройденную проверку.
+      - name: Проверка наличия токена
+        run: |
+          if [ -z "$SONAR_TOKEN" ]; then
+            echo "Не задан секрет SONAR_TOKEN: анализ не выполнялся."
+            echo "Добавьте его в Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+
+      # Та же команда, что запускается на машине разработчика.
+      - name: Анализ
+        run: sh devops/sonar/анализ.sh
