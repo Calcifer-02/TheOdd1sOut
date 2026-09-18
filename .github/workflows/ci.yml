@@ -1,0 +1,79 @@
+# Конвейер проверок решения.
+#
+# Состав отвечает на один вопрос: соберётся ли решение и поднимется ли оно
+# одной командой у того, кто получил только исходный код. Задание, которое
+# ничего не проверяет, в конвейер не ставится: зелёный прогон без проверки
+# хуже отсутствующего, потому что выдаёт пробел за пройденный гейт.
+
+name: Проверки решения
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+# Новый прогон по той же ветке отменяет предыдущий: держать очередь
+# из устаревших проверок незачем.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  back:
+    name: Сборка расчётной части и чат-бота
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      # Режим замка: состав и версии обязаны совпасть с packages.lock.json.
+      # Расхождение роняет задание, а не подтягивает другие версии молча.
+      - name: Восстановление зависимостей в режиме замка
+        run: dotnet restore src/back/Imolt.slnx --locked-mode
+
+      - name: Сборка
+        run: dotnet build src/back/Imolt.slnx -c Release --no-restore
+
+  front:
+    name: Сборка мини-приложения
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: src/front/miniapp/package-lock.json
+
+      # npm ci ставит строго по package-lock.json и падает при расхождении
+      # с package.json.
+      - name: Установка зависимостей по замку
+        run: npm ci --no-audit --no-fund
+        working-directory: src/front/miniapp
+
+      - name: Сборка
+        run: npm run build
+        working-directory: src/front/miniapp
+
+  zapusk:
+    name: Запуск решения одной командой
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Та же проверка, что запускается на машине разработчика: собирает
+      # образы, поднимает четыре службы и подтверждает связи между ними.
+      # Падает, если сломан compose, проксирование или доступ к базе данных.
+      - name: Проверка запуска
+        run: sh tests/devops/проверка-запуска.sh
+
+      - name: Состояние служб при отказе
+        if: failure()
+        run: |
+          docker compose ps
+          docker compose logs --tail 80
