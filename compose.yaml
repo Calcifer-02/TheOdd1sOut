@@ -1,0 +1,67 @@
+# Локальный запуск всех компонентов решения одной командой:
+#     docker compose up --build
+# Условия трека, разд. 6.1 п. 5. Значения берутся из файла .env,
+# образец которого лежит рядом (.env.example). Секретов здесь нет.
+
+name: imolt
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      # Готовность базы данных — условие запуска расчётной части: иначе
+      # первые запросы уходят в ещё не поднятый сервер.
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: ./src/back
+      dockerfile: Imolt.Api/Dockerfile
+    environment:
+      DATABASE_URL: "Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+    ports:
+      - "${API_PORT}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  bot:
+    build:
+      context: ./src/back
+      dockerfile: Imolt.Bot/Dockerfile
+    environment:
+      # Токен выдают организаторы; в репозиторий он не попадает и приходит
+      # из локального .env (условия трека, разд. 4 п. 9).
+      MAX_BOT_TOKEN: ${MAX_BOT_TOKEN}
+      API_BASE_URL: http://api:8080
+    ports:
+      - "${BOT_PORT}:8080"
+    depends_on:
+      api:
+        condition: service_started
+    restart: unless-stopped
+
+  miniapp:
+    build:
+      context: ./src/front/miniapp
+    ports:
+      - "${MINIAPP_PORT}:80"
+    depends_on:
+      api:
+        condition: service_started
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
