@@ -14,18 +14,28 @@
 
 set -u
 
-SONAR_HOST=${SONAR_HOST:-<адрес сервера анализа>}
-SONAR_PROJECT=${SONAR_PROJECT:-<ключ проекта>}
+# Адрес сервера, ключ проекта и токен приходят из окружения: сервер анализа
+# принадлежит организации, и его адрес в публичном репозитории не хранится.
+# Значения лежат в локальном .env, который не версионируется.
 OBRAZ=imolt-sonar
 
 REPO=$(cd "$(dirname "$0")/../.." && pwd)
 cd "$REPO" || exit 1
 
-if [ -z "${SONAR_TOKEN:-}" ]; then
-  echo "Отмена: не задана переменная SONAR_TOKEN."
-  echo "Токен берётся в SonarQube: My Account → Security → Generate Tokens."
-  exit 1
+# Настройки берутся из локального .env, если он есть: там же живут остальные
+# переменные окружения решения.
+if [ -f .env ]; then
+  . ./.env
 fi
+
+for peremennaya in SONAR_HOST SONAR_PROJECT SONAR_TOKEN; do
+  eval "znachenie=\${$peremennaya:-}"
+  if [ -z "$znachenie" ]; then
+    echo "Отмена: не задана переменная $peremennaya."
+    echo "Задайте SONAR_HOST, SONAR_PROJECT и SONAR_TOKEN в локальном .env."
+    exit 1
+  fi
+done
 
 # Образ среды анализа собирается один раз и переиспользуется.
 if ! docker image inspect "$OBRAZ" >/dev/null 2>&1; then
