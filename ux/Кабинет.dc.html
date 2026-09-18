@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; background: #EFEEF1; font-family: Montserrat, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: #1F5BFF; }
+  a:hover { color: #1741B8; }
+  input, textarea { font-family: inherit; }
+  @keyframes pop { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+<script src="./image-slot.js"></script>
+</helmet>
+<div style="max-width:1440px;margin:0 auto;padding-bottom:80px">
+
+  <div style="min-height:80px;padding:12px 24px;display:flex;align-items:center;flex-wrap:wrap;gap:12px 28px;border-bottom:1px solid #D7D7D9">
+    <span style="font-family:Montserrat;font-weight:700;font-size:24px;line-height:28px;color:#FF4719;letter-spacing:-0.01em">ИМОЛТ</span>
+    <a href="Калькулятор.dc.html" style="font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#111111;text-decoration:none">Калькулятор</a>
+    <span style="font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#FF4719">Кабинет</span>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:16px">
+      <div style="display:flex;flex-direction:column;align-items:flex-end">
+        <span style="font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#111111">ООО «СтройВывоз МСК»</span>
+        <span style="font-family:Montserrat;font-weight:400;font-size:12px;line-height:16px;color:#707070">перевозчик · ИНН 7725901233</span>
+      </div>
+      <span style="width:40px;height:40px;border-radius:999px;background:#111111;display:flex;align-items:center;justify-content:center;font-family:Inter;font-weight:600;font-size:14px;color:#FFFFFF">СВ</span>
+    </div>
+  </div>
+
+  <div style="max-width:1240px;margin:0 auto;padding:32px 24px 0;display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
+
+    <div style="flex:1 1 220px;max-width:240px;min-width:0;display:flex;flex-direction:column;gap:16px">
+      <div style="background:#FFFFFF;border-radius:20px;padding:12px;display:flex;flex-direction:column;gap:2px">
+        <sc-for list="{{ nav }}" as="n" hint-placeholder-count="5">
+          <button type="button" onClick="{{ n.onClick }}" style="{{ n.style }}">{{ n.label }}</button>
+        </sc-for>
+      </div>
+      <div style="background:#FFF4E0;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" style="flex:none"><circle cx="10" cy="10" r="7" stroke="#B7791F" stroke-width="1.5"/><path d="M10 6.4V10.4L12.6 12" stroke="#B7791F" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span style="font-family:Montserrat;font-weight:600;font-size:13px;line-height:18px;color:#8A5B12">Подписка ожидает подтверждения</span>
+        </div>
+        <span style="font-family:Montserrat;font-weight:400;font-size:12px;line-height:17px;color:#8A5B12">Расчёты доступны. Детали маршрута откроются после активации.</span>
+      </div>
+    </div>
+
+    <div style="flex:1 1 520px;min-width:0;display:flex;flex-direction:column;gap:20px">
+
+      <sc-if value="{{ isCalcs }}">
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap">
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <h1 style="margin:0;font-family:Montserrat;font-weight:700;font-size:32px;line-height:38px;color:#111111;letter-spacing:-0.01em">Расчёты</h1>
+              <span style="font-family:Montserrat;font-weight:400;font-size:14px;line-height:20px;color:#707070">Сохранённые расчёты и выгруженные КП</span>
+            </div>
+            <a href="Калькулятор.dc.html" style="height:56px;padding:0 28px;border-radius:999px;background:#E7F53D;display:flex;align-items:center;font-family:Montserrat;font-weight:700;font-size:16px;line-height:24px;color:#111111;text-decoration:none">Новый расчёт</a>
+          </div>
+
+          <div style="background:#FFFFFF;border-radius:20px;padding:12px;display:flex;flex-direction:column;gap:2px">
+            <div style="display:grid;grid-template-columns:minmax(120px,1fr) 150px 110px minmax(0,140px);gap:12px;align-items:center;height:44px;padding:0 12px;background:#F5F4F7;border-radius:12px;font-family:Montserrat;font-weight:500;font-size:12px;line-height:16px;color:#707070">
+              <div>Адрес и отходы</div>
+              <div>Полигоны</div>
+              <div style="text-align:right">Итого</div>
+              <div style="text-align:right">Дата · КП</div>
+            </div>
+            <sc-for list="{{ calcs }}" as="c" hint-placeholder-count="3">
+              <div style="display:grid;grid-template-columns:minmax(120px,1fr) 150px 110px minmax(0,140px);gap:12px;align-items:center;min-height:64px;padding:8px 12px;border-bottom:1px solid #E2E2E2">
+                <div style="min-width:0">
+                  <div style="font-family:Inter;font-weight:600;font-size:15px;line-height:21px;color:#111111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.addr }}</div>
+                  <div style="font-family:Montserrat;font-weight:400;font-size:12px;line-height:16px;color:#707070;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.waste }}</div>
+                </div>
+                <div style="font-family:Montserrat;font-weight:400;font-size:13px;line-height:18px;color:#4A4A4A">{{ c.polygons }}</div>
+                <div style="text-align:right;font-family:Inter;font-weight:700;font-size:18px;line-height:24px;color:#111111;font-variant-numeric:tabular-nums;white-space:nowrap">{{ c.total }}</div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+                  <span style="font-family:Inter;font-weight:600;font-size:12px;line-height:16px;color:#707070;font-variant-numeric:tabular-nums">{{ c.date }}</span>
+                  <a href="КП.dc.html" style="font-family:Montserrat;font-weight:500;font-size:13px;line-height:18px;color:#1F5BFF">Открыть КП</a>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isServices }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-direction:column;gap:20px">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <h1 style="margin:0;font-family:Montserrat;font-weight:700;font-size:32px;line-height:38px;color:#111111;letter-spacing:-0.01em">Наши услуги</h1>
+            <span style="font-family:Montserrat;font-weight:400;font-size:14px;line-height:20px;color:#707070;max-width:620px">Документация для вывоза и демонтажа. Цены указаны от минимального объёма работ; точная стоимость — после уточнения объекта.</span>
+          </div>
+
+          <sc-if value="{{ orderSent }}">
+            <div style="background:#FFFFFF;border-radius:20px;padding:20px;display:flex;align-items:flex-start;gap:12px;animation:pop 200ms ease-out">
+              <span style="width:32px;height:32px;border-radius:999px;background:#E6F4EC;display:flex;align-items:center;justify-content:center;flex:none">
+                <svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8.5L6.5 11.5L12.5 5" stroke="#1F8A4C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <div style="font-family:Montserrat;font-weight:700;font-size:20px;line-height:26px;color:#111111">Заявка на услугу отправлена</div>
+                <div style="font-family:Montserrat;font-weight:400;font-size:14px;line-height:20px;color:#707070">{{ orderSentText }}</div>
+              </div>
+            </div>
+          </sc-if>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px">
+            <sc-for list="{{ services }}" as="sv" hint-placeholder-count="6">
+              <div style="{{ sv.cardStyle }}">
+                <div style="position:relative;height:140px;background:#EDEDEF;flex:none">
+                  <image-slot id="{{ sv.slotId }}" shape="rect" placeholder="{{ sv.slotHint }}"></image-slot>
+                </div>
+                <div style="padding:16px;display:flex;flex-direction:column;gap:12px;flex:1">
+                  <div style="display:flex;flex-direction:column;gap:6px;flex:1">
+                    <div style="font-family:Montserrat;font-weight:700;font-size:18px;line-height:24px;color:#111111;text-wrap:pretty">{{ sv.name }}</div>
+                    <div style="font-family:Montserrat;font-weight:400;font-size:13px;line-height:18px;color:#707070">{{ sv.desc }}</div>
+                  </div>
+                  <div style="display:flex;flex-direction:column;gap:2px">
+                    <span style="font-family:Montserrat;font-weight:400;font-size:12px;line-height:16px;color:#707070">{{ sv.priceLabel }}</span>
+                    <span style="{{ sv.priceStyle }}">{{ sv.price }}</span>
+                  </div>
+                  <sc-if value="{{ sv.formOpen }}">
+                    <div style="display:flex;flex-direction:column;gap:10px;padding-top:4px;border-top:1px solid #E2E2E2;animation:pop 200ms ease-out">
+                      <div style="height:52px;border:1px solid #D7D7D9;border-radius:12px;padding:0 14px;display:flex;flex-direction:column;justify-content:center">
+                        <span style="font-family:Montserrat;font-weight:500;font-size:11px;line-height:14px;color:#848484">Адрес объекта</span>
+                        <input type="text" value="{{ addrValue }}" onChange="{{ onAddr }}" placeholder="Москва, ул. Годовикова, 9" style="border:0;outline:none;padding:0;background:none;font-family:Montserrat;font-weight:400;font-size:15px;line-height:21px;color:#111111;width:100%" />
+                      </div>
+                      <div style="border:1px solid #D7D7D9;border-radius:12px;padding:10px 14px;display:flex;flex-direction:column;gap:2px">
+                        <span style="font-family:Montserrat;font-weight:500;font-size:11px;line-height:14px;color:#848484">Комментарий</span>
+                        <textarea rows="2" value="{{ noteValue }}" onChange="{{ onNote }}" placeholder="Сроки, площадь, особенности объекта" style="border:0;outline:none;padding:0;background:none;resize:vertical;font-family:Montserrat;font-weight:400;font-size:14px;line-height:20px;color:#111111;width:100%"></textarea>
+                      </div>
+                      <div style="display:flex;gap:8px">
+                        <button type="button" onClick="{{ sv.onSubmit }}" style="flex:1;height:48px;border:0;border-radius:999px;background:#111111;font-family:Montserrat;font-weight:500;font-size:15px;line-height:21px;color:#FFFFFF;cursor:pointer">Отправить</button>
+                        <button type="button" onClick="{{ sv.onCancel }}" style="height:48px;padding:0 16px;border:1px solid #D7D7D9;border-radius:999px;background:#FFFFFF;font-family:Montserrat;font-weight:500;font-size:15px;line-height:21px;color:#111111;cursor:pointer">Отмена</button>
+                      </div>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ sv.buttonVisible }}">
+                    <button type="button" onClick="{{ sv.onOrder }}" style="{{ sv.buttonStyle }}">Заказать</button>
+                  </sc-if>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isOther }}">
+        <div style="background:#FFFFFF;border-radius:20px;padding:56px 24px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center">
+          <div style="font-family:Montserrat;font-weight:700;font-size:22px;line-height:28px;color:#111111">{{ otherTitle }}</div>
+          <div style="font-family:Montserrat;font-weight:400;font-size:14px;line-height:20px;color:#707070;max-width:420px">Раздел не входит в текущий объём макетов. Скажите, если нужно спроектировать его сейчас.</div>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1240,&quot;height&quot;:900},&quot;section&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Услуги&quot;,&quot;Расчёты&quot;,&quot;Маршруты&quot;,&quot;Подписка&quot;,&quot;Профиль&quot;],&quot;default&quot;:&quot;Услуги&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Кабинет&quot;}}">
+const SERVICES = [
+  { id: 'ossig-msk', name: 'Разрешение ОССиГ (Москва)', desc: 'Оформление разрешения на перемещение отходов строительства и грунта по территории Москвы.', price: 'от 50 000 ₽', slot: 'Фото: документы ОССиГ' },
+  { id: 'ossig-mo', name: 'Разрешение ОССиГ (Московская область)', desc: 'Разрешение на перемещение ОССиГ по территории Московской области.', price: 'от 50 000 ₽', slot: 'Фото: объект в МО' },
+  { id: 'oati', name: 'Ордер ОАТИ', desc: 'Ордер на проведение земляных работ, устройство и содержание строительных площадок.', price: 'от 80 000 ₽', slot: 'Фото: стройплощадка' },
+  { id: 'ppr', name: 'ППР и ПОД', desc: 'Проект производства работ и проект организации демонтажа под конкретный объект.', price: 'от 50 000 ₽', slot: 'Фото: чертежи ППР' },
+  { id: 'lab', name: 'Лабораторные исследования и паспорта отходов', desc: 'Отбор проб, протоколы испытаний, паспорта отходов по кодам ФККО.', price: 'цена по запросу', slot: 'Фото: лаборатория' },
+  { id: 'bio', name: 'Биотестирование', desc: 'Определение класса опасности отходов методом биотестирования с протоколом.', price: 'цена по запросу', slot: 'Фото: пробы отходов' }
+];
+
+const NAV = [
+  { key: 'calcs', label: 'Расчёты' },
+  { key: 'routes', label: 'Маршруты' },
+  { key: 'services', label: 'Услуги' },
+  { key: 'subscription', label: 'Подписка' },
+  { key: 'profile', label: 'Профиль' }
+];
+
+const CALCS = [
+  { addr: 'Москва, ул. Годовикова, 9', waste: 'Лом бетона 20 т · Древесина 7,5 т', polygons: '«Сабурово», «Восток»', total: '39 320 ₽', date: '18.09.2026' },
+  { addr: 'Москва, Дмитровское ш., 108', waste: 'Грунт 120 т', polygons: '«Икша»', total: '87 840 ₽', date: '16.09.2026' },
+  { addr: 'Московская обл., Химки, ул. Победы, 4', waste: 'Смешанные отходы 45 т', polygons: '«Электроугли»', total: '132 570 ₽', date: '12.09.2026' }
+];
+
+class Component extends DCLogic {
+  state = { section: 'services', openForm: null, addr: '', note: '', sentFor: null };
+
+  componentDidMount() {
+    const map = { 'Расчёты': 'calcs', 'Услуги': 'services', 'Маршруты': 'routes', 'Подписка': 'subscription', 'Профиль': 'profile' };
+    const k = map[this.props.section];
+    if (k) this.setState({ section: k });
+  }
+
+  renderVals() {
+    const s = this.state;
+    const sent = s.sentFor ? SERVICES.filter(x => x.id === s.sentFor)[0] : null;
+    return {
+      nav: NAV.map(n => ({
+        label: n.label,
+        style: 'text-align:left;width:100%;min-height:48px;padding:0 16px;border:0;border-radius:12px;background:' + (s.section === n.key ? '#111111' : 'transparent') + ';font-family:Montserrat;font-weight:500;font-size:15px;line-height:21px;color:' + (s.section === n.key ? '#FFFFFF' : '#111111') + ';cursor:pointer;transition:background 150ms ease-out',
+        onClick: () => this.setState({ section: n.key, openForm: null })
+      })),
+      isCalcs: s.section === 'calcs',
+      isServices: s.section === 'services',
+      isOther: s.section !== 'calcs' && s.section !== 'services',
+      otherTitle: (NAV.filter(n => n.key === s.section)[0] || { label: '' }).label,
+      calcs: CALCS,
+
+      orderSent: !!sent,
+      orderSentText: sent ? ('«' + sent.name + '» — менеджер свяжется в течение рабочего дня.') : '',
+
+      addrValue: s.addr, noteValue: s.note,
+      onAddr: e => this.setState({ addr: e.target.value }),
+      onNote: e => this.setState({ note: e.target.value }),
+
+      services: SERVICES.map(sv => ({
+        name: sv.name, desc: sv.desc, price: sv.price,
+        priceLabel: sv.price.indexOf('от') === 0 ? 'Стоимость' : 'Стоимость',
+        priceStyle: 'font-family:Inter;font-weight:700;font-size:' + (sv.price.indexOf('от') === 0 ? '20' : '16') + 'px;line-height:26px;color:#111111;font-variant-numeric:tabular-nums',
+        slotId: 'service-' + sv.id, slotHint: sv.slot,
+        cardStyle: 'background:#FFFFFF;border-radius:20px;overflow:hidden;display:flex;flex-direction:column;border:1px solid ' + (s.openForm === sv.id ? '#111111' : 'transparent'),
+        formOpen: s.openForm === sv.id,
+        buttonVisible: s.openForm !== sv.id,
+        buttonStyle: 'height:48px;border:0;border-radius:999px;background:#111111;font-family:Montserrat;font-weight:500;font-size:15px;line-height:21px;color:#FFFFFF;cursor:pointer;transition:background 150ms ease-out',
+        onOrder: () => this.setState({ openForm: sv.id, sentFor: null }),
+        onCancel: () => this.setState({ openForm: null }),
+        onSubmit: () => this.setState({ openForm: null, sentFor: sv.id, addr: '', note: '' })
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; background: #DEDDE1; font-family: Montserrat, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: #1F5BFF; }
+  a:hover { color: #1741B8; }
+  input { font-family: inherit; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pop { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</helmet>
+<div style="min-height:100vh;padding:0 0 40px;display:flex;flex-direction:column;align-items:center">
+
+<div style="position:sticky;top:0;z-index:60;width:100%;background:#111111;padding:10px 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+  <span style="font-family:'Courier New',monospace;font-size:11px;line-height:16px;color:#848484;letter-spacing:0.04em;text-transform:uppercase">390 · состояния</span>
+  <sc-for list="{{ presets }}" as="p" hint-placeholder-count="6">
+    <button type="button" onClick="{{ p.onClick }}" style="{{ p.style }}">{{ p.label }}</button>
+  </sc-for>
+</div>
+
+<div style="width:390px;min-height:844px;background:#EFEEF1;position:relative;margin-top:24px;display:flex;flex-direction:column;border-radius:20px;box-shadow:0 8px 24px rgba(17,17,17,0.12)">
+
+  <div style="height:56px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #D7D7D9;background:#EFEEF1">
+    <span style="font-family:Montserrat;font-weight:700;font-size:20px;line-height:24px;color:#FF4719;letter-spacing:-0.01em">ИМОЛТ</span>
+    <div style="display:flex;align-items:center;gap:8px">
+      <a href="tel:+74955320273" aria-label="Позвонить" style="width:44px;height:44px;border-radius:999px;display:flex;align-items:center;justify-content:center;text-decoration:none">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5 3.5H8L9.2 6.8L7.6 8C8.4 9.8 10.2 11.6 12 12.4L13.2 10.8L16.5 12V15C16.5 15.8 15.8 16.5 15 16.5C9.2 16.1 3.9 10.8 3.5 5C3.5 4.2 4.2 3.5 5 3.5Z" stroke="#111111" stroke-width="1.5" stroke-linejoin="round"/></svg>
+      </a>
+      <button type="button" aria-label="Меню" style="width:44px;height:44px;border:0;background:none;border-radius:999px;display:flex;align-items:center;justify-content:center;cursor:pointer">
+        <svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 6H17" stroke="#111111" stroke-width="1.5" stroke-linecap="round"/><path d="M3 10H17" stroke="#111111" stroke-width="1.5" stroke-linecap="round"/><path d="M3 14H17" stroke="#111111" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="m-scroll" style="flex:1;padding:24px 16px 32px;display:flex;flex-direction:column;gap:20px">
+
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <h1 style="margin:0;font-family:Montserrat;font-weight:700;font-size:32px;line-height:38px;color:#111111;letter-spacing:-0.02em;text-wrap:pretty">Калькулятор вывоза строительных отходов</h1>
+      <p style="margin:0;font-family:Montserrat;font-weight:400;font-size:14px;line-height:20px;color:#707070">Москва и область. Перевозка и утилизация — отдельно, результат сразу.</p>
+    </div>
+
+    <div style="background:#FFFFFF;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:16px">
+      <div style="position:relative">
+        <div style="{{ addrBoxStyle }}">
+          <label for="m-addr" style="font-family:Montserrat;font-weight:500;font-size:11px;line-height:14px;color:#848484">Адрес вывоза</label>
+          <input id="m-addr" type="text" value="{{ addr }}" onChange="{{ onAddr }}" onFocus="{{ onAddrFocus }}" placeholder="Начните вводить адрес" style="border:0;outline:none;padding:0;background:none;font-family:Montserrat;font-weight:400;font-size:16px;line-height:22px;color:#111111;width:100%" />
+        </div>
+        <sc-if value="{{ addrError }}">
+          <div style="margin-top:6px;font-family:Montserrat;font-weight:400;font-size:12px;line-height:16px;color:#D3321B">Выберите адрес из подсказки</div>
+        </sc-if>
+        <sc-if value="{{ suggestOpen }}">
+          <div style="position:absolute;left:0;right:0;top:62px;z-index:30;border:1px solid #D7D7D9;border-radius:12px;background:#FFFFFF;box-shadow:0 8px 24px rgba(17,17,17,0.12);overflow:hidden;animation:pop 200ms ease-out">
+            <sc-for list="{{ suggestions }}" as="s" hint-placeholder-count="3">
+              <button type="button" onClick="{{ s.onClick }}" style="display:block;width:100%;text-align:left;border:0;background:#FFFFFF;padding:14px 16px;font-family:Montserrat;font-weight:400;font-size:14px;line-height:20px;color:#111111;cursor:pointer">{{ s.text }}</button>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+
+      <sc-for list="{{ lineVals }}" as="ln" hint-placeholder-count="1">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="position:relative">
+            <button type="button" onClick="{{ ln.onOpen }}" style="{{ ln.boxStyle }}">
+              <span style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:flex-start">
+                <sc-if value="{{ ln.hasGroup }}">
+                  <span style="font-family:Montserrat;font-weight:500;font-size:11px;line-height:14px;color:#848484">Тип отходов</span>
+                </sc-if>
+                <span style="{{ ln.labelStyle }}">{{ ln.label }}</span>
+              </span>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" style="flex:none"><path d="M6 8.5L10 12.5L14 8.5" stroke="#9C9C9C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <sc-if value="{{ ln.open }}">
+              <div style="position:absolute;left:0;right:0;top:62px;z-index:20;border:1px solid #D7D7D9;border-radius:12px;background:#FFFFFF;box-shadow:0 8px 24px rgba(17,17,17,0.12);overflow:hidden;animation:pop 200ms ease-out">
+                <sc-for list="{{ ln.options }}" as="opt" hint-placeholder-count="5">
+                  <button type="button" onClick="{{ opt.onClick }}" style="{{ opt.style }}">
+                    <span>{{ opt.name }}</span>
+                    <span style="font-family:Inter;font-weight:600;font-size:11px;line-height:15px;color:#707070;font-variant-numeric:tabular-nums">{{ opt.meta }}</span>
+                  </button>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="flex:1;min-width:0;height:56px;border:1px solid #D7D7D9;border-radius:12px;padding:0 8px 0 16px;display:flex;align-items:center;gap:8px">
+              <span style="flex:1;min-width:0;display:flex;flex-direction:column">
+                <span style="font-family:Montserrat;font-weight:500;font-size:11px;line-height:14px;color:#848484">Объём</span>
+                <input type="text" inputMode="decimal" value="{{ ln.qty }}" onChange="{{ ln.onQty }}" placeholder="0" style="border:0;outline:none;padding:0;background:none;font-family:Inter;font-weight:600;font-size:16px;line-height:22px;color:#111111;font-variant-numeric:tabular-nums;width:100%" />
+              </span>
+              <span style="display:flex;padding:3px;background:#F5F4F7;border-radius:999px;flex:none">
+                <button type="button" onClick="{{ ln.onTons }}" style="{{ ln.tonsStyle }}">т</button>
+                <button type="button" onClick="{{ ln.onCubes }}" style="{{ ln.cubesStyle }}">м³</button>
+              </span>
+            </div>
+            <sc-if value="{{ ln.canRemove }}">
+              <button type="button" onClick="{{ ln.onRemove }}" aria-label="Убрать тип отходов" style="width:44px;height:44px;border:0;background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5.5 5.5L14.5 14.5" stroke="#9C9C9C" stroke-width="1.5" stroke-linecap="round"/><path d="M14.5 5.5L5.5 14.5" stroke="#9C9C9C" stroke-width="1.5" stroke-linecap="round"/></svg>
+              </button>
+            </sc-if>
+          </div>
+          <sc-if value="{{ ln.showConv }}">
+            <span style="font-family:Montserrat;font-weight:400;font-size:12px;line-height:16px;color:#707070">{{ ln.conv }}</span>
+          </sc-if>
+        </div>
+      </sc-for>
+
+      <button type="button" onClick="{{ onAddLine }}" style="align-self:flex-start;min-height:44px;padding:0;border:0;background:none;display:flex;align-items:center;gap:8px;font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#1F5BFF;cursor:pointer">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 4.5V15.5" stroke="#1F5BFF" stroke-width="1.5" stroke-linecap="round"/><path d="M4.5 10H15.5" stroke="#1F5BFF" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Добавить тип отходов
+      </button>
+
+      <div style="height:1px;background:#E2E2E2"></div>
+
+      <button type="button" onClick="{{ onToggleDisposal }}" style="display:flex;align-items:center;gap:10px;border:0;background:none;padding:0;cursor:pointer;min-height:44px">
+        <span style="{{ dispBoxStyle }}">
+          <sc-if value="{{ needDisposal }}">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8.5L6.5 11.5L12.5 5" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </sc-if>
+        </span>
+        <span style="font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#111111">Нужна утилизация на полигоне</span>
+      </button>
+
+      <button type="button" onClick="{{ onCalc }}" style="{{ calcStyle }}">
+        <sc-if value="{{ calcLoading }}" hint-placeholder-val="{{ false }}">
+          <span style="width:22px;height:22px;border-radius:999px;border:2px solid rgba(17,17,17,0.25);border-top-color:#111111;animation:spin 700ms linear infinite;display:block"></span>
+        </sc-if>
+        <sc-if value="{{ calcIdle }}" hint-placeholder-val="{{ true }}">
+          <span>Рассчитать</span>
+        </sc-if>
+      </button>
+    </div>
+
+    <sc-if value="{{ showBenefits }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="background:#FFFFFF;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:4px">
+          <div style="font-family:Montserrat;font-weight:700;font-size:20px;line-height:26px;color:#111111">Цена видна сразу</div>
+          <div style="font-family:Montserrat;font-weight:400;font-size:14px;line-height:20px;color:#707070">Без «оставьте телефон». Перевозка и утилизация показаны отдельно.</div>
+        </div>
+        <div style="background:#FFFFFF;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:4px">
+          <div style="font-family:Montserrat;font-weight:700;font-size:20px;line-height:26px;color:#111111">Расстояние по дорогам</div>
+          <div style="font-family:Montserrat;font-weight:400;font-size:14px;line-height:20px;color:#707070">Маршрут до каждой площадки считается по дорожной сети, не по прямой.</div>
+        </div>
+        <div style="background:#FFFFFF;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:4px">
+          <div style="font-family:Montserrat;font-weight:700;font-size:20px;line-height:26px;color:#111111">Актуальные статусы</div>
+          <div style="font-family:Montserrat;font-weight:400;font-size:14px;line-height:20px;color:#707070">У каждого полигона статус приёма и дата подтверждения цены.</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ showResults }}">
+      <div style="display:flex;flex-direction:column;gap:14px">
+
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <h2 style="margin:0;font-family:Montserrat;font-weight:700;font-size:26px;line-height:32px;color:#111111;letter-spacing:-0.01em">Результаты</h2>
+          <span style="font-family:Montserrat;font-weight:400;font-size:12px;line-height:16px;color:#707070">{{ resultSubtitle }}</span>
+        </div>
+
+        <div style="display:flex;gap:4px;padding:4px;background:#F5F4F7;border-radius:999px;overflow-x:auto">
+          <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="2">
+            <button type="button" onClick="{{ t.onClick }}" style="{{ t.style }}">{{ t.label }}</button>
+          </sc-for>
+        </div>
+
+        <div style="display:flex;padding:3px;background:#F5F4F7;border-radius:999px;overflow-x:auto">
+          <sc-for list="{{ sorts }}" as="s" hint-placeholder-count="4">
+            <button type="button" onClick="{{ s.onClick }}" style="{{ s.style }}">
+              <span>{{ s.label }}</span>
+              <sc-if value="{{ s.active }}">
+                <span style="{{ s.arrowStyle }}">↑</span>
+              </sc-if>
+            </button>
+          </sc-for>
+        </div>
+
+        <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:2px">
+          <sc-for list="{{ chips }}" as="c" hint-placeholder-count="3">
+            <button type="button" onClick="{{ c.onClick }}" style="{{ c.style }}">{{ c.label }}</button>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{ filterPopOpen }}">
+          <div style="padding:16px;border-radius:12px;background:#FFFFFF;border:1px solid #D7D7D9;box-shadow:0 8px 24px rgba(17,17,17,0.12);display:flex;flex-direction:column;gap:12px;animation:pop 200ms ease-out">
+            <span style="font-family:Montserrat;font-weight:500;font-size:12px;line-height:16px;color:#707070">{{ filterPopLabel }}</span>
+            <div style="display:flex;gap:8px">
+              <input type="text" inputMode="numeric" value="{{ filterN }}" onChange="{{ onFilterN }}" style="flex:1;min-width:0;height:48px;border:1px solid #111111;border-radius:12px;padding:0 12px;outline:none;font-family:Inter;font-weight:600;font-size:16px;line-height:22px;color:#111111;font-variant-numeric:tabular-nums" />
+              <button type="button" onClick="{{ onApplyFilter }}" style="height:48px;padding:0 18px;border:0;border-radius:999px;background:#111111;font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#FFFFFF;cursor:pointer;flex:none">Применить</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ noticeStale }}">
+          <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:12px;background:#FFF4E0">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" style="flex:none"><circle cx="10" cy="10" r="7" stroke="#B7791F" stroke-width="1.5"/><path d="M10 6.4V10.4L12.6 12" stroke="#B7791F" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <span style="font-family:Montserrat;font-weight:500;font-size:13px;line-height:18px;color:#8A5B12">{{ noticeStaleText }}</span>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ noticeError }}">
+          <div style="display:flex;flex-direction:column;gap:10px;padding:14px;border-radius:12px;background:#FBE9E5">
+            <div style="display:flex;align-items:flex-start;gap:10px">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" style="flex:none"><circle cx="10" cy="10" r="7" stroke="#D3321B" stroke-width="1.5"/><path d="M10 6.2V10.6" stroke="#D3321B" stroke-width="1.5" stroke-linecap="round"/><path d="M10 13.4V13.5" stroke="#D3321B" stroke-width="1.8" stroke-linecap="round"/></svg>
+              <span style="font-family:Montserrat;font-weight:500;font-size:13px;line-height:18px;color:#A4260F">Не удалось рассчитать расстояния</span>
+            </div>
+            <button type="button" onClick="{{ onRetry }}" style="height:44px;border:1px solid #D3321B;border-radius:999px;background:none;font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#A4260F;cursor:pointer">Повторить</button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ blockedWarn }}">
+          <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:12px;background:#EDEDEF">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" style="flex:none"><circle cx="10" cy="10" r="7" stroke="#707070" stroke-width="1.5"/><path d="M10 6.4V6.5" stroke="#707070" stroke-width="1.8" stroke-linecap="round"/><path d="M10 9V13.6" stroke="#707070" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <span style="flex:1;font-family:Montserrat;font-weight:500;font-size:13px;line-height:18px;color:#4A4A4A">Полигон заблокирован. Он остаётся в выборе, решение за вами.</span>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ tableLoading }}">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ skeletons }}" as="sk" hint-placeholder-count="4">
+              <div style="background:#FFFFFF;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px">
+                <div style="display:flex;gap:12px;align-items:flex-start">
+                  <div style="width:22px;height:22px;border-radius:6px;background:#EDEDEF;flex:none"></div>
+                  <div style="flex:1;display:flex;flex-direction:column;gap:6px"><div style="{{ sk.w1 }}"></div><div style="{{ sk.w2 }}"></div></div>
+                  <div style="width:86px;height:22px;border-radius:4px;background:#EDEDEF;flex:none"></div>
+                </div>
+                <div style="height:24px;width:120px;border-radius:6px;background:#EDEDEF"></div>
+                <div style="height:1px;background:#E2E2E2"></div>
+                <div style="height:16px;border-radius:4px;background:#F5F4F7"></div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ tableEmpty }}">
+          <div style="background:#FFFFFF;border-radius:20px;padding:32px 20px;display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center">
+            <div style="font-family:Montserrat;font-weight:700;font-size:20px;line-height:26px;color:#111111;text-wrap:pretty">{{ emptyTitle }}</div>
+            <div style="font-family:Montserrat;font-weight:400;font-size:13px;line-height:18px;color:#707070">Снимите фильтр расстояния или выберите другой тип отходов.</div>
+            <button type="button" onClick="{{ onClearFilter }}" style="height:48px;padding:0 24px;border:0;border-radius:999px;background:#111111;font-family:Montserrat;font-weight:500;font-size:16px;line-height:24px;color:#FFFFFF;cursor:pointer">Снять фильтр</button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ tableRows }}">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <sc-for list="{{ rows }}" as="r" hint-placeholder-count="4">
+              <div style="{{ r.cardStyle }}">
+                <div style="display:flex;gap:12px;align-items:flex-start">
+                  <button type="button" onClick="{{ r.onToggle }}" aria-label="Выбрать полигон" style="{{ r.boxStyle }}">
+                    <sc-if value="{{ r.selected }}">
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8.5L6.5 11.5L12.5 5" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </sc-if>
+                  </button>
+                  <div style="flex:1;min-width:0">
+                    <div style="{{ r.nameStyle }}">{{ r.name }}</div>
+                    <div style="{{ r.addrStyle }}">{{ r.meta }}</div>
+                  </div>
+                  <div style="{{ r.totalStyle }}">{{ r.totalStr }}</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-left:34px">
+                  <div style="{{ r.badgeStyle }}">
+                    <sc-if value="{{ r.isActive }}">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8.5L6.5 11.5L12.5 5" stroke="#1F8A4C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </sc-if>
+                    <sc-if value="{{ r.isBlocked }}">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="5.5" stroke="#D3321B" stroke-width="1.5"/><path d="M4.2 11.8L11.8 4.2" stroke="#D3321B" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    </sc-if>
+                    <sc-if value="{{ r.isStale }}">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="5.5" stroke="#B7791F" stroke-width="1.5"/><path d="M8 5.2V8.4L10.2 9.8" stroke="#B7791F" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    </sc-if>
+                    <sc-if value="{{ r.isUnknown }}">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="5.5" stroke="#707070" stroke-width="1.5"/><path d="M8 5.4V5.5" stroke="#707070" stroke-width="1.6" stroke-linecap="round"/><path d="M8 7.4V10.6" stroke="#707070" stroke-width="1.5" stroke-linecap="round"/></svg>
+                    </sc-if>
+                    <span style="{{ r.badgeTextStyle }}">{{ r.statusText }}</span>
+                  </div>
+                  <span style="font-family:Montserrat;font-weight:400;font-size:12px;line-height:16px;color:#707070">{{ r.dataDate }}</span>
+                </div>
+                <div style="height:1px;background:#E2E2E2"></div>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+                  <div style="display:flex;gap:14px;font-family:Inter;font-weight:600;font-size:13px;line-height:18px;color:#707070;font-variant-numeric:tabular-nums">
+                    <span>перевозка {{ r.transportStr }}</span>
+                    <span>утилизация {{ r.disposalStr }}</span>
+                  </div>
+                  <button type="button" onClick="{{ r.onRoute }}" aria-label="Маршрут" style="width:44px;height:44px;border:0;background:none;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;margin:-10px -10px -10px 0">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 2.5C7 2.5 4.8 4.8 4.8 7.7C4.8 11.6 10 17.5 10 17.5C10 17.5 15.2 11.6 15.2 7.7C15.2 4.8 13 2.5 10 2.5Z" stroke="#9C9C9C" stroke-width="1.5" stroke-linejoin="round"/><circle cx="10" cy="7.7" r="1.8" stroke="#9C9C9C" stroke-width="1.5"/></svg>
+                  </button>
+                </div>
+              </div>
+            </sc-for>
+
+            <sc-if value="{{ canShowMore }}">
+              <button type="button" onClick="{{ onShowMore }}" style="height:48px;border:0;border-radius:999px;background:#111111;font-family:Montserrat;font-weight:500;font-size:16px;line-height:24px;color:#FFFFFF;cursor:pointer">{{ showMoreLabel }}</button>
+            </sc-if>
+            <span style="font-family:Montserrat;font-weight:400;font-size:12px;line-height:16px;color:#707070;text-align:center">{{ rowsCounter }}</span>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ reqOpen }}">
+          <div style="background:#FFFFFF;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:16px;animation:pop 200ms ease-out">
+            <sc-if value="{{ reqSent }}">
+              <div style="display:flex;align-items:flex-start;gap:12px">
+                <span style="width:32px;height:32px;border-radius:999px;background:#E6F4EC;display:flex;align-items:center;justify-content:center;flex:none">
+                  <svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8.5L6.5 11.5L12.5 5" stroke="#1F8A4C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <div style="display:flex;flex-direction:column;gap:4px">
+                  <div style="font-family:Montserrat;font-weight:700;font-size:20px;line-height:26px;color:#111111">Заявка принята</div>
+                  <div style="font-family:Montserrat;font-weight:400;font-size:13px;line-height:18px;color:#707070">Менеджер свяжется в течение рабочего дня.</div>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ reqForm }}">
+              <div style="display:flex;flex-direction:column;gap:14px">
+                <div style="font-family:Montserrat;font-weight:700;font-size:20px;line-height:26px;color:#111111">Заявка на вывоз</div>
+                <div style="height:56px;border:1px solid #D7D7D9;border-radius:12px;padding:0 16px;display:flex;flex-direction:column;justify-content:center">
+                  <label for="m-name" style="font-family:Montserrat;font-weight:500;font-size:11px;line-height:14px;color:#848484">Имя</label>
+                  <input id="m-name" type="text" value="{{ reqName }}" onChange="{{ onReqName }}" placeholder="Как к вам обращаться" style="border:0;outline:none;padding:0;background:none;font-family:Montserrat;font-weight:400;font-size:16px;line-height:22px;color:#111111;width:100%" />
+                </div>
+                <div style="height:56px;border:1px solid #D7D7D9;border-radius:12px;padding:0 16px;display:flex;flex-direction:column;justify-content:center">
+                  <label for="m-phone" style="font-family:Montserrat;font-weight:500;font-size:11px;line-height:14px;color:#848484">Телефон</label>
+                  <input id="m-phone" type="tel" value="{{ reqPhone }}" onChange="{{ onReqPhone }}" placeholder="+7" style="border:0;outline:none;padding:0;background:none;font-family:Inter;font-weight:600;font-size:16px;line-height:22px;color:#111111;width:100%;font-variant-numeric:tabular-nums" />
+                </div>
+                <div style="min-height:56px;border:1px solid #E2E2E2;border-radius:12px;background:#F5F4F7;padding:8px 16px;display:flex;flex-direction:column;justify-content:center">
+                  <span style="font-family:Montserrat;font-weight:500;font-size:11px;line-height:14px;color:#848484">Полигон</span>
+                  <span style="font-family:Montserrat;font-weight:400;font-size:14px;line-height:20px;color:#111111">{{ reqPolygon }}</span>
+                </div>
+                <button type="button" onClick="{{ onToggleAgree }}" style="display:flex;align-items:flex-start;gap:10px;border:0;background:none;padding:0;cursor:pointer;text-align:left;min-height:44px">
+                  <span style="{{ agreeBoxStyle }}">
+                    <sc-if value="{{ reqAgree }}">
+                      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8.5L6.5 11.5L12.5 5" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </sc-if>
+                  </span>
+                  <span style="font-family:Montserrat;font-weight:400;font-size:13px;line-height:18px;color:#111111">Согласен на обработку персональных данных согласно <a href="#" style="color:#1F5BFF">политике</a></span>
+                </button>
+                <button type="button" onClick="{{ onSendReq }}" style="{{ sendStyle }}">Отправить заявку</button>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+  </div>
+
+  <sc-if value="{{ barVisible }}">
+    <div style="position:sticky;bottom:0;z-index:50;height:72px;background:#FFFFFF;padding:0 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 -8px 24px rgba(17,17,17,0.12);border-radius:0 0 20px 20px;animation:pop 200ms ease-out">
+      <div style="display:flex;flex-direction:column;min-width:0">
+        <span style="font-family:Montserrat;font-weight:500;font-size:12px;line-height:16px;color:#707070">{{ barLabel }}</span>
+        <span style="{{ barTotalStyle }}">{{ barTotal }}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex:none">
+        <button type="button" onClick="{{ onOpenReq }}" aria-label="Заявка на вывоз" style="width:48px;height:48px;border:1px solid #D7D7D9;border-radius:999px;background:#FFFFFF;display:flex;align-items:center;justify-content:center;cursor:pointer">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5 3.5H8L9.2 6.8L7.6 8C8.4 9.8 10.2 11.6 12 12.4L13.2 10.8L16.5 12V15C16.5 15.8 15.8 16.5 15 16.5C9.2 16.1 3.9 10.8 3.5 5C3.5 4.2 4.2 3.5 5 3.5Z" stroke="#111111" stroke-width="1.5" stroke-linejoin="round"/></svg>
+        </button>
+        <button type="button" onClick="{{ onDownload }}" style="height:48px;padding:0 20px;border:0;border-radius:999px;background:#E7F53D;font-family:Montserrat;font-weight:700;font-size:14px;line-height:20px;color:#111111;cursor:pointer;white-space:nowrap">Скачать КП</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ sheetOpen }}">
+    <div style="position:absolute;inset:0;z-index:70;background:rgba(17,17,17,0.32);border-radius:20px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end">
+      <div style="background:#FFFFFF;border-radius:20px 20px 0 0;overflow:hidden;animation:pop 200ms ease-out">
+        <sc-if value="{{ sheetFull }}">
+          <div style="display:flex;flex-direction:column">
+            <div style="position:relative;height:160px;background:#EDEDEF">
+              <svg width="390" height="160" viewBox="0 0 390 160" fill="none" aria-hidden="true" style="display:block">
+                <rect width="390" height="160" fill="#EDEDEF"/>
+                <path d="M0 44H390" stroke="#E2E2E2" stroke-width="9"/>
+                <path d="M0 118H390" stroke="#E2E2E2" stroke-width="9"/>
+                <path d="M128 0V160" stroke="#E2E2E2" stroke-width="9"/>
+                <path d="M276 0V160" stroke="#E2E2E2" stroke-width="9"/>
+                <path d="M58 126C118 126 142 64 218 50C272 41 304 37 338 37" stroke="#111111" stroke-width="3" stroke-linecap="round"/>
+                <circle cx="58" cy="126" r="7" fill="#111111"/>
+                <circle cx="338" cy="37" r="7" fill="#111111"/>
+              </svg>
+              <span style="position:absolute;left:16px;bottom:12px;font-family:'Courier New',monospace;font-size:11px;line-height:14px;color:#707070;background:rgba(255,255,255,0.85);padding:2px 6px;border-radius:4px">мини-карта · заглушка</span>
+            </div>
+            <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+              <div style="font-family:Inter;font-weight:600;font-size:18px;line-height:24px;color:#111111;font-variant-numeric:tabular-nums">{{ sheetSummary }}</div>
+              <div style="font-family:Montserrat;font-weight:400;font-size:13px;line-height:18px;color:#707070">{{ sheetFrom }}</div>
+              <a href="https://yandex.ru/maps" target="_blank" rel="noopener" style="min-height:48px;display:flex;align-items:center;justify-content:center;border-radius:999px;background:#111111;font-family:Montserrat;font-weight:500;font-size:16px;line-height:24px;color:#FFFFFF;text-decoration:none">Открыть в Яндекс.Картах</a>
+              <button type="button" onClick="{{ onCloseSheet }}" style="min-height:44px;border:0;background:none;font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#1F5BFF;cursor:pointer">Закрыть</button>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ sheetLocked }}">
+          <div style="padding:20px 16px;display:flex;flex-direction:column;gap:12px;align-items:flex-start">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="4.5" y="8.5" width="11" height="8" rx="2" stroke="#9C9C9C" stroke-width="1.5"/><path d="M7.2 8.5V6.6C7.2 5.1 8.5 3.8 10 3.8C11.5 3.8 12.8 5.1 12.8 6.6V8.5" stroke="#9C9C9C" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <div style="font-family:Montserrat;font-weight:700;font-size:18px;line-height:24px;color:#111111">Детали маршрута — по подписке</div>
+            <div style="font-family:Montserrat;font-weight:400;font-size:13px;line-height:18px;color:#707070">Расстояние и стоимость видны всем. Время в пути и переход в Яндекс.Карты — перевозчикам и демонтажным компаниям.</div>
+            <button type="button" onClick="{{ onSub }}" style="width:100%;min-height:48px;border:0;border-radius:999px;background:#111111;font-family:Montserrat;font-weight:500;font-size:16px;line-height:24px;color:#FFFFFF;cursor:pointer">Войти</button>
+            <button type="button" onClick="{{ onCloseSheet }}" style="width:100%;min-height:44px;border:0;background:none;font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#1F5BFF;cursor:pointer">Закрыть</button>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ toast }}">
+    <div style="position:sticky;bottom:88px;margin:0 16px -64px;z-index:60;background:#111111;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;animation:pop 200ms ease-out">
+      <div style="display:flex;align-items:center;gap:10px">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 3.5V13" stroke="#E7F53D" stroke-width="1.5" stroke-linecap="round"/><path d="M6.2 9.4L10 13.2L13.8 9.4" stroke="#E7F53D" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.5 16H15.5" stroke="#E7F53D" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <span style="font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#FFFFFF">КП сохранено</span>
+      </div>
+      <a href="КП.dc.html" style="font-family:Montserrat;font-weight:500;font-size:13px;line-height:18px;color:#E7F53D">Открыть коммерческое предложение</a>
+    </div>
+  </sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:460,&quot;height&quot;:1000},&quot;initialState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Э-01 пустая форма&quot;,&quot;Э-02 форма заполнена&quot;,&quot;Э-03 результаты&quot;,&quot;Э-04 фильтр и выбор&quot;,&quot;Э-05 маршрут&quot;,&quot;Э-08 заявка&quot;,&quot;Э-12 загрузка&quot;,&quot;Э-12 ошибка&quot;,&quot;Э-12 пустой результат&quot;],&quot;default&quot;:&quot;Э-01 пустая форма&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Прототип&quot;},&quot;subscriber&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Прототип&quot;}}">
+const NB = '\u00A0';
+const GROUPS = {
+  concrete: { name: 'Лом бетона', full: 'Лом бетона и железобетона', rub: 12, dens: 2.0 },
+  brick:    { name: 'Лом кирпича', full: 'Лом кирпичной кладки', rub: 14, dens: 1.5 },
+  wood:     { name: 'Древесина', full: 'Древесина от разборки', rub: 30, dens: 0.5 },
+  soil:     { name: 'Грунт', full: 'Грунт от земляных работ', rub: 10, dens: 1.6 },
+  mixed:    { name: 'Смешанные отходы', full: 'Смешанные отходы строительства', rub: 22, dens: 0.9 }
+};
+const ORDER = ['concrete', 'brick', 'wood', 'soil', 'mixed'];
+
+const POLYGONS = [
+  { id: 'saburovo', name: 'Площадка «Сабурово»', short: 'г. о. Красногорск', dist: 38, status: 'active', date: '17.09', t: { concrete: 520, brick: 480, wood: 950, soil: 300, mixed: 790 } },
+  { id: 'vostok', name: 'Комплекс переработки «Восток»', short: 'д. Тимохово', dist: 45, status: 'active', date: '17.09', t: { concrete: 450, brick: 420, wood: 800, soil: 260, mixed: 700 } },
+  { id: 'elektro', name: 'Площадка «Электроугли»', short: 'г. Электроугли', dist: 49, status: 'active', date: '17.09', t: { concrete: 470, brick: 450, wood: 880, soil: 280, mixed: 740 } },
+  { id: 'iksha', name: 'Площадка «Икша»', short: 'пос. Икша', dist: 52, status: 'active', date: '17.09', t: { concrete: 380, brick: 360, wood: 700, soil: 210, mixed: 610 } },
+  { id: 'hmetevo', name: 'Полигон «Хметьево»', short: 'г. о. Солнечногорск', dist: 62, status: 'unknown', date: '17.09', t: { concrete: 410, brick: 390, wood: 1100, soil: 240, mixed: 680 } },
+  { id: 'aleksin', name: 'Полигон «Алексинский карьер»', short: 'г. о. Клин', dist: 88, status: 'blocked', date: '17.09', t: { concrete: 600, brick: 560, wood: 1050, soil: 350, mixed: 900 } },
+  { id: 'dubna', name: 'Полигон «Малая Дубна»', short: 'г. о. Орехово-Зуево', dist: 92, status: 'active', date: '17.09', t: { concrete: 350, brick: 330, wood: 900, soil: 190, mixed: 570 } },
+  { id: 'lesnaya', name: 'Полигон «Лесная»', short: 'д. Лесная, Серпухов', dist: 98, status: 'stale', date: '03.09', t: { concrete: 320, brick: 300, wood: 750, soil: 180, mixed: 520 } },
+  { id: 'don', name: 'КПО «Дон»', short: 'г. о. Кашира', dist: 105, status: 'active', date: '17.09', t: { concrete: 300, brick: 290, wood: 720, soil: 170, mixed: 500 } },
+  { id: 'yug', name: 'Комплекс «Юг»', short: 'г. о. Коломна', dist: 115, status: 'active', date: '17.09', t: { concrete: 290, brick: 280, wood: 780, soil: 160, mixed: 490 } }
+];
+
+const ADDRESSES = [
+  'Москва, ул. Годовикова, 9',
+  'Москва, ул. Годовикова, 9, корп. 1',
+  'Москва, ул. Годовикова, 11',
+  'Москва, ул. Годовикова, 11, стр. 5',
+  'Москва, Годовиков пер., 2'
+];
+
+const SORTS = [
+  { key: 'total', label: 'По итогу' },
+  { key: 'transport', label: 'Перевозка' },
+  { key: 'disposal', label: 'Утилизация' },
+  { key: 'dist', label: 'Расстояние' }
+];
+
+const PRESETS = [
+  { key: 'e01', label: 'Э-01' },
+  { key: 'e02', label: 'Э-02' },
+  { key: 'e03', label: 'Э-03' },
+  { key: 'e04', label: 'Э-04 выбор' },
+  { key: 'e05', label: 'Э-05 маршрут' },
+  { key: 'e08', label: 'Э-08 заявка' },
+  { key: 'load', label: 'загрузка' },
+  { key: 'err', label: 'ошибка' },
+  { key: 'empty', label: 'пусто' }
+];
+
+function fmt(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, NB); }
+function rub(n) { return fmt(n) + NB + '₽'; }
+function tons(n) {
+  const s = (Math.round(n * 10) / 10).toFixed(1).replace('.', ',');
+  return s.endsWith(',0') ? s.slice(0, -2) : s;
+}
+
+class Component extends DCLogic {
+  state = {
+    addr: '', addrPicked: false, addrError: false, suggestOpen: false,
+    lines: [{ g: '', qty: '', unit: 't' }], openGroup: -1,
+    needDisposal: true, phase: 'form',
+    tab: '', sort: 'total', dir: 1,
+    filter: null, filterPop: null, filterN: '50',
+    selected: [], showAll: false, sheet: null,
+    reqOpen: false, reqSent: false, reqName: '', reqPhone: '', reqAgree: false,
+    blockedWarn: false, toast: false, sub: false
+  };
+
+  componentDidMount() {
+    this.setState({ sub: !!this.props.subscriber });
+    const map = { 'Э-01 пустая форма': 'e01', 'Э-02 форма заполнена': 'e02', 'Э-03 результаты': 'e03', 'Э-04 фильтр и выбор': 'e04', 'Э-05 маршрут': 'e05', 'Э-08 заявка': 'e08', 'Э-12 загрузка': 'load', 'Э-12 ошибка': 'err', 'Э-12 пустой результат': 'empty' };
+    const k = map[this.props.initialState];
+    if (k && k !== 'e01') this.preset(k);
+  }
+
+  filled() {
+    return {
+      addr: 'Москва, ул. Годовикова, 9', addrPicked: true, addrError: false, suggestOpen: false,
+      lines: [{ g: 'concrete', qty: '20', unit: 't' }, { g: 'wood', qty: '15', unit: 'm3' }],
+      tab: 'concrete'
+    };
+  }
+
+  preset(key) {
+    const base = {
+      openGroup: -1, filter: null, filterPop: null, filterN: '50', selected: [], showAll: false,
+      sheet: null, reqOpen: false, reqSent: false, reqName: '', reqPhone: '', reqAgree: false,
+      blockedWarn: false, toast: false, sort: 'total', dir: 1
+    };
+    const f = this.filled();
+    if (key === 'e01') { this.setState(Object.assign({}, base, { addr: '', addrPicked: false, lines: [{ g: '', qty: '', unit: 't' }], tab: '', phase: 'form' })); return; }
+    if (key === 'e02') { this.setState(Object.assign({}, base, f, { phase: 'form' })); return; }
+    if (key === 'e03') { this.setState(Object.assign({}, base, f, { phase: 'results' })); return; }
+    if (key === 'e04') { this.setState(Object.assign({}, base, f, { phase: 'results', filter: { mode: 'max', n: 50 }, selected: ['saburovo', 'vostok'] })); return; }
+    if (key === 'e05') { this.setState(Object.assign({}, base, f, { phase: 'results', sheet: 'vostok', sub: true })); return; }
+    if (key === 'e08') { this.setState(Object.assign({}, base, f, { phase: 'results', selected: ['vostok'], reqOpen: true, reqName: 'Алексей', reqPhone: '+7 926 118-40-22', reqAgree: true })); return; }
+    if (key === 'load') { this.setState(Object.assign({}, base, f, { phase: 'loading' })); return; }
+    if (key === 'err') { this.setState(Object.assign({}, base, f, { phase: 'error' })); return; }
+    if (key === 'empty') { this.setState(Object.assign({}, base, f, { phase: 'results', filter: { mode: 'min', n: 140 } })); return; }
+  }
+
+  tonsOf(l) {
+    const q = parseFloat(String(l.qty).replace(',', '.'));
+    if (!q || !l.g) return 0;
+    return l.unit === 't' ? q : q * GROUPS[l.g].dens;
+  }
+
+  activeLine() {
+    const s = this.state;
+    return s.lines.find(l => l.g && l.g === s.tab) || s.lines.find(l => l.g) || null;
+  }
+
+  visible() {
+    const line = this.activeLine();
+    if (!line) return [];
+    const f = this.state.filter;
+    const t = this.tonsOf(line);
+    let list = POLYGONS.filter(p => !f || (f.mode === 'max' ? p.dist <= f.n : p.dist >= f.n)).map(p => {
+      const transport = t * GROUPS[line.g].rub * p.dist;
+      const disposal = this.state.needDisposal ? t * p.t[line.g] : 0;
+      return { p: p, transport: transport, disposal: disposal, total: transport + disposal };
+    });
+    const key = this.state.sort === 'dist' ? null : this.state.sort;
+    list.sort((a, b) => (key ? a[key] - b[key] : a.p.dist - b.p.dist) * this.state.dir);
+    return list;
+  }
+
+  setLine(i, patch) {
+    const lines = this.state.lines.map((l, j) => j === i ? Object.assign({}, l, patch) : l);
+    const st = { lines: lines, openGroup: -1 };
+    if (patch.g && (!this.state.tab || !lines.some(l => l.g === this.state.tab))) st.tab = patch.g;
+    this.setState(st);
+  }
+
+  renderVals() {
+    const s = this.state;
+    const line = this.activeLine();
+    const rowsAll = this.visible();
+    const shown = s.showAll ? rowsAll : rowsAll.slice(0, 4);
+    const selRows = rowsAll.filter(r => s.selected.indexOf(r.p.id) >= 0);
+    let sumT = 0, sumD = 0;
+    selRows.forEach(r => { sumT += r.transport; sumD += r.disposal; });
+    const barTotalStr = rub(sumT + sumD);
+
+    const badges = {
+      active: { bg: '#E6F4EC', fg: '#1F8A4C', text: 'Активен' },
+      blocked: { bg: '#FBE9E5', fg: '#D3321B', text: 'Заблокирован' },
+      stale: { bg: '#FFF4E0', fg: '#B7791F', text: 'Данные устарели' },
+      unknown: { bg: '#EDEDEF', fg: '#707070', text: 'Не подтверждён' }
+    };
+    const segBase = 'height:44px;padding:0 14px;display:flex;align-items:center;gap:6px;border:0;border-radius:999px;background:none;font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#707070;cursor:pointer;white-space:nowrap;transition:all 150ms ease-out;';
+    const chipBase = 'height:44px;padding:0 16px;display:flex;align-items:center;border-radius:999px;font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;cursor:pointer;white-space:nowrap;flex:none;transition:all 150ms ease-out;';
+
+    const canCalc = s.addrPicked && s.lines.some(l => l.g && this.tonsOf(l) > 0);
+    const loading = s.phase === 'loading';
+    const sheetPoly = s.sheet ? POLYGONS.filter(p => p.id === s.sheet)[0] : null;
+
+    const suggestions = ADDRESSES.filter(a => a.toLowerCase().indexOf(s.addr.toLowerCase()) >= 0).slice(0, 6)
+      .map(a => ({ text: a, onClick: () => this.setState({ addr: a, addrPicked: true, addrError: false, suggestOpen: false }) }));
+
+    return {
+      presets: PRESETS.map(p => ({
+        label: p.label,
+        style: 'height:26px;padding:0 10px;border:1px solid #333333;border-radius:999px;background:#111111;font-family:Montserrat;font-weight:500;font-size:11px;line-height:14px;color:#C8C8C8;cursor:pointer;white-space:nowrap',
+        onClick: () => this.preset(p.key)
+      })),
+
+      addr: s.addr, addrError: s.addrError,
+      suggestOpen: s.suggestOpen && suggestions.length > 0,
+      suggestions: suggestions,
+      addrBoxStyle: 'height:56px;border:1px solid ' + (s.addrError ? '#D3321B' : s.suggestOpen ? '#111111' : '#D7D7D9') + ';border-radius:12px;padding:0 16px;display:flex;flex-direction:column;justify-content:center;gap:1px',
+      onAddr: e => this.setState({ addr: e.target.value, addrPicked: false, suggestOpen: e.target.value.length >= 2, addrError: false }),
+      onAddrFocus: () => this.setState({ suggestOpen: s.addr.length >= 2 && !s.addrPicked }),
+
+      lineVals: s.lines.map((l, i) => ({
+        hasGroup: !!l.g,
+        label: l.g ? GROUPS[l.g].full : 'Тип отходов',
+        labelStyle: 'font-family:Montserrat;font-weight:400;font-size:15px;line-height:21px;color:' + (l.g ? '#111111' : '#848484') + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%',
+        boxStyle: 'width:100%;height:56px;border:1px solid ' + (s.openGroup === i ? '#111111' : '#D7D7D9') + ';border-radius:12px;padding:0 12px 0 16px;background:#FFFFFF;display:flex;align-items:center;gap:8px;cursor:pointer;text-align:left',
+        open: s.openGroup === i,
+        onOpen: () => this.setState({ openGroup: s.openGroup === i ? -1 : i, suggestOpen: false }),
+        options: ORDER.map(g => ({
+          name: GROUPS[g].full,
+          meta: GROUPS[g].rub + NB + '₽/т·км · ' + String(GROUPS[g].dens).replace('.', ',') + NB + 'т/м³',
+          style: 'display:flex;flex-direction:column;align-items:flex-start;gap:2px;width:100%;border:0;background:' + (l.g === g ? '#F8FDB5' : '#FFFFFF') + ';padding:12px 16px;font-family:Montserrat;font-weight:400;font-size:14px;line-height:20px;color:#111111;cursor:pointer;text-align:left',
+          onClick: () => this.setLine(i, { g: g })
+        })),
+        qty: l.qty,
+        onQty: e => this.setLine(i, { qty: e.target.value.replace(/[^0-9.,]/g, '') }),
+        tonsStyle: 'height:44px;padding:0 14px;border:0;border-radius:999px;background:' + (l.unit === 't' ? '#111111' : 'transparent') + ';font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:' + (l.unit === 't' ? '#FFFFFF' : '#707070') + ';cursor:pointer',
+        cubesStyle: 'height:44px;padding:0 14px;border:0;border-radius:999px;background:' + (l.unit === 'm3' ? '#111111' : 'transparent') + ';font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:' + (l.unit === 'm3' ? '#FFFFFF' : '#707070') + ';cursor:pointer',
+        onTons: () => this.setLine(i, { unit: 't' }),
+        onCubes: () => this.setLine(i, { unit: 'm3' }),
+        showConv: l.unit === 'm3' && this.tonsOf(l) > 0,
+        conv: '≈ ' + tons(this.tonsOf(l)) + NB + 'т при плотности ' + (l.g ? String(GROUPS[l.g].dens).replace('.', ',') : '—') + NB + 'т/м³',
+        canRemove: s.lines.length > 1,
+        onRemove: () => { const lines = s.lines.filter((x, j) => j !== i); this.setState({ lines: lines, tab: lines.some(x => x.g === s.tab) ? s.tab : (lines.find(x => x.g) || {}).g || '' }); }
+      })),
+      onAddLine: () => this.setState({ lines: s.lines.concat([{ g: '', qty: '', unit: 't' }]), openGroup: s.lines.length }),
+
+      needDisposal: s.needDisposal,
+      dispBoxStyle: 'width:22px;height:22px;border-radius:6px;flex:none;display:flex;align-items:center;justify-content:center;' + (s.needDisposal ? 'background:#111111;border:1px solid #111111' : 'background:#FFFFFF;border:1px solid #D7D7D9'),
+      onToggleDisposal: () => this.setState({ needDisposal: !s.needDisposal }),
+
+      calcLoading: loading, calcIdle: !loading,
+      calcStyle: 'height:56px;width:100%;border:0;border-radius:999px;display:flex;align-items:center;justify-content:center;font-family:Montserrat;font-weight:700;font-size:16px;line-height:24px;' + (canCalc && !loading ? 'background:#E7F53D;color:#111111;cursor:pointer' : loading ? 'background:#E7F53D;color:#111111' : 'background:#F0F3C8;color:#9C9C9C;cursor:not-allowed'),
+      onCalc: () => {
+        if (!s.addrPicked) { this.setState({ addrError: true }); return; }
+        if (!canCalc) return;
+        this.setState({ phase: 'loading', selected: [], showAll: false, toast: false, reqOpen: false });
+        setTimeout(() => this.setState({ phase: 'results' }), 900);
+      },
+
+      showBenefits: s.phase === 'form',
+      showResults: s.phase !== 'form',
+      resultSubtitle: line ? (s.addr + ' · ' + GROUPS[line.g].full + ', ' + tons(this.tonsOf(line)) + NB + 'т') : '',
+
+      tabs: s.lines.filter(l => l.g).map(l => ({
+        label: GROUPS[l.g].name + ', ' + tons(this.tonsOf(l)) + NB + 'т',
+        style: 'height:44px;padding:0 18px;border:0;border-radius:999px;background:' + (s.tab === l.g ? '#FFFFFF' : 'transparent') + ';font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:' + (s.tab === l.g ? '#111111' : '#707070') + ';cursor:pointer;white-space:nowrap;flex:none',
+        onClick: () => this.setState({ tab: l.g, sheet: null })
+      })),
+
+      sorts: SORTS.map(so => ({
+        label: so.label,
+        active: s.sort === so.key,
+        arrowStyle: 'font-family:Inter;font-size:12px;line-height:16px;color:#FFFFFF;display:inline-block;transform:' + (s.dir === 1 ? 'none' : 'rotate(180deg)'),
+        style: segBase + (s.sort === so.key ? 'background:#111111;color:#FFFFFF' : ''),
+        onClick: () => this.setState({ sort: so.key, dir: s.sort === so.key ? -s.dir : 1 })
+      })),
+
+      chips: [
+        {
+          label: s.filter && s.filter.mode === 'max' ? 'до ' + s.filter.n + ' км' : 'до 50 км',
+          style: chipBase + (s.filter && s.filter.mode === 'max' ? 'border:1px solid #111111;background:#111111;color:#FFFFFF' : 'border:1px solid #D7D7D9;background:#FFFFFF;color:#111111'),
+          onClick: () => {
+            if (s.filter && s.filter.mode === 'max') this.setState({ filterPop: s.filterPop === 'max' ? null : 'max', filterN: String(s.filter.n) });
+            else this.setState({ filter: { mode: 'max', n: 50 }, filterPop: null, showAll: false });
+          }
+        },
+        {
+          label: s.filter && s.filter.mode === 'min' ? 'не менее ' + s.filter.n + ' км' : 'не менее 50 км',
+          style: chipBase + (s.filter && s.filter.mode === 'min' ? 'border:1px solid #111111;background:#111111;color:#FFFFFF' : 'border:1px solid #D7D7D9;background:#FFFFFF;color:#111111'),
+          onClick: () => {
+            if (s.filter && s.filter.mode === 'min') this.setState({ filterPop: s.filterPop === 'min' ? null : 'min', filterN: String(s.filter.n) });
+            else this.setState({ filter: { mode: 'min', n: 50 }, filterPop: null, showAll: false });
+          }
+        },
+        {
+          label: s.filter ? 'сбросить' : 'все расстояния',
+          style: chipBase + (s.filter ? 'border:1px solid #D7D7D9;background:#FFFFFF;color:#111111' : 'border:1px solid #E2E2E2;background:#FFFFFF;color:#9C9C9C'),
+          onClick: () => { if (s.filter) this.setState({ filter: null, filterPop: null }); }
+        }
+      ],
+      filterPopOpen: !!s.filterPop,
+      filterPopLabel: s.filterPop === 'min' ? 'Не менее, км' : 'Не более, км',
+      filterN: s.filterN,
+      onFilterN: e => this.setState({ filterN: e.target.value.replace(/[^0-9]/g, '') }),
+      onApplyFilter: () => this.setState({ filter: { mode: s.filterPop, n: parseInt(s.filterN || '0', 10) }, filterPop: null, showAll: false }),
+      onClearFilter: () => this.setState({ filter: null, filterPop: null }),
+
+      noticeStale: s.phase === 'results' && rowsAll.length > 0,
+      noticeStaleText: 'Цены и статусы на 17.09.2026' + (rowsAll.some(r => r.p.status === 'stale') ? '. По «Лесной» данные от 03.09' : ''),
+      noticeError: s.phase === 'error',
+      onRetry: () => { this.setState({ phase: 'loading' }); setTimeout(() => this.setState({ phase: 'results' }), 900); },
+      blockedWarn: s.blockedWarn,
+
+      tableLoading: loading,
+      skeletons: [0, 1, 2, 3].map(i => ({
+        w1: 'height:16px;border-radius:4px;background:#EDEDEF;width:' + [72, 58, 66, 50][i] + '%',
+        w2: 'height:12px;border-radius:4px;background:#F5F4F7;width:' + [88, 74, 80, 68][i] + '%'
+      })),
+      tableEmpty: s.phase === 'results' && rowsAll.length === 0,
+      emptyTitle: line && s.filter ? 'Нет полигонов ' + (s.filter.mode === 'min' ? 'дальше ' : 'ближе ') + s.filter.n + NB + 'км' : 'Нет полигонов для этого типа отходов',
+      tableRows: s.phase === 'results' && rowsAll.length > 0,
+
+      rows: shown.map(r => {
+        const p = r.p;
+        const sel = s.selected.indexOf(p.id) >= 0;
+        const b = badges[p.status];
+        const muted = p.status === 'blocked';
+        const ink = muted ? '#707070' : '#111111';
+        const totStr = rub(r.total);
+        const totSize = totStr.length <= 9 ? 20 : totStr.length <= 12 ? 17 : 15;
+        return {
+          name: p.name,
+          meta: p.short + ' · ' + p.dist + NB + 'км',
+          transportStr: rub(r.transport), disposalStr: r.disposal ? rub(r.disposal) : '—', totalStr: totStr,
+          cardStyle: 'border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;transition:background 150ms ease-out;background:' + (sel ? '#F8FDB5' : '#FFFFFF'),
+          boxStyle: 'width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;flex:none;margin-top:2px;' + (sel ? 'background:#111111;border:1px solid #111111' : 'background:#FFFFFF;border:1px solid #D7D7D9'),
+          selected: sel,
+          onToggle: () => {
+            const has = sel;
+            this.setState({ selected: has ? s.selected.filter(x => x !== p.id) : s.selected.concat([p.id]), blockedWarn: !has && muted ? true : s.blockedWarn, toast: false });
+          },
+          nameStyle: 'font-family:Inter;font-weight:600;font-size:15px;line-height:21px;color:' + ink,
+          addrStyle: 'font-family:Montserrat;font-weight:400;font-size:12px;line-height:16px;color:#707070',
+          totalStyle: 'font-family:Inter;font-weight:700;font-size:' + totSize + 'px;line-height:24px;font-variant-numeric:tabular-nums;white-space:nowrap;flex:none;color:' + ink,
+          badgeStyle: 'display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 8px;border-radius:6px;background:' + b.bg,
+          badgeTextStyle: 'font-family:Montserrat;font-weight:600;font-size:12px;line-height:16px;white-space:nowrap;color:' + b.fg,
+          statusText: b.text,
+          isActive: p.status === 'active', isBlocked: p.status === 'blocked', isStale: p.status === 'stale', isUnknown: p.status === 'unknown',
+          dataDate: 'данные от ' + p.date,
+          onRoute: () => this.setState({ sheet: p.id })
+        };
+      }),
+      rowsCounter: 'Показано ' + shown.length + ' из ' + rowsAll.length,
+      canShowMore: !s.showAll && rowsAll.length > 4,
+      showMoreLabel: 'Показать ещё ' + Math.max(rowsAll.length - 4, 0),
+      onShowMore: () => this.setState({ showAll: true }),
+
+      barVisible: selRows.length > 0,
+      barLabel: 'Выбрано ' + selRows.length + ' · перевозка ' + rub(sumT),
+      barTotal: barTotalStr,
+      barTotalStyle: 'font-family:Inter;font-weight:700;font-size:' + (barTotalStr.length <= 9 ? 20 : barTotalStr.length <= 12 ? 17 : 15) + 'px;line-height:24px;color:#111111;font-variant-numeric:tabular-nums;white-space:nowrap',
+      onDownload: () => this.setState({ toast: true }),
+      onOpenReq: () => this.setState({ reqOpen: true, reqSent: false }),
+      toast: s.toast,
+
+      sheetOpen: !!sheetPoly,
+      sheetFull: !!sheetPoly && s.sub,
+      sheetLocked: !!sheetPoly && !s.sub,
+      sheetSummary: sheetPoly ? (sheetPoly.dist + NB + 'км · ~' + (Math.floor(sheetPoly.dist / 40) > 0 ? Math.floor(sheetPoly.dist / 40) + NB + 'ч ' : '') + (Math.round((sheetPoly.dist / 40 % 1) * 12) * 5) + NB + 'мин') : '',
+      sheetFrom: sheetPoly ? (s.addr + ' → ' + sheetPoly.name) : '',
+      onCloseSheet: () => this.setState({ sheet: null }),
+      onSub: () => this.setState({ sub: true }),
+
+      reqOpen: s.reqOpen, reqSent: s.reqSent, reqForm: !s.reqSent,
+      reqName: s.reqName, reqPhone: s.reqPhone, reqAgree: s.reqAgree,
+      reqPolygon: selRows.length ? selRows[0].p.name : 'Выберите полигон в списке',
+      onReqName: e => this.setState({ reqName: e.target.value }),
+      onReqPhone: e => this.setState({ reqPhone: e.target.value }),
+      onToggleAgree: () => this.setState({ reqAgree: !s.reqAgree }),
+      agreeBoxStyle: 'width:22px;height:22px;border-radius:6px;flex:none;display:flex;align-items:center;justify-content:center;margin-top:1px;' + (s.reqAgree ? 'background:#111111;border:1px solid #111111' : 'background:#FFFFFF;border:1px solid #D7D7D9'),
+      sendStyle: 'height:56px;width:100%;border:0;border-radius:999px;font-family:Montserrat;font-weight:500;font-size:16px;line-height:24px;' + (s.reqAgree && s.reqName && s.reqPhone ? 'background:#111111;color:#FFFFFF;cursor:pointer' : 'background:#EDEDEF;color:#9C9C9C;cursor:not-allowed'),
+      onSendReq: () => { if (s.reqAgree && s.reqName && s.reqPhone) this.setState({ reqSent: true }); }
+    };
+  }
+}
+</script>
+</body>
+</html>
