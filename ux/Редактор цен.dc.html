@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; background: #EFEEF1; font-family: Montserrat, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: #1F5BFF; }
+  a:hover { color: #1741B8; }
+  input { font-family: inherit; }
+  @keyframes pop { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+</helmet>
+<div style="max-width:1440px;margin:0 auto;padding-bottom:80px">
+
+  <div style="min-height:80px;padding:12px 24px;display:flex;align-items:center;flex-wrap:wrap;gap:12px 28px;border-bottom:1px solid #D7D7D9">
+    <span style="font-family:Montserrat;font-weight:700;font-size:24px;line-height:28px;color:#FF4719;letter-spacing:-0.01em">ИМОЛТ</span>
+    <a href="Калькулятор.dc.html" style="font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#111111;text-decoration:none">Калькулятор</a>
+    <a href="Кабинет.dc.html" style="font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#111111;text-decoration:none">Кабинет</a>
+    <span style="font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#FF4719">Редактор цен</span>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:16px">
+      <div style="display:flex;flex-direction:column;align-items:flex-end">
+        <span style="font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#111111">Смирнова Е. А.</span>
+        <span style="font-family:Montserrat;font-weight:400;font-size:12px;line-height:16px;color:#707070">менеджер данных</span>
+      </div>
+      <span style="width:40px;height:40px;border-radius:999px;background:#111111;display:flex;align-items:center;justify-content:center;font-family:Inter;font-weight:600;font-size:14px;color:#FFFFFF">ЕС</span>
+    </div>
+  </div>
+
+  <div style="max-width:1240px;margin:0 auto;padding:32px 24px 0;display:flex;flex-direction:column;gap:20px">
+
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <h1 style="margin:0;font-family:Montserrat;font-weight:700;font-size:32px;line-height:38px;color:#111111;letter-spacing:-0.01em">Цены и справочники</h1>
+        <span style="font-family:Montserrat;font-weight:400;font-size:14px;line-height:20px;color:#707070">{{ subtitle }}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <button type="button" onClick="{{ onImport }}" style="height:48px;padding:0 20px;border:1px solid #D7D7D9;border-radius:999px;background:#FFFFFF;font-family:Montserrat;font-weight:500;font-size:15px;line-height:21px;color:#111111;cursor:pointer;transition:border-color 150ms ease-out" style-hover="border-color:#111111">Импорт из Excel</button>
+        <button type="button" style="height:48px;padding:0 20px;border:0;border-radius:999px;background:#111111;font-family:Montserrat;font-weight:500;font-size:15px;line-height:21px;color:#FFFFFF;cursor:pointer;transition:background 150ms ease-out" style-hover="background:#2A2A2A">{{ addLabel }}</button>
+        <button type="button" onClick="{{ onSave }}" style="{{ saveStyle }}">{{ saveLabel }}</button>
+      </div>
+    </div>
+
+    <div style="background:#FFFFFF;border-radius:20px;padding:16px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0">
+        <span style="width:40px;height:40px;border-radius:999px;background:#E6F4EC;display:flex;align-items:center;justify-content:center;flex:none">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 10.2L8 12.6L17 4.5L9.8 14.8L9.4 17.5L7.6 13.6L3 10.2Z" stroke="#1F8A4C" stroke-width="1.5" stroke-linejoin="round"/></svg>
+        </span>
+        <div style="display:flex;flex-direction:column;min-width:0">
+          <span style="font-family:Montserrat;font-weight:600;font-size:15px;line-height:21px;color:#111111">Обновление статусов из Telegram: сегодня 07:15</span>
+          <span style="font-family:Montserrat;font-weight:400;font-size:13px;line-height:18px;color:#707070">Канал «ОСИП цифровой контроллинг» · обновлено 12 полигонов, не распознано 2 сообщения</span>
+        </div>
+      </div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+        <button type="button" onClick="{{ onManualStatus }}" style="height:44px;padding:0 18px;border:1px solid #D7D7D9;border-radius:999px;background:#FFFFFF;font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#111111;cursor:pointer;white-space:nowrap;transition:border-color 150ms ease-out" style-hover="border-color:#111111">Задать статус вручную</button>
+      </div>
+    </div>
+
+    <sc-if value="{{ importOpen }}">
+      <div style="background:#FFFFFF;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:16px;animation:pop 200ms ease-out">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px">
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div style="font-family:Montserrat;font-weight:700;font-size:22px;line-height:28px;color:#111111">Предпросмотр импорта</div>
+            <div style="font-family:Montserrat;font-weight:400;font-size:14px;line-height:20px;color:#707070">tarify_polygony_18-09-2026.xlsx · 10 строк, расхождений 3</div>
+          </div>
+          <button type="button" onClick="{{ onCloseImport }}" aria-label="Закрыть" style="width:40px;height:40px;border:1px solid #D7D7D9;border-radius:999px;background:#FFFFFF;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5.5 5.5L14.5 14.5" stroke="#111111" stroke-width="1.5" stroke-linecap="round"/><path d="M14.5 5.5L5.5 14.5" stroke="#111111" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+        <div style="border:1px solid #E2E2E2;border-radius:12px;overflow:hidden">
+          <div style="display:grid;grid-template-columns:minmax(120px,1fr) 130px 110px 110px 150px;gap:8px;align-items:center;height:44px;padding:0 12px;background:#F5F4F7;font-family:Montserrat;font-weight:500;font-size:12px;line-height:16px;color:#707070">
+            <div>Полигон</div><div>Группа</div><div style="text-align:right">В базе</div><div style="text-align:right">В файле</div><div>Что будет</div>
+          </div>
+          <sc-for list="{{ importRows }}" as="ir" hint-placeholder-count="3">
+            <div style="{{ ir.rowStyle }}">
+              <div style="font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#111111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ ir.polygon }}</div>
+              <div style="font-family:Montserrat;font-weight:400;font-size:14px;line-height:20px;color:#4A4A4A">{{ ir.group }}</div>
+              <div style="text-align:right;font-family:Inter;font-weight:600;font-size:14px;line-height:20px;color:#707070;font-variant-numeric:tabular-nums">{{ ir.was }}</div>
+              <div style="text-align:right;font-family:Inter;font-weight:700;font-size:14px;line-height:20px;color:#111111;font-variant-numeric:tabular-nums">{{ ir.now }}</div>
+              <div style="font-family:Montserrat;font-weight:500;font-size:13px;line-height:18px;color:#4A4A4A">{{ ir.action }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button type="button" onClick="{{ onApplyImport }}" style="height:56px;padding:0 28px;border:0;border-radius:999px;background:#E7F53D;font-family:Montserrat;font-weight:700;font-size:16px;line-height:24px;color:#111111;cursor:pointer;transition:background 150ms ease-out" style-hover="background:#DDEB2E">Применить 3 изменения</button>
+          <button type="button" onClick="{{ onCloseImport }}" style="height:48px;padding:0 20px;border:1px solid #D7D7D9;border-radius:999px;background:#FFFFFF;font-family:Montserrat;font-weight:500;font-size:15px;line-height:21px;color:#111111;cursor:pointer">Отменить</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div style="display:flex;gap:4px;padding:4px;background:#F5F4F7;border-radius:999px">
+        <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="2">
+          <button type="button" onClick="{{ t.onClick }}" style="{{ t.style }}">{{ t.label }}</button>
+        </sc-for>
+      </div>
+      <div style="height:44px;min-width:260px;flex:1 1 260px;max-width:360px;border:1px solid #D7D7D9;border-radius:12px;background:#FFFFFF;padding:0 14px;display:flex;align-items:center;gap:10px">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" style="flex:none"><circle cx="9" cy="9" r="5.5" stroke="#9C9C9C" stroke-width="1.5"/><path d="M13.2 13.2L17 17" stroke="#9C9C9C" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <input type="text" value="{{ query }}" onChange="{{ onQuery }}" placeholder="{{ searchPlaceholder }}" aria-label="Поиск" style="flex:1;min-width:0;border:0;outline:none;background:none;font-family:Montserrat;font-weight:400;font-size:15px;line-height:21px;color:#111111" />
+      </div>
+      <span style="font-family:Montserrat;font-weight:400;font-size:13px;line-height:18px;color:#707070">{{ counter }}</span>
+    </div>
+
+    <sc-if value="{{ isPolygons }}" hint-placeholder-val="{{ true }}">
+      <div style="background:#FFFFFF;border-radius:20px;padding:12px;display:flex;flex-direction:column;gap:8px">
+        <div style="{{ polyGrid }}height:44px;padding:0 12px;background:#F5F4F7;border-radius:12px;font-family:Montserrat;font-weight:500;font-size:12px;line-height:16px;color:#707070">
+          <div>Полигон и юрлицо</div>
+          <sc-for list="{{ groupHeaders }}" as="gh" hint-placeholder-count="5">
+            <div style="text-align:right">{{ gh }}</div>
+          </sc-for>
+          <div>Статус</div>
+          <div style="text-align:right">Актуально</div>
+        </div>
+
+        <div style="display:flex;flex-direction:column">
+          <sc-for list="{{ polyRows }}" as="r" hint-placeholder-count="6">
+            <div style="{{ r.rowStyle }}">
+              <div style="min-width:0">
+                <div style="font-family:Inter;font-weight:600;font-size:15px;line-height:21px;color:#111111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</div>
+                <div style="font-family:Montserrat;font-weight:400;font-size:12px;line-height:16px;color:#707070;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.entity }}</div>
+              </div>
+              <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="5">
+                <div style="display:flex;justify-content:flex-end">
+                  <sc-if value="{{ c.editing }}">
+                    <input type="text" inputMode="numeric" value="{{ c.draft }}" onChange="{{ c.onDraft }}" onBlur="{{ c.onCommit }}" onKeyDown="{{ c.onKey }}" autoFocus="{{ true }}" aria-label="Тариф" style="{{ c.inputStyle }}" />
+                  </sc-if>
+                  <sc-if value="{{ c.idle }}">
+                    <button type="button" onClick="{{ c.onEdit }}" style="{{ c.cellStyle }}">{{ c.value }}</button>
+                  </sc-if>
+                </div>
+              </sc-for>
+              <div style="{{ r.statusWrapStyle }}">
+                <div style="{{ r.badgeStyle }}">
+                  <sc-if value="{{ r.isActive }}">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8.5L6.5 11.5L12.5 5" stroke="#1F8A4C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </sc-if>
+                  <sc-if value="{{ r.isBlocked }}">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="5.5" stroke="#D3321B" stroke-width="1.5"/><path d="M4.2 11.8L11.8 4.2" stroke="#D3321B" stroke-width="1.5" stroke-linecap="round"/></svg>
+                  </sc-if>
+                  <sc-if value="{{ r.isStale }}">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="5.5" stroke="#B7791F" stroke-width="1.5"/><path d="M8 5.2V8.4L10.2 9.8" stroke="#B7791F" stroke-width="1.5" stroke-linecap="round"/></svg>
+                  </sc-if>
+                  <sc-if value="{{ r.isUnknown }}">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="5.5" stroke="#707070" stroke-width="1.5"/><path d="M8 5.4V5.5" stroke="#707070" stroke-width="1.6" stroke-linecap="round"/><path d="M8 7.4V10.6" stroke="#707070" stroke-width="1.5" stroke-linecap="round"/></svg>
+                  </sc-if>
+                  <span style="{{ r.badgeTextStyle }}">{{ r.statusText }}</span>
+                </div>
+                <sc-if value="{{ r.needsStatus }}">
+                  <button type="button" onClick="{{ r.onSetActive }}" style="height:28px;padding:0 10px;border:1px solid #D7D7D9;border-radius:999px;background:#FFFFFF;font-family:Montserrat;font-weight:500;font-size:12px;line-height:16px;color:#111111;cursor:pointer;white-space:nowrap;flex:none">Активен</button>
+                </sc-if>
+              </div>
+              <div style="{{ r.dateStyle }}">{{ r.date }}</div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isGroups }}">
+      <div style="background:#FFFFFF;border-radius:20px;padding:12px;display:flex;flex-direction:column;gap:8px">
+        <div style="display:grid;grid-template-columns:minmax(160px,1fr) 130px 130px 190px 110px;gap:8px;align-items:center;height:44px;padding:0 12px;background:#F5F4F7;border-radius:12px;font-family:Montserrat;font-weight:500;font-size:12px;line-height:16px;color:#707070">
+          <div>Группа отходов</div>
+          <div style="text-align:right">₽/т·км</div>
+          <div style="text-align:right">Плотность, т/м³</div>
+          <div>Код ФККО</div>
+          <div style="text-align:right">Актуально</div>
+        </div>
+        <div style="display:flex;flex-direction:column">
+          <sc-for list="{{ groupRows }}" as="g" hint-placeholder-count="5">
+            <div style="display:grid;grid-template-columns:minmax(160px,1fr) 130px 130px 190px 110px;gap:8px;align-items:center;min-height:44px;padding:6px 12px;border-bottom:1px solid #E2E2E2">
+              <div style="font-family:Inter;font-weight:600;font-size:15px;line-height:21px;color:#111111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ g.name }}</div>
+              <div style="display:flex;justify-content:flex-end">
+                <sc-if value="{{ g.editingRub }}">
+                  <input type="text" inputMode="numeric" value="{{ g.draft }}" onChange="{{ g.onDraft }}" onBlur="{{ g.onCommit }}" onKeyDown="{{ g.onKey }}" autoFocus="{{ true }}" aria-label="Цена за тонна-километр" style="{{ g.inputStyle }}" />
+                </sc-if>
+                <sc-if value="{{ g.idleRub }}">
+                  <button type="button" onClick="{{ g.onEditRub }}" style="{{ g.rubStyle }}">{{ g.rub }}</button>
+                </sc-if>
+              </div>
+              <div style="text-align:right;font-family:Inter;font-weight:600;font-size:15px;line-height:21px;color:#111111;font-variant-numeric:tabular-nums">{{ g.dens }}</div>
+              <div style="font-family:Inter;font-weight:600;font-size:13px;line-height:18px;color:#4A4A4A;font-variant-numeric:tabular-nums">{{ g.fkko }}</div>
+              <div style="{{ g.dateStyle }}">{{ g.date }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="padding:8px 12px;font-family:Montserrat;font-weight:400;font-size:12px;line-height:16px;color:#707070">Изменение цены за тонна-километр или плотности применяется ко всем новым расчётам. Сохранённые КП остаются с ценами на дату выпуска.</div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ dirty }}">
+      <div style="position:sticky;bottom:24px;background:#111111;border-radius:20px;padding:16px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;box-shadow:0 8px 24px rgba(17,17,17,0.12);animation:pop 200ms ease-out">
+        <div style="display:flex;flex-direction:column;min-width:0">
+          <span style="font-family:Montserrat;font-weight:600;font-size:15px;line-height:21px;color:#FFFFFF">{{ dirtyTitle }}</span>
+          <span style="font-family:Montserrat;font-weight:400;font-size:13px;line-height:18px;color:#B4B4B8">{{ dirtyText }}</span>
+        </div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+          <button type="button" onClick="{{ onReset }}" style="height:48px;padding:0 20px;border:1px solid #4A4A4A;border-radius:999px;background:none;font-family:Montserrat;font-weight:500;font-size:15px;line-height:21px;color:#FFFFFF;cursor:pointer;white-space:nowrap">Вернуть как было</button>
+          <button type="button" onClick="{{ onSave }}" style="height:56px;padding:0 28px;border:0;border-radius:999px;background:#E7F53D;font-family:Montserrat;font-weight:700;font-size:16px;line-height:24px;color:#111111;cursor:pointer;white-space:nowrap;transition:background 150ms ease-out" style-hover="background:#DDEB2E">Сохранить</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ saved }}">
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:12px;background:#E6F4EC;animation:pop 200ms ease-out">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" style="flex:none"><circle cx="10" cy="10" r="7" stroke="#1F8A4C" stroke-width="1.5"/><path d="M6.8 10.2L9 12.4L13.2 7.6" stroke="#1F8A4C" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span style="font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#14663A">Сохранено. Новые расчёты используют обновлённые значения, дата актуальности — 18.09.2026.</span>
+      </div>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1240,&quot;height&quot;:900},&quot;tab&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Полигоны&quot;,&quot;Группы отходов&quot;],&quot;default&quot;:&quot;Полигоны&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Редактор&quot;},&quot;showImportPreview&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Редактор&quot;}}">
+const NB = '\u00A0';
+const ORDER = ['concrete', 'brick', 'wood', 'soil', 'mixed'];
+const GROUP_NAMES = { concrete: 'Бетон', brick: 'Кирпич', wood: 'Древесина', soil: 'Грунт', mixed: 'Смесь' };
+
+const GROUPS = [
+  { key: 'concrete', name: 'Лом бетона и железобетона', rub: 12, dens: '2,0', fkko: '8 22 201 01 21 5', date: '17.09.2026' },
+  { key: 'brick', name: 'Лом кирпичной кладки', rub: 14, dens: '1,5', fkko: '8 23 101 01 21 5', date: '17.09.2026' },
+  { key: 'wood', name: 'Древесина от разборки', rub: 30, dens: '0,5', fkko: '8 21 000 01 20 5', date: '17.09.2026' },
+  { key: 'soil', name: 'Грунт от земляных работ', rub: 10, dens: '1,6', fkko: '8 11 100 01 49 5', date: '17.09.2026' },
+  { key: 'mixed', name: 'Смешанные отходы строительства', rub: 22, dens: '0,9', fkko: '8 90 000 01 72 4', date: '17.09.2026' }
+];
+
+const POLYGONS = [
+  { id: 'saburovo', name: 'Площадка «Сабурово»', entity: 'ООО «Сабурово-Ресурс»', status: 'active', date: '17.09.2026', t: { concrete: 520, brick: 480, wood: 950, soil: 300, mixed: 790 } },
+  { id: 'vostok', name: 'Комплекс переработки «Восток»', entity: 'АО «Восток-Переработка»', status: 'active', date: '17.09.2026', t: { concrete: 450, brick: 420, wood: 800, soil: 260, mixed: 700 } },
+  { id: 'elektro', name: 'Площадка «Электроугли»', entity: 'ООО «ЭкоПлощадка ЭУ»', status: 'active', date: '17.09.2026', t: { concrete: 470, brick: 450, wood: 880, soil: 280, mixed: 740 } },
+  { id: 'iksha', name: 'Площадка «Икша»', entity: 'ООО «Икша-Грунт»', status: 'unknown', date: '17.09.2026', t: { concrete: 380, brick: 360, wood: 700, soil: 210, mixed: 610 } },
+  { id: 'hmetevo', name: 'Полигон «Хметьево»', entity: 'ООО «Хметьево-Сервис»', status: 'unknown', date: '17.09.2026', t: { concrete: 410, brick: 390, wood: 1100, soil: 240, mixed: 680 } },
+  { id: 'aleksin', name: 'Полигон «Алексинский карьер»', entity: 'ООО «Алексинский карьер»', status: 'blocked', date: '17.09.2026', t: { concrete: 600, brick: 560, wood: 1050, soil: 350, mixed: 900 } },
+  { id: 'dubna', name: 'Полигон «Малая Дубна»', entity: 'МУП «Дубна-Чистота»', status: 'active', date: '17.09.2026', t: { concrete: 350, brick: 330, wood: 900, soil: 190, mixed: 570 } },
+  { id: 'lesnaya', name: 'Полигон «Лесная»', entity: 'ООО «Лесная-Эко»', status: 'stale', date: '03.09.2026', t: { concrete: 320, brick: 300, wood: 750, soil: 180, mixed: 520 } },
+  { id: 'don', name: 'КПО «Дон»', entity: 'АО «КПО Дон»', status: 'active', date: '17.09.2026', t: { concrete: 300, brick: 290, wood: 720, soil: 170, mixed: 500 } },
+  { id: 'yug', name: 'Комплекс «Юг»', entity: 'ООО «Юг-Ресурс»', status: 'active', date: '17.09.2026', t: { concrete: 290, brick: 280, wood: 780, soil: 160, mixed: 490 } }
+];
+
+const IMPORT_ROWS = [
+  { polygon: 'Площадка «Икша»', group: 'Лом бетона', was: '380', now: '480', action: 'Тариф обновится', diff: true },
+  { polygon: 'Комплекс «Юг»', group: 'Древесина', was: '780', now: '820', action: 'Тариф обновится', diff: true },
+  { polygon: 'Полигон «Лесная»', group: 'Грунт', was: '180', now: '180', action: 'Без изменений', diff: false },
+  { polygon: 'КПО «Дон»', group: 'Смесь', was: '500', now: '540', action: 'Тариф обновится', diff: true },
+  { polygon: 'Площадка «Сабурово»', group: 'Кирпич', was: '480', now: '480', action: 'Без изменений', diff: false }
+];
+
+const TODAY = '18.09.2026';
+
+function fmt(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, NB); }
+
+class Component extends DCLogic {
+  state = {
+    tab: 'polygons', query: '',
+    edits: {}, groupEdits: {}, statusEdits: {},
+    editing: null, draft: '',
+    importOpen: false, saved: false
+  };
+
+  componentDidMount() {
+    if (this.props.tab === 'Группы отходов') this.setState({ tab: 'groups' });
+    if (this.props.showImportPreview) this.setState({ importOpen: true });
+  }
+
+  dirtyCount() {
+    return Object.keys(this.state.edits).length + Object.keys(this.state.groupEdits).length + Object.keys(this.state.statusEdits).length;
+  }
+
+  commit() {
+    const e = this.state.editing;
+    if (!e) return;
+    const v = parseInt(String(this.state.draft).replace(/[^0-9]/g, ''), 10);
+    if (e.kind === 'poly') {
+      const p = POLYGONS.filter(x => x.id === e.id)[0];
+      const edits = Object.assign({}, this.state.edits);
+      const key = e.id + ':' + e.group;
+      if (!v || v === p.t[e.group]) delete edits[key]; else edits[key] = v;
+      this.setState({ edits: edits, editing: null, draft: '', saved: false });
+    } else {
+      const g = GROUPS.filter(x => x.key === e.id)[0];
+      const ge = Object.assign({}, this.state.groupEdits);
+      if (!v || v === g.rub) delete ge[e.id]; else ge[e.id] = v;
+      this.setState({ groupEdits: ge, editing: null, draft: '', saved: false });
+    }
+  }
+
+  renderVals() {
+    const s = this.state;
+    const q = s.query.trim().toLowerCase();
+    const dirty = this.dirtyCount();
+    const badges = {
+      active: { bg: '#E6F4EC', fg: '#1F8A4C', text: 'Активен' },
+      blocked: { bg: '#FBE9E5', fg: '#D3321B', text: 'Заблокирован' },
+      stale: { bg: '#FFF4E0', fg: '#B7791F', text: 'Данные устарели' },
+      unknown: { bg: '#EDEDEF', fg: '#707070', text: 'Не подтверждён' }
+    };
+    const polyGrid = 'display:grid;grid-template-columns:minmax(130px,1fr) repeat(5,76px) 170px 92px;gap:6px;align-items:center;';
+    const cellBase = 'min-width:68px;height:32px;padding:0 10px;border-radius:8px;display:flex;align-items:center;justify-content:flex-end;font-family:Inter;font-weight:600;font-size:15px;line-height:21px;font-variant-numeric:tabular-nums;cursor:text;transition:all 150ms ease-out;';
+    const inputStyle = 'width:100%;min-width:68px;height:32px;padding:0 10px;border:1px solid #111111;border-radius:8px;background:#FFFFFF;outline:none;text-align:right;font-family:Inter;font-weight:600;font-size:15px;line-height:21px;color:#111111;font-variant-numeric:tabular-nums';
+
+    const polyList = POLYGONS.filter(p => !q || p.name.toLowerCase().indexOf(q) >= 0 || p.entity.toLowerCase().indexOf(q) >= 0);
+    const groupList = GROUPS.filter(g => !q || g.name.toLowerCase().indexOf(q) >= 0 || g.fkko.indexOf(q) >= 0);
+
+    const onKey = e => {
+      if (e.key === 'Enter') this.commit();
+      if (e.key === 'Escape') this.setState({ editing: null, draft: '' });
+    };
+
+    return {
+      subtitle: 'Менеджер данных ИМОЛТ · тарифы утилизации, цены перевозки и статусы приёма',
+      addLabel: s.tab === 'groups' ? 'Добавить группу' : 'Добавить полигон',
+      saveLabel: dirty ? 'Сохранить (' + dirty + ')' : 'Сохранить',
+      saveStyle: 'height:56px;padding:0 28px;border:0;border-radius:999px;font-family:Montserrat;font-weight:700;font-size:16px;line-height:24px;transition:background 150ms ease-out;' + (dirty ? 'background:#E7F53D;color:#111111;cursor:pointer' : 'background:#F0F3C8;color:#9C9C9C;cursor:not-allowed'),
+      onSave: () => { if (dirty) this.setState({ edits: {}, groupEdits: {}, statusEdits: {}, editing: null, saved: true }); },
+      onReset: () => this.setState({ edits: {}, groupEdits: {}, statusEdits: {}, editing: null, draft: '', saved: false }),
+
+      dirty: dirty > 0,
+      dirtyTitle: 'Не сохранено: ' + dirty + (dirty === 1 ? ' изменение' : dirty < 5 ? ' изменения' : ' изменений'),
+      dirtyText: 'Дата актуальности у затронутых строк станет ' + TODAY,
+      saved: s.saved,
+
+      importOpen: s.importOpen,
+      onImport: () => this.setState({ importOpen: true, saved: false }),
+      onCloseImport: () => this.setState({ importOpen: false }),
+      onApplyImport: () => {
+        const edits = Object.assign({}, s.edits);
+        edits['iksha:concrete'] = 480;
+        edits['yug:wood'] = 820;
+        edits['don:mixed'] = 540;
+        this.setState({ edits: edits, importOpen: false, saved: false });
+      },
+      importRows: IMPORT_ROWS.map(r => ({
+        polygon: r.polygon, group: r.group, was: r.was, now: r.now, action: r.action,
+        rowStyle: 'display:grid;grid-template-columns:minmax(120px,1fr) 130px 110px 110px 150px;gap:8px;align-items:center;min-height:44px;padding:6px 12px;border-top:1px solid #E2E2E2;background:' + (r.diff ? '#F8FDB5' : '#FFFFFF')
+      })),
+
+      onManualStatus: () => {
+        const se = Object.assign({}, s.statusEdits);
+        POLYGONS.forEach(p => { if (p.status === 'unknown') se[p.id] = 'active'; });
+        this.setState({ statusEdits: se, saved: false });
+      },
+
+      tabs: [{ key: 'polygons', label: 'Полигоны' }, { key: 'groups', label: 'Группы отходов' }].map(t => ({
+        label: t.label,
+        style: 'height:44px;padding:0 20px;border:0;border-radius:999px;background:' + (s.tab === t.key ? '#111111' : 'transparent') + ';font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:' + (s.tab === t.key ? '#FFFFFF' : '#707070') + ';cursor:pointer;white-space:nowrap;transition:all 150ms ease-out',
+        onClick: () => this.setState({ tab: t.key, editing: null, query: '' })
+      })),
+      isPolygons: s.tab === 'polygons',
+      isGroups: s.tab === 'groups',
+      query: s.query,
+      onQuery: e => this.setState({ query: e.target.value }),
+      searchPlaceholder: s.tab === 'groups' ? 'Поиск по группе или коду ФККО' : 'Поиск по полигону или юрлицу',
+      counter: s.tab === 'groups' ? ('Групп: ' + groupList.length + ' из ' + GROUPS.length) : ('Полигонов: ' + polyList.length + ' из ' + POLYGONS.length),
+
+      polyGrid: polyGrid,
+      groupHeaders: ORDER.map(g => GROUP_NAMES[g] + ', ₽/т'),
+
+      polyRows: polyList.map(p => {
+        const st = s.statusEdits[p.id] || p.status;
+        const b = badges[st];
+        const rowChanged = ORDER.some(g => s.edits[p.id + ':' + g] !== undefined) || s.statusEdits[p.id] !== undefined;
+        return {
+          name: p.name, entity: p.entity,
+          rowStyle: polyGrid + 'min-height:52px;padding:6px 12px;border-bottom:1px solid #E2E2E2;border-left:3px solid ' + (rowChanged ? '#E7F53D' : 'transparent'),
+          cells: ORDER.map(g => {
+            const key = p.id + ':' + g;
+            const changed = s.edits[key] !== undefined;
+            const value = changed ? s.edits[key] : p.t[g];
+            const editing = !!s.editing && s.editing.kind === 'poly' && s.editing.id === p.id && s.editing.group === g;
+            return {
+              value: fmt(value),
+              editing: editing,
+              idle: !editing,
+              draft: s.draft,
+              inputStyle: inputStyle,
+              cellStyle: cellBase + (changed ? 'background:#F8FDB5;border:1px solid #111111;color:#111111' : 'background:#FFFFFF;border:1px solid transparent;color:' + (st === 'blocked' ? '#707070' : '#111111')),
+              onEdit: () => this.setState({ editing: { kind: 'poly', id: p.id, group: g }, draft: String(value), saved: false }),
+              onDraft: e => this.setState({ draft: e.target.value.replace(/[^0-9]/g, '') }),
+              onCommit: () => this.commit(),
+              onKey: onKey
+            };
+          }),
+          statusWrapStyle: 'display:flex;gap:4px;min-width:0;' + (st === 'unknown' ? 'flex-direction:column;align-items:flex-start' : 'align-items:center;flex-wrap:wrap'),
+          badgeStyle: 'display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 8px;border-radius:6px;flex:none;max-width:100%;background:' + b.bg,
+          badgeTextStyle: 'font-family:Montserrat;font-weight:600;font-size:12px;line-height:16px;white-space:nowrap;color:' + b.fg,
+          statusText: b.text,
+          isActive: st === 'active', isBlocked: st === 'blocked', isStale: st === 'stale', isUnknown: st === 'unknown',
+          needsStatus: st === 'unknown',
+          onSetActive: () => { const se = Object.assign({}, s.statusEdits); se[p.id] = 'active'; this.setState({ statusEdits: se, saved: false }); },
+          date: rowChanged ? TODAY : p.date,
+          dateStyle: 'text-align:right;font-family:Inter;font-weight:600;font-size:12px;line-height:16px;font-variant-numeric:tabular-nums;white-space:nowrap;color:' + (rowChanged ? '#111111' : '#707070')
+        };
+      }),
+
+      groupRows: groupList.map(g => {
+        const changed = s.groupEdits[g.key] !== undefined;
+        const value = changed ? s.groupEdits[g.key] : g.rub;
+        const editing = !!s.editing && s.editing.kind === 'group' && s.editing.id === g.key;
+        return {
+          name: g.name, dens: g.dens, fkko: g.fkko,
+          rub: fmt(value),
+          editingRub: editing,
+          idleRub: !editing,
+          draft: s.draft,
+          inputStyle: inputStyle,
+          rubStyle: cellBase + (changed ? 'background:#F8FDB5;border:1px solid #111111;color:#111111' : 'background:#FFFFFF;border:1px solid transparent;color:#111111'),
+          onEditRub: () => this.setState({ editing: { kind: 'group', id: g.key }, draft: String(value), saved: false }),
+          onDraft: e => this.setState({ draft: e.target.value.replace(/[^0-9]/g, '') }),
+          onCommit: () => this.commit(),
+          onKey: onKey,
+          date: changed ? TODAY : g.date,
+          dateStyle: 'text-align:right;font-family:Inter;font-weight:600;font-size:12px;line-height:16px;font-variant-numeric:tabular-nums;white-space:nowrap;color:' + (changed ? '#111111' : '#707070')
+        };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

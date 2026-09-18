@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; background: #DEDDE1; font-family: Montserrat, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: #1F5BFF; }
+  a:hover { color: #1741B8; }
+  input, textarea { font-family: inherit; }
+  @keyframes pop { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+<script src="./image-slot.js"></script>
+</helmet>
+<div style="min-height:100vh;padding:0 0 40px;display:flex;flex-direction:column;align-items:center">
+
+<div style="position:sticky;top:0;z-index:80;width:100%;background:#111111;padding:10px 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+  <span style="font-family:'Courier New',monospace;font-size:11px;line-height:16px;color:#848484;letter-spacing:0.04em;text-transform:uppercase">390 · кабинет</span>
+  <sc-for list="{{ presets }}" as="p" hint-placeholder-count="6">
+    <button type="button" onClick="{{ p.onClick }}" style="{{ p.style }}">{{ p.label }}</button>
+  </sc-for>
+</div>
+
+<div style="width:390px;min-height:844px;background:#EFEEF1;position:relative;margin-top:24px;display:flex;flex-direction:column;border-radius:20px;box-shadow:0 8px 24px rgba(17,17,17,0.12)">
+
+  <div style="min-height:56px;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #D7D7D9">
+    <span style="font-family:Montserrat;font-weight:700;font-size:20px;line-height:24px;color:#FF4719;letter-spacing:-0.01em">ИМОЛТ</span>
+    <sc-if value="{{ loggedIn }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0">
+        <div style="display:flex;flex-direction:column;align-items:flex-end;min-width:0">
+          <span style="font-family:Montserrat;font-weight:500;font-size:13px;line-height:18px;color:#111111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px">ООО «СтройВывоз МСК»</span>
+          <span style="font-family:Montserrat;font-weight:400;font-size:11px;line-height:15px;color:#707070">перевозчик</span>
+        </div>
+        <span style="width:36px;height:36px;border-radius:999px;background:#111111;display:flex;align-items:center;justify-content:center;font-family:Inter;font-weight:600;font-size:13px;color:#FFFFFF;flex:none">СВ</span>
+      </div>
+    </sc-if>
+  </div>
+
+  <div style="flex:1;padding:20px 16px 32px;display:flex;flex-direction:column;gap:18px">
+
+    <sc-if value="{{ isLogin }}">
+      <div style="display:flex;flex-direction:column;gap:18px;animation:pop 200ms ease-out">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <h1 style="margin:0;font-family:Montserrat;font-weight:700;font-size:32px;line-height:38px;color:#111111;letter-spacing:-0.02em">Вход в кабинет</h1>
+          <p style="margin:0;font-family:Montserrat;font-weight:400;font-size:14px;line-height:20px;color:#707070">Расчёт работает без входа. Кабинет нужен для сохранённых расчётов, деталей маршрута и заказа документации.</p>
+        </div>
+
+        <div style="background:#FFFFFF;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;gap:4px;padding:4px;background:#F5F4F7;border-radius:999px">
+            <sc-for list="{{ loginTabs }}" as="lt" hint-placeholder-count="2">
+              <button type="button" onClick="{{ lt.onClick }}" style="{{ lt.style }}">{{ lt.label }}</button>
+            </sc-for>
+          </div>
+
+          <div style="height:56px;border:1px solid #D7D7D9;border-radius:12px;padding:0 16px;display:flex;flex-direction:column;justify-content:center">
+            <label for="mk-login" style="font-family:Montserrat;font-weight:500;font-size:11px;line-height:14px;color:#848484">{{ loginFieldLabel }}</label>
+            <input id="mk-login" type="text" value="{{ loginValue }}" onChange="{{ onLoginValue }}" placeholder="{{ loginPlaceholder }}" style="border:0;outline:none;padding:0;background:none;font-family:Inter;font-weight:600;font-size:16px;line-height:22px;color:#111111;width:100%;font-variant-numeric:tabular-nums" />
+          </div>
+
+          <sc-if value="{{ codeSent }}">
+            <div style="display:flex;flex-direction:column;gap:10px;animation:pop 200ms ease-out">
+              <span style="font-family:Montserrat;font-weight:400;font-size:13px;line-height:18px;color:#707070">Код отправлен. Введите четыре цифры.</span>
+              <div style="display:flex;gap:8px">
+                <span style="flex:1;height:56px;border:1px solid #111111;border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:Inter;font-weight:700;font-size:22px;color:#111111">4</span>
+                <span style="flex:1;height:56px;border:1px solid #111111;border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:Inter;font-weight:700;font-size:22px;color:#111111">7</span>
+                <span style="flex:1;height:56px;border:1px solid #D7D7D9;border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:Inter;font-weight:700;font-size:22px;color:#848484">—</span>
+                <span style="flex:1;height:56px;border:1px solid #D7D7D9;border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:Inter;font-weight:700;font-size:22px;color:#848484">—</span>
+              </div>
+            </div>
+          </sc-if>
+
+          <button type="button" onClick="{{ onLoginAction }}" style="{{ loginBtnStyle }}">{{ loginBtnLabel }}</button>
+          <button type="button" onClick="{{ onRegister }}" style="min-height:44px;border:0;background:none;font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#1F5BFF;text-decoration:underline;cursor:pointer">Зарегистрироваться</button>
+        </div>
+
+        <sc-if value="{{ showRoles }}">
+          <div style="display:flex;flex-direction:column;gap:12px;animation:pop 200ms ease-out">
+            <div style="font-family:Montserrat;font-weight:700;font-size:22px;line-height:28px;color:#111111">Кто вы</div>
+            <sc-for list="{{ roles }}" as="rl" hint-placeholder-count="2">
+              <button type="button" onClick="{{ rl.onClick }}" style="{{ rl.style }}">
+                <span style="display:flex;flex-direction:column;gap:4px;text-align:left;min-width:0">
+                  <span style="font-family:Montserrat;font-weight:700;font-size:16px;line-height:22px;color:#111111">{{ rl.name }}</span>
+                  <span style="font-family:Montserrat;font-weight:400;font-size:13px;line-height:18px;color:#707070">{{ rl.desc }}</span>
+                </span>
+                <span style="{{ rl.dotStyle }}"></span>
+              </button>
+            </sc-for>
+
+            <div style="background:#FFFFFF;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+                <span style="font-family:Montserrat;font-weight:700;font-size:18px;line-height:24px;color:#111111">Подписка</span>
+                <span style="font-family:Inter;font-weight:700;font-size:20px;line-height:26px;color:#848484">… ₽ в месяц</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;font-family:Montserrat;font-weight:400;font-size:13px;line-height:18px;color:#707070">
+                <span>Детали маршрута и время в пути</span>
+                <span>Сохранение расчётов и выгрузка КП</span>
+                <span>Справочник цен по всем полигонам</span>
+                <span>Пробный период — … дней</span>
+              </div>
+              <div style="padding:10px 12px;border-radius:12px;background:#F5F4F7;font-family:Montserrat;font-weight:400;font-size:12px;line-height:17px;color:#4A4A4A">Оплата вне сервиса. Менеджер выставит счёт и активирует доступ.</div>
+              <button type="button" onClick="{{ onSubRequest }}" style="height:56px;border:0;border-radius:999px;background:#E7F53D;font-family:Montserrat;font-weight:700;font-size:16px;line-height:24px;color:#111111;cursor:pointer">Оставить заявку на подписку</button>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ loggedIn }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;flex-direction:column;gap:16px">
+
+        <sc-if value="{{ subPending }}">
+          <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:12px;background:#FFF4E0">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" style="flex:none"><circle cx="10" cy="10" r="7" stroke="#B7791F" stroke-width="1.5"/><path d="M10 6.4V10.4L12.6 12" stroke="#B7791F" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <span style="font-family:Montserrat;font-weight:500;font-size:13px;line-height:18px;color:#8A5B12">Подписка ожидает подтверждения. Расчёты доступны, детали маршрута — после активации.</span>
+          </div>
+        </sc-if>
+
+        <div style="display:flex;gap:4px;padding:4px;background:#F5F4F7;border-radius:999px;overflow-x:auto">
+          <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="5">
+            <button type="button" onClick="{{ t.onClick }}" style="{{ t.style }}">{{ t.label }}</button>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{ isCalcs }}">
+          <div style="display:flex;flex-direction:column;gap:10px;animation:pop 200ms ease-out">
+            <a href="Калькулятор мобильный.dc.html" style="height:56px;border-radius:999px;background:#E7F53D;display:flex;align-items:center;justify-content:center;font-family:Montserrat;font-weight:700;font-size:16px;line-height:24px;color:#111111;text-decoration:none">Новый расчёт</a>
+            <sc-for list="{{ calcs }}" as="c" hint-placeholder-count="3">
+              <div style="background:#FFFFFF;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+                  <div style="min-width:0">
+                    <div style="font-family:Inter;font-weight:600;font-size:15px;line-height:21px;color:#111111">{{ c.addr }}</div>
+                    <div style="font-family:Montserrat;font-weight:400;font-size:12px;line-height:16px;color:#707070">{{ c.waste }}</div>
+                  </div>
+                  <div style="{{ c.totalStyle }}">{{ c.total }}</div>
+                </div>
+                <div style="height:1px;background:#E2E2E2"></div>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+                  <span style="font-family:Montserrat;font-weight:400;font-size:12px;line-height:16px;color:#707070;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ c.meta }}</span>
+                  <a href="КП мобильный.dc.html" style="font-family:Montserrat;font-weight:500;font-size:13px;line-height:18px;color:#1F5BFF;white-space:nowrap">Открыть КП</a>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isRoutes }}">
+          <div style="display:flex;flex-direction:column;gap:10px;animation:pop 200ms ease-out">
+            <sc-for list="{{ routes }}" as="r" hint-placeholder-count="2">
+              <div style="background:#FFFFFF;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+                  <div style="min-width:0">
+                    <div style="font-family:Inter;font-weight:600;font-size:15px;line-height:21px;color:#111111">{{ r.title }}</div>
+                    <div style="font-family:Montserrat;font-weight:400;font-size:12px;line-height:16px;color:#707070">{{ r.from }}</div>
+                  </div>
+                  <div style="font-family:Inter;font-weight:700;font-size:16px;line-height:22px;color:#111111;font-variant-numeric:tabular-nums;white-space:nowrap">{{ r.dist }}</div>
+                </div>
+                <div style="height:1px;background:#E2E2E2"></div>
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+                  <span style="{{ r.timeStyle }}">{{ r.time }}</span>
+                  <sc-if value="{{ r.locked }}">
+                    <span style="display:inline-flex;align-items:center;gap:6px">
+                      <svg width="16" height="16" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="4.5" y="8.5" width="11" height="8" rx="2" stroke="#9C9C9C" stroke-width="1.5"/><path d="M7.2 8.5V6.6C7.2 5.1 8.5 3.8 10 3.8C11.5 3.8 12.8 5.1 12.8 6.6V8.5" stroke="#9C9C9C" stroke-width="1.5" stroke-linecap="round"/></svg>
+                      <span style="font-family:Montserrat;font-weight:500;font-size:12px;line-height:16px;color:#707070">по подписке</span>
+                    </span>
+                  </sc-if>
+                  <sc-if value="{{ r.open }}">
+                    <a href="https://yandex.ru/maps" target="_blank" rel="noopener" style="font-family:Montserrat;font-weight:500;font-size:13px;line-height:18px;color:#1F5BFF;white-space:nowrap">Открыть в Яндекс.Картах</a>
+                  </sc-if>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isServices }}">
+          <div style="display:flex;flex-direction:column;gap:12px;animation:pop 200ms ease-out">
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <div style="font-family:Montserrat;font-weight:700;font-size:26px;line-height:32px;color:#111111;letter-spacing:-0.01em">Наши услуги</div>
+              <div style="font-family:Montserrat;font-weight:400;font-size:13px;line-height:18px;color:#707070">Цены указаны от минимального объёма работ.</div>
+            </div>
+
+            <sc-if value="{{ orderSent }}">
+              <div style="background:#FFFFFF;border-radius:12px;padding:14px;display:flex;align-items:flex-start;gap:10px;animation:pop 200ms ease-out">
+                <span style="width:28px;height:28px;border-radius:999px;background:#E6F4EC;display:flex;align-items:center;justify-content:center;flex:none">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8.5L6.5 11.5L12.5 5" stroke="#1F8A4C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <div style="display:flex;flex-direction:column;gap:2px">
+                  <span style="font-family:Montserrat;font-weight:700;font-size:15px;line-height:21px;color:#111111">Заявка отправлена</span>
+                  <span style="font-family:Montserrat;font-weight:400;font-size:13px;line-height:18px;color:#707070">{{ orderSentText }}</span>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-for list="{{ services }}" as="sv" hint-placeholder-count="6">
+              <div style="{{ sv.cardStyle }}">
+                <div style="position:relative;height:120px;background:#EDEDEF;flex:none">
+                  <image-slot id="{{ sv.slotId }}" shape="rect" placeholder="{{ sv.slotHint }}"></image-slot>
+                </div>
+                <div style="padding:14px;display:flex;flex-direction:column;gap:10px">
+                  <div style="font-family:Montserrat;font-weight:700;font-size:16px;line-height:22px;color:#111111;text-wrap:pretty">{{ sv.name }}</div>
+                  <div style="font-family:Montserrat;font-weight:400;font-size:13px;line-height:18px;color:#707070">{{ sv.desc }}</div>
+                  <div style="{{ sv.priceStyle }}">{{ sv.price }}</div>
+                  <sc-if value="{{ sv.formOpen }}">
+                    <div style="display:flex;flex-direction:column;gap:10px;padding-top:10px;border-top:1px solid #E2E2E2;animation:pop 200ms ease-out">
+                      <div style="height:52px;border:1px solid #D7D7D9;border-radius:12px;padding:0 14px;display:flex;flex-direction:column;justify-content:center">
+                        <span style="font-family:Montserrat;font-weight:500;font-size:11px;line-height:14px;color:#848484">Адрес объекта</span>
+                        <input type="text" value="{{ orderAddr }}" onChange="{{ onOrderAddr }}" placeholder="Москва, ул. Годовикова, 9" style="border:0;outline:none;padding:0;background:none;font-family:Montserrat;font-weight:400;font-size:15px;line-height:21px;color:#111111;width:100%" />
+                      </div>
+                      <div style="border:1px solid #D7D7D9;border-radius:12px;padding:10px 14px;display:flex;flex-direction:column;gap:2px">
+                        <span style="font-family:Montserrat;font-weight:500;font-size:11px;line-height:14px;color:#848484">Комментарий</span>
+                        <textarea rows="2" value="{{ orderNote }}" onChange="{{ onOrderNote }}" placeholder="Сроки, площадь, особенности объекта" style="border:0;outline:none;padding:0;background:none;resize:vertical;font-family:Montserrat;font-weight:400;font-size:14px;line-height:20px;color:#111111;width:100%"></textarea>
+                      </div>
+                      <button type="button" onClick="{{ sv.onSubmit }}" style="height:52px;border:0;border-radius:999px;background:#111111;font-family:Montserrat;font-weight:500;font-size:15px;line-height:21px;color:#FFFFFF;cursor:pointer">Отправить</button>
+                      <button type="button" onClick="{{ sv.onCancel }}" style="min-height:44px;border:0;background:none;font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#1F5BFF;cursor:pointer">Отмена</button>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ sv.buttonVisible }}">
+                    <button type="button" onClick="{{ sv.onOrder }}" style="height:52px;border:0;border-radius:999px;background:#111111;font-family:Montserrat;font-weight:500;font-size:15px;line-height:21px;color:#FFFFFF;cursor:pointer">Заказать</button>
+                  </sc-if>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isSub }}">
+          <div style="display:flex;flex-direction:column;gap:12px;animation:pop 200ms ease-out">
+            <div style="background:#FFFFFF;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+                <span style="font-family:Montserrat;font-weight:700;font-size:20px;line-height:26px;color:#111111">Перевозчик</span>
+                <span style="font-family:Inter;font-weight:700;font-size:20px;line-height:26px;color:#848484">… ₽ в месяц</span>
+              </div>
+              <div style="display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 8px;border-radius:6px;background:#FFF4E0;align-self:flex-start">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="5.5" stroke="#B7791F" stroke-width="1.5"/><path d="M8 5.2V8.4L10.2 9.8" stroke="#B7791F" stroke-width="1.5" stroke-linecap="round"/></svg>
+                <span style="font-family:Montserrat;font-weight:600;font-size:12px;line-height:16px;color:#B7791F">Ожидает подтверждения</span>
+              </div>
+              <div style="font-family:Montserrat;font-weight:400;font-size:13px;line-height:19px;color:#707070">Заявка от 18.09.2026. Оплата вне сервиса: менеджер выставит счёт и активирует доступ к деталям маршрута.</div>
+              <button type="button" style="height:52px;border:1px solid #D7D7D9;border-radius:999px;background:#FFFFFF;font-family:Montserrat;font-weight:500;font-size:15px;line-height:21px;color:#111111;cursor:pointer">Связаться с менеджером</button>
+            </div>
+            <div style="background:#FFFFFF;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:8px">
+              <span style="font-family:Montserrat;font-weight:600;font-size:15px;line-height:21px;color:#111111">Что даёт подписка</span>
+              <span style="font-family:Montserrat;font-weight:400;font-size:13px;line-height:19px;color:#707070">Время в пути и переход в Яндекс.Карты, сохранение расчётов, выгрузка КП, справочник цен по всем полигонам, заказ документации.</span>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isProfile }}">
+          <div style="display:flex;flex-direction:column;gap:12px;animation:pop 200ms ease-out">
+            <div style="background:#FFFFFF;border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:12px">
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <span style="font-family:Montserrat;font-weight:700;font-size:20px;line-height:26px;color:#111111">ООО «СтройВывоз МСК»</span>
+                <span style="font-family:Montserrat;font-weight:400;font-size:13px;line-height:18px;color:#707070">Перевозчик</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div style="display:flex;justify-content:space-between;gap:12px"><span style="font-family:Montserrat;font-weight:400;font-size:13px;line-height:18px;color:#707070">ИНН</span><span style="font-family:Inter;font-weight:600;font-size:13px;line-height:18px;color:#111111;font-variant-numeric:tabular-nums">7725901233</span></div>
+                <div style="display:flex;justify-content:space-between;gap:12px"><span style="font-family:Montserrat;font-weight:400;font-size:13px;line-height:18px;color:#707070">Телефон</span><span style="font-family:Inter;font-weight:600;font-size:13px;line-height:18px;color:#111111;font-variant-numeric:tabular-nums">+7 926 118-40-22</span></div>
+                <div style="display:flex;justify-content:space-between;gap:12px"><span style="font-family:Montserrat;font-weight:400;font-size:13px;line-height:18px;color:#707070">Почта</span><span style="font-family:Montserrat;font-weight:500;font-size:13px;line-height:18px;color:#111111">info@stroyvyvoz.ru</span></div>
+              </div>
+              <div style="height:1px;background:#E2E2E2"></div>
+              <button type="button" onClick="{{ onToggleAis }}" style="display:flex;align-items:center;gap:10px;border:0;background:none;padding:0;cursor:pointer;min-height:44px;text-align:left">
+                <span style="{{ aisBoxStyle }}">
+                  <sc-if value="{{ aisOn }}">
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3.5 8.5L6.5 11.5L12.5 5" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </sc-if>
+                </span>
+                <span style="font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:#111111">Транспорт зарегистрирован в АИС ОССиГ</span>
+              </button>
+            </div>
+            <button type="button" onClick="{{ onLogout }}" style="min-height:52px;border:1px solid #D7D7D9;border-radius:999px;background:#FFFFFF;font-family:Montserrat;font-weight:500;font-size:15px;line-height:21px;color:#111111;cursor:pointer">Выйти</button>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+  </div>
+
+  <div style="position:sticky;bottom:0;z-index:50;height:64px;background:#FFFFFF;border-top:1px solid #E2E2E2;border-radius:0 0 20px 20px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))">
+    <a href="Калькулятор мобильный.dc.html" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none">
+      <svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="4" y="2.5" width="12" height="15" rx="2" stroke="#9C9C9C" stroke-width="1.5"/><path d="M7 6.5H13" stroke="#9C9C9C" stroke-width="1.5" stroke-linecap="round"/><path d="M7.2 10.6H7.3" stroke="#9C9C9C" stroke-width="1.8" stroke-linecap="round"/><path d="M10 10.6H10.1" stroke="#9C9C9C" stroke-width="1.8" stroke-linecap="round"/><path d="M12.8 10.6H12.9" stroke="#9C9C9C" stroke-width="1.8" stroke-linecap="round"/><path d="M7.2 13.9H10.1" stroke="#9C9C9C" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <span style="font-family:Montserrat;font-weight:500;font-size:11px;line-height:14px;color:#707070">Расчёт</span>
+    </a>
+    <a href="КП мобильный.dc.html" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none">
+      <svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5 2.5H11.5L15.5 6.5V17.5H5V2.5Z" stroke="#9C9C9C" stroke-width="1.5" stroke-linejoin="round"/><path d="M11.2 2.8V6.8H15.2" stroke="#9C9C9C" stroke-width="1.5" stroke-linejoin="round"/></svg>
+      <span style="font-family:Montserrat;font-weight:500;font-size:11px;line-height:14px;color:#707070">КП</span>
+    </a>
+    <button type="button" style="border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;padding:0">
+      <svg width="22" height="22" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="7" r="3" stroke="#111111" stroke-width="1.5"/><path d="M4 16.5C4 13.7 6.7 12 10 12C13.3 12 16 13.7 16 16.5" stroke="#111111" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <span style="font-family:Montserrat;font-weight:600;font-size:11px;line-height:14px;color:#111111">Кабинет</span>
+    </button>
+  </div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:460,&quot;height&quot;:1000},&quot;screen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Услуги&quot;,&quot;Расчёты&quot;,&quot;Маршруты&quot;,&quot;Подписка&quot;,&quot;Профиль&quot;,&quot;Вход&quot;,&quot;Выбор роли и подписка&quot;],&quot;default&quot;:&quot;Услуги&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Кабинет&quot;},&quot;subscriptionActive&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Кабинет&quot;}}">
+const SERVICES = [
+  { id: 'ossig-msk', name: 'Разрешение ОССиГ (Москва)', desc: 'Оформление разрешения на перемещение отходов строительства и грунта по территории Москвы.', price: 'от 50 000 ₽', slot: 'Фото: документы ОССиГ' },
+  { id: 'ossig-mo', name: 'Разрешение ОССиГ (Московская область)', desc: 'Разрешение на перемещение ОССиГ по территории Московской области.', price: 'от 50 000 ₽', slot: 'Фото: объект в МО' },
+  { id: 'oati', name: 'Ордер ОАТИ', desc: 'Ордер на проведение земляных работ, устройство и содержание строительных площадок.', price: 'от 80 000 ₽', slot: 'Фото: стройплощадка' },
+  { id: 'ppr', name: 'ППР и ПОД', desc: 'Проект производства работ и проект организации демонтажа под конкретный объект.', price: 'от 50 000 ₽', slot: 'Фото: чертежи ППР' },
+  { id: 'lab', name: 'Лабораторные исследования и паспорта отходов', desc: 'Отбор проб, протоколы испытаний, паспорта отходов по кодам ФККО.', price: 'цена по запросу', slot: 'Фото: лаборатория' },
+  { id: 'bio', name: 'Биотестирование', desc: 'Определение класса опасности отходов методом биотестирования с протоколом.', price: 'цена по запросу', slot: 'Фото: пробы отходов' }
+];
+
+const TABS = [
+  { key: 'calcs', label: 'Расчёты' },
+  { key: 'routes', label: 'Маршруты' },
+  { key: 'services', label: 'Услуги' },
+  { key: 'sub', label: 'Подписка' },
+  { key: 'profile', label: 'Профиль' }
+];
+
+const CALCS = [
+  { addr: 'Москва, ул. Годовикова, 9', waste: 'Лом бетона 20 т · Древесина 7,5 т', total: '39 320 ₽', meta: '«Сабурово», «Восток» · 18.09.2026' },
+  { addr: 'Москва, Дмитровское ш., 108', waste: 'Грунт 120 т', total: '87 840 ₽', meta: '«Икша» · 16.09.2026' },
+  { addr: 'Химки, ул. Победы, 4', waste: 'Смешанные отходы 45 т', total: '132 570 ₽', meta: '«Электроугли» · 12.09.2026' }
+];
+
+const ROUTES = [
+  { title: 'Площадка «Сабурово»', from: 'ул. Годовикова, 9 → г. о. Красногорск', dist: '38 км', time: '~55 мин' },
+  { title: 'Комплекс переработки «Восток»', from: 'ул. Годовикова, 9 → д. Тимохово', dist: '45 км', time: '~1 ч 10 мин' },
+  { title: 'Площадка «Икша»', from: 'Дмитровское ш., 108 → пос. Икша', dist: '52 км', time: '~1 ч 20 мин' }
+];
+
+const ROLES = [
+  { key: 'carrier', name: 'Перевозчик', desc: 'Маршруты, детали в пути, заказ документации' },
+  { key: 'demo', name: 'Демонтажная компания', desc: 'База полигонов и тарифов для бюджетирования' }
+];
+
+class Component extends DCLogic {
+  state = {
+    logged: true, tab: 'services',
+    loginMode: 'phone', loginValue: '', codeSent: false, showRoles: false, role: 'carrier',
+    subPending: true, openForm: null, orderAddr: '', orderNote: '', sentFor: null,
+    ais: true
+  };
+
+  componentDidMount() {
+    const map = {
+      'Вход': 'login', 'Выбор роли и подписка': 'roles',
+      'Расчёты': 'calcs', 'Маршруты': 'routes', 'Услуги': 'services', 'Подписка': 'sub', 'Профиль': 'profile'
+    };
+    const k = map[this.props.screen];
+    if (k === 'login') this.setState({ logged: false, showRoles: false, codeSent: false });
+    else if (k === 'roles') this.setState({ logged: false, showRoles: true, codeSent: true, loginValue: '+7 926 118-40-22' });
+    else if (k) this.setState({ logged: true, tab: k });
+    if (this.props.subscriptionActive) this.setState({ subPending: false });
+  }
+
+  renderVals() {
+    const s = this.state;
+    const sent = s.sentFor ? SERVICES.filter(x => x.id === s.sentFor)[0] : null;
+    const phone = s.loginMode === 'phone';
+    const chipTab = 'height:44px;padding:0 18px;border:0;border-radius:999px;font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;cursor:pointer;white-space:nowrap;flex:none;transition:all 150ms ease-out;';
+
+    return {
+      presets: [
+        { key: 'login', label: 'Вход' },
+        { key: 'roles', label: 'Роль и подписка' },
+        { key: 'calcs', label: 'Расчёты' },
+        { key: 'routes', label: 'Маршруты' },
+        { key: 'services', label: 'Услуги' },
+        { key: 'sub', label: 'Подписка' },
+        { key: 'profile', label: 'Профиль' }
+      ].map(p => ({
+        label: p.label,
+        style: 'height:26px;padding:0 10px;border:1px solid #333333;border-radius:999px;background:#111111;font-family:Montserrat;font-weight:500;font-size:11px;line-height:14px;color:#C8C8C8;cursor:pointer;white-space:nowrap',
+        onClick: () => {
+          if (p.key === 'login') this.setState({ logged: false, showRoles: false, codeSent: false, loginValue: '' });
+          else if (p.key === 'roles') this.setState({ logged: false, showRoles: true, codeSent: true, loginValue: '+7 926 118-40-22' });
+          else this.setState({ logged: true, tab: p.key, openForm: null, sentFor: null });
+        }
+      })),
+
+      isLogin: !s.logged,
+      loggedIn: s.logged,
+
+      loginTabs: [{ key: 'phone', label: 'По телефону' }, { key: 'email', label: 'По почте' }].map(t => ({
+        label: t.label,
+        style: 'flex:1;height:44px;border:0;border-radius:999px;background:' + (s.loginMode === t.key ? '#FFFFFF' : 'transparent') + ';font-family:Montserrat;font-weight:500;font-size:14px;line-height:20px;color:' + (s.loginMode === t.key ? '#111111' : '#707070') + ';cursor:pointer',
+        onClick: () => this.setState({ loginMode: t.key, codeSent: false })
+      })),
+      loginFieldLabel: phone ? 'Телефон' : 'Электронная почта',
+      loginPlaceholder: phone ? '+7' : 'name@company.ru',
+      loginValue: s.loginValue,
+      onLoginValue: e => this.setState({ loginValue: e.target.value }),
+      codeSent: s.codeSent,
+      loginBtnLabel: s.codeSent ? 'Подтвердить' : (phone ? 'Получить код' : 'Войти'),
+      loginBtnStyle: 'height:56px;border:0;border-radius:999px;font-family:Montserrat;font-weight:700;font-size:16px;line-height:24px;' + (s.loginValue ? 'background:#E7F53D;color:#111111;cursor:pointer' : 'background:#F0F3C8;color:#9C9C9C;cursor:not-allowed'),
+      onLoginAction: () => {
+        if (!s.loginValue) return;
+        if (!s.codeSent && phone) { this.setState({ codeSent: true }); return; }
+        this.setState({ showRoles: true });
+      },
+      onRegister: () => this.setState({ codeSent: true, showRoles: true, loginValue: s.loginValue || '+7 926 118-40-22' }),
+      showRoles: s.showRoles,
+      roles: ROLES.map(r => ({
+        name: r.name, desc: r.desc,
+        style: 'width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px;border-radius:20px;background:#FFFFFF;cursor:pointer;text-align:left;border:1px solid ' + (s.role === r.key ? '#111111' : 'transparent'),
+        dotStyle: 'width:22px;height:22px;border-radius:999px;flex:none;border:' + (s.role === r.key ? '7px solid #111111' : '1px solid #D7D7D9'),
+        onClick: () => this.setState({ role: r.key })
+      })),
+      onSubRequest: () => this.setState({ logged: true, tab: 'sub', subPending: true }),
+
+      subPending: s.subPending,
+      tabs: TABS.map(t => ({
+        label: t.label,
+        style: chipTab + (s.tab === t.key ? 'background:#FFFFFF;color:#111111' : 'background:transparent;color:#707070'),
+        onClick: () => this.setState({ tab: t.key, openForm: null })
+      })),
+      isCalcs: s.tab === 'calcs',
+      isRoutes: s.tab === 'routes',
+      isServices: s.tab === 'services',
+      isSub: s.tab === 'sub',
+      isProfile: s.tab === 'profile',
+
+      calcs: CALCS.map(c => ({
+        addr: c.addr, waste: c.waste, total: c.total, meta: c.meta,
+        totalStyle: 'font-family:Inter;font-weight:700;font-size:' + (c.total.length <= 9 ? 17 : 15) + 'px;line-height:23px;color:#111111;font-variant-numeric:tabular-nums;white-space:nowrap;flex:none'
+      })),
+
+      routes: ROUTES.map(r => ({
+        title: r.title, from: r.from, dist: r.dist,
+        time: s.subPending ? 'время в пути скрыто' : r.time,
+        timeStyle: 'font-family:' + (s.subPending ? 'Montserrat' : 'Inter') + ';font-weight:' + (s.subPending ? '400' : '600') + ';font-size:13px;line-height:18px;color:' + (s.subPending ? '#707070' : '#111111') + ';font-variant-numeric:tabular-nums',
+        locked: s.subPending,
+        open: !s.subPending
+      })),
+
+      orderSent: !!sent,
+      orderSentText: sent ? ('«' + sent.name + '» — менеджер свяжется в течение рабочего дня.') : '',
+      orderAddr: s.orderAddr, orderNote: s.orderNote,
+      onOrderAddr: e => this.setState({ orderAddr: e.target.value }),
+      onOrderNote: e => this.setState({ orderNote: e.target.value }),
+      services: SERVICES.map(sv => ({
+        name: sv.name, desc: sv.desc, price: sv.price,
+        priceStyle: 'font-family:Inter;font-weight:700;font-size:' + (sv.price.indexOf('от') === 0 ? '20' : '16') + 'px;line-height:26px;color:#111111;font-variant-numeric:tabular-nums',
+        slotId: 'mk-service-' + sv.id, slotHint: sv.slot,
+        cardStyle: 'background:#FFFFFF;border-radius:20px;overflow:hidden;display:flex;flex-direction:column;border:1px solid ' + (s.openForm === sv.id ? '#111111' : 'transparent'),
+        formOpen: s.openForm === sv.id,
+        buttonVisible: s.openForm !== sv.id,
+        onOrder: () => this.setState({ openForm: sv.id, sentFor: null }),
+        onCancel: () => this.setState({ openForm: null }),
+        onSubmit: () => this.setState({ openForm: null, sentFor: sv.id, orderAddr: '', orderNote: '' })
+      })),
+
+      aisOn: s.ais,
+      aisBoxStyle: 'width:22px;height:22px;border-radius:6px;flex:none;display:flex;align-items:center;justify-content:center;' + (s.ais ? 'background:#111111;border:1px solid #111111' : 'background:#FFFFFF;border:1px solid #D7D7D9'),
+      onToggleAis: () => this.setState({ ais: !s.ais }),
+      onLogout: () => this.setState({ logged: false, showRoles: false, codeSent: false, loginValue: '' })
+    };
+  }
+}
+</script>
+</body>
+</html>
