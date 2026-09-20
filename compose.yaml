@@ -13,7 +13,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - "127.0.0.1:${POSTGRES_PORT}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -23,6 +23,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+    restart: unless-stopped
 
   api:
     build:
@@ -31,7 +32,7 @@ services:
     environment:
       DATABASE_URL: "Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
     ports:
-      - "${API_PORT}:8080"
+      - "127.0.0.1:${API_PORT}:8080"
     depends_on:
       db:
         condition: service_healthy
@@ -47,7 +48,7 @@ services:
       MAX_BOT_TOKEN: ${MAX_BOT_TOKEN}
       API_BASE_URL: http://api:8080
     ports:
-      - "${BOT_PORT}:8080"
+      - "127.0.0.1:${BOT_PORT}:8080"
     depends_on:
       api:
         condition: service_started
@@ -57,7 +58,7 @@ services:
     build:
       context: ./src/front/miniapp
     ports:
-      - "${MINIAPP_PORT}:80"
+      - "127.0.0.1:${MINIAPP_PORT}:80"
     depends_on:
       api:
         condition: service_started
