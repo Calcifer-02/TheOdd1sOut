@@ -1,0 +1,644 @@
+# Конфигурация проверки интерфейса прикладного программирования «ИМОЛТ».
+# Условия трека «Эффективный бизнес», разд. 6.2 п. 5.
+#
+# Перечень точек собран из договора и обязан ему соответствовать:
+# src/back/Imolt.Api/contracts/openapi.yaml. Расхождение ловит проверка
+# tests/contracts/Imolt.Contracts.Tests — она сверяет метод, путь, роль и
+# ожидаемые коды каждой точки этого файла с договором.
+#
+# Поле state отделяет то, что служба уже отдаёт, от того, что пока только
+# объявлено: проверяющий видит это до первого запроса, а не после.
+
+configVersion: "1.0"
+solution: ИМОЛТ — расчёт стоимости вывоза и утилизации строительных отходов
+repository: https://github.com/Calcifer-02/TheOdd1sOut
+contract: src/back/Imolt.Api/contracts/openapi.yaml
+baseUrl: https://triadmind.ru/api
+
+# Базовый адрес берётся целиком. Собирать путь от корня узла нельзя: там
+# стоит мини-приложение, и неизвестный путь возвращает его страницу с кодом
+# 200 — ошибка выглядит как успех (ADR-0004).
+baseUrlNotes:
+  local: http://localhost:18080
+  mock: http://localhost:4010
+
+roles:
+  - id: guest
+    name: Клиент без входа
+    description: >-
+      Расчёт, подбор полигонов и коммерческое предложение задуманы доступными
+      без входа. Учётная запись не нужна.
+    credentials: не требуются
+  - id: authenticated
+    name: Участник с сессией
+    description: >-
+      Перевозчик, демонтажная компания или менеджер данных. Маркер выдаёт
+      операция createSession.
+    credentials: >-
+      Тестовых учётных записей нет: вход не реализован. Появятся вместе
+      с первой рабочей сессией.
+
+# Какие проверки можно выполнить на стенде сегодня. Остальные точки объявлены
+# договором, но обработчиков не имеют — на них служба отвечает 404.
+mandatoryChecks:
+  - getHealth
+  - getReadiness
+
+# Что именно не определено заказчиком и потому не проверяется по существу:
+# разграничение доступа между гостем и подпиской — открытый вопрос Q-011.
+openQuestionsAffectingRoles:
+  - Q-011
+
+checks:
+  - id: getHealth
+    name: Живость службы
+    area: служебное
+    state: реализовано
+    method: GET
+    path: /health
+    role: guest
+    query: []
+    expectedStatus:
+    - 200
+    expectedContentType: application/json
+    requirements:
+    - R-011
+  - id: getReadiness
+    name: Готовность службы
+    area: служебное
+    state: реализовано
+    method: GET
+    path: /ready
+    role: guest
+    query: []
+    expectedStatus:
+    - 200
+    expectedContentType: application/json
+    requirements:
+    - R-011
+  - id: listWasteGroups
+    name: Справочник групп отходов
+    area: справочники
+    state: объявлено
+    method: GET
+    path: /v1/waste-groups
+    role: guest
+    query:
+    - name: query
+      required: false
+    - name: limit
+      required: false
+    - name: offset
+      required: false
+    expectedStatus:
+    - 200
+    expectedContentType: application/json
+    requirements:
+    - R-013
+    - R-039
+    - R-017
+    - R-015
+  - id: getWasteGroup
+    name: Карточка группы отходов
+    area: справочники
+    state: объявлено
+    method: GET
+    path: /v1/waste-groups/{wasteGroupId}
+    role: guest
+    query: []
+    expectedStatus:
+    - 200
+    expectedContentType: application/json
+    requirements:
+    - R-039
+  - id: updateWasteGroup
+    name: Изменить цену перевозки и плотность группы
+    area: справочники
+    state: объявлено
+    method: PATCH
+    path: /v1/waste-groups/{wasteGroupId}
+    role: authenticated
+    query: []
+    expectedStatus:
+    - 200
+    expectedContentType: application/json
+    requirements:
+    - R-042
+    - R-043
+    - R-048
+    openQuestions:
+    - Q-011
+    - Q-013
+  - id: listLandfills
+    name: Реестр полигонов
+    area: справочники
+    state: объявлено
+    method: GET
+    path: /v1/landfills
+    role: guest
+    query:
+    - name: query
+      required: false
+    - name: wasteGroupId
+      required: false
+    - name: status
+      required: false
+    - name: limit
+      required: false
+    - name: offset
+      required: false
+    expectedStatus:
+    - 200
+    expectedContentType: application/json
+    requirements:
+    - R-040
+    - R-004
+    - R-028
+    - R-048
+  - id: getLandfill
+    name: Карточка полигона
+    area: справочники
+    state: объявлено
+    method: GET
+    path: /v1/landfills/{landfillId}
+    role: guest
+    query: []
+    expectedStatus:
+    - 200
+    expectedContentType: application/json
+    requirements:
+    - R-040
+    - R-041
+  - id: setLandfillTariff
+    name: Задать тариф утилизации полигона по группе отходов
+    area: справочники
+    state: объявлено
+    method: PUT
+    path: /v1/landfills/{landfillId}/tariffs/{wasteGroupId}
+    role: authenticated
+    query: []
+    expectedStatus:
+    - 200
+    expectedContentType: application/json
+    requirements:
+    - R-042
+    - R-048
+    openQuestions:
+    - Q-011
+  - id: setLandfillStatus
+    name: Задать статус полигона вручную
+    area: справочники
+    state: объявлено
+    method: PUT
+    path: /v1/landfills/{landfillId}/status
+    role: authenticated
+    query: []
+    expectedStatus:
+    - 200
+    expectedContentType: application/json
+    requirements:
+    - R-044
+    - R-028
+    - R-048
+    openQuestions:
+    - Q-011
+    - Q-013
+  - id: listLandfillReviews
+    name: Отзывы и оценки полигона
+    area: справочники
+    state: объявлено
+    method: GET
+    path: /v1/landfills/{landfillId}/reviews
+    role: guest
+    query:
+    - name: limit
+      required: false
+    - name: offset
+      required: false
+    expectedStatus:
+    - 200
+    expectedContentType: application/json
+    requirements:
+    - R-031
+  - id: createLandfillReview
+    name: Оставить оценку и отзыв о полигоне
+    area: справочники
+    state: объявлено
+    method: POST
+    path: /v1/landfills/{landfillId}/reviews
+    role: authenticated
+    query: []
+    expectedStatus:
+    - 201
+    expectedContentType: application/json
+    requirements:
+    - R-031
+    - R-048
+    openQuestions:
+    - Q-011
+  - id: suggestAddresses
+    name: Подсказки адреса вывоза
+    area: справочники
+    state: объявлено
+    method: GET
+    path: /v1/address-suggestions
+    role: guest
+    query:
+    - name: query
+      required: true
+    - name: limit
+      required: false
+    expectedStatus:
+    - 200
+    expectedContentType: application/json
+    requirements:
+    - R-012
+    - R-055
+    - R-056
+    openQuestions:
+    - Q-014
+  - id: getDataFreshness
+    name: Дата актуальности цен и статусов
+    area: справочники
+    state: объявлено
+    method: GET
+    path: /v1/data-freshness
+    role: guest
+    query: []
+    expectedStatus:
+    - 200
+    expectedContentType: application/json
+    requirements:
+    - R-048
+    - R-007
+    - R-028
+    openQuestions:
+    - Q-001
+  - id: getLatestSyncRun
+    name: Итог последнего обновления справочников
+    area: справочники
+    state: объявлено
+    method: GET
+    path: /v1/sync-runs/latest
+    role: authenticated
+    query: []
+    expectedStatus:
+    - 200
+    expectedContentType: application/json
+    requirements:
+    - R-044
+    - R-046
+    - R-048
+    - R-007
+    openQuestions:
+    - Q-002
+    - Q-011
+  - id: startReferenceImport
+    name: Загрузить справочник из файла и получить предпросмотр
+    area: справочники
+    state: объявлено
+    method: POST
+    path: /v1/reference-imports
+    role: authenticated
+    query: []
+    expectedStatus:
+    - 201
+    expectedContentType: application/json
+    requirements:
+    - R-045
+    - R-042
+    openQuestions:
+    - Q-011
+    - Q-014
+  - id: confirmReferenceImport
+    name: Применить разобранный импорт
+    area: справочники
+    state: объявлено
+    method: POST
+    path: /v1/reference-imports/{importId}/confirmation
+    role: authenticated
+    query: []
+    expectedStatus:
+    - 200
+    expectedContentType: application/json
+    requirements:
+    - R-045
+    - R-048
+    openQuestions:
+    - Q-011
+  - id: convertAmounts
+    name: Пересчитать объём между тоннами и кубометрами
+    area: расчёт
+    state: объявлено
+    method: POST
+    path: /v1/amount-conversions
+    role: guest
+    query: []
+    expectedStatus:
+    - 200
+    expectedContentType: application/json
+    requirements:
+    - R-014
+    - R-015
+    - R-016
+    openQuestions:
+    - Q-009
+  - id: listCalculations
+    name: Сохранённые расчёты кабинета
+    area: расчёт
+    state: объявлено
+    method: GET
+    path: /v1/calculations
+    role: authenticated
+    query:
+    - name: limit
+      required: false
+    - name: offset
+      required: false
+    expectedStatus:
+    - 200
+    expectedContentType: application/json
+    requirements:
+    - R-049
+    - R-008
+    openQuestions:
+    - Q-011
+  - id: createCalculation
+    name: Рассчитать стоимость вывоза и утилизации
+    area: расчёт
+    state: объявлено
+    method: POST
+    path: /v1/calculations
+    role: guest
+    query: []
+    expectedStatus:
+    - 201
+    expectedContentType: application/json
+    requirements:
+    - R-002
+    - R-003
+    - R-018
+    - R-019
+    - R-020
+    - R-021
+    - R-022
+    - R-058
+    - R-059
+    - R-060
+    openQuestions:
+    - Q-008
+    - Q-010
+  - id: getCalculation
+    name: Расчёт целиком
+    area: расчёт
+    state: объявлено
+    method: GET
+    path: /v1/calculations/{calculationId}
+    role: guest
+    query: []
+    expectedStatus:
+    - 200
+    expectedContentType: application/json
+    requirements:
+    - R-002
+    - R-019
+    - R-048
+  - id: listPlacementOptions
+    name: Варианты размещения по группе отходов
+    area: расчёт
+    state: объявлено
+    method: GET
+    path: /v1/calculations/{calculationId}/options
+    role: guest
+    query:
+    - name: wasteGroupId
+      required: true
+    - name: sort
+      required: false
+    - name: order
+      required: false
+    - name: distanceMode
+      required: false
+    - name: distanceKm
+      required: false
+    - name: limit
+      required: false
+    - name: offset
+      required: false
+    expectedStatus:
+    - 200
+    expectedContentType: application/json
+    requirements:
+    - R-004
+    - R-023
+    - R-024
+    - R-025
+    - R-026
+    - R-029
+    - R-060
+  - id: setCalculationSelection
+    name: Выбрать полигоны и получить сводку
+    area: расчёт
+    state: объявлено
+    method: PUT
+    path: /v1/calculations/{calculationId}/selection
+    role: guest
+    query: []
+    expectedStatus:
+    - 200
+    expectedContentType: application/json
+    requirements:
+    - R-027
+    - R-028
+    - R-032
+  - id: setCalculationAllocation
+    name: Распределить объём между выбранными полигонами
+    area: расчёт
+    state: объявлено
+    method: PUT
+    path: /v1/calculations/{calculationId}/allocation
+    role: guest
+    query: []
+    expectedStatus:
+    - 200
+    expectedContentType: application/json
+    requirements:
+    - R-030
+    - R-032
+  - id: getCalculationRoute
+    name: Маршрут и сводка по выбранным полигонам
+    area: расчёт
+    state: объявлено
+    method: GET
+    path: /v1/calculations/{calculationId}/route
+    role: guest
+    query: []
+    expectedStatus:
+    - 200
+    expectedContentType: application/json
+    requirements:
+    - R-005
+    - R-032
+    - R-033
+    - R-034
+    - R-035
+    - R-050
+    - R-057
+    openQuestions:
+    - Q-003
+    - Q-008
+    - Q-011
+  - id: createQuote
+    name: Сформировать коммерческое предложение
+    area: сделка
+    state: объявлено
+    method: POST
+    path: /v1/calculations/{calculationId}/quotes
+    role: guest
+    query: []
+    expectedStatus:
+    - 201
+    expectedContentType: application/json
+    requirements:
+    - R-006
+    - R-036
+    - R-037
+    - R-038
+    - R-059
+    openQuestions:
+    - Q-010
+    - Q-012
+  - id: downloadQuoteDocument
+    name: Скачать коммерческое предложение
+    area: сделка
+    state: объявлено
+    method: GET
+    path: /v1/quotes/{quoteId}/document
+    role: guest
+    query: []
+    expectedStatus:
+    - 200
+    expectedContentType: application/pdf
+    requirements:
+    - R-036
+    - R-037
+    - R-038
+    - R-059
+    - R-061
+    openQuestions:
+    - Q-012
+  - id: createPickupRequest
+    name: Отправить заявку на вывоз
+    area: сделка
+    state: объявлено
+    method: POST
+    path: /v1/pickup-requests
+    role: guest
+    query: []
+    expectedStatus:
+    - 201
+    expectedContentType: application/json
+    requirements:
+    - R-009
+    - R-053
+    - R-054
+  - id: listDocumentServices
+    name: Каталог услуг по документации
+    area: сделка
+    state: объявлено
+    method: GET
+    path: /v1/document-services
+    role: guest
+    query: []
+    expectedStatus:
+    - 200
+    expectedContentType: application/json
+    requirements:
+    - R-052
+    openQuestions:
+    - Q-005
+  - id: createDocumentServiceOrder
+    name: Заказать услугу по документации
+    area: сделка
+    state: объявлено
+    method: POST
+    path: /v1/document-service-orders
+    role: authenticated
+    query: []
+    expectedStatus:
+    - 201
+    expectedContentType: application/json
+    requirements:
+    - R-009
+    - R-052
+    - R-054
+    openQuestions:
+    - Q-005
+    - Q-011
+  - id: createSubscriptionRequest
+    name: Оставить заявку на подписку
+    area: сделка
+    state: объявлено
+    method: POST
+    path: /v1/subscription-requests
+    role: authenticated
+    query: []
+    expectedStatus:
+    - 201
+    expectedContentType: application/json
+    requirements:
+    - R-008
+    - R-049
+    openQuestions:
+    - Q-004
+    - Q-011
+  - id: requestSignInCode
+    name: Запросить код подтверждения
+    area: сделка
+    state: объявлено
+    method: POST
+    path: /v1/auth/codes
+    role: guest
+    query: []
+    expectedStatus:
+    - 202
+    expectedContentType: application/json
+    requirements:
+    - R-049
+    openQuestions:
+    - Q-004
+  - id: createSession
+    name: Подтвердить код и получить сессию
+    area: сделка
+    state: объявлено
+    method: POST
+    path: /v1/auth/sessions
+    role: guest
+    query: []
+    expectedStatus:
+    - 201
+    expectedContentType: application/json
+    requirements:
+    - R-049
+    - R-050
+    - R-051
+    - R-054
+    openQuestions:
+    - Q-011
+  - id: getProfile
+    name: Профиль и состояние подписки
+    area: сделка
+    state: объявлено
+    method: GET
+    path: /v1/profile
+    role: authenticated
+    query: []
+    expectedStatus:
+    - 200
+    expectedContentType: application/json
+    requirements:
+    - R-049
+    - R-050
+    - R-051
+    openQuestions:
+    - Q-011
