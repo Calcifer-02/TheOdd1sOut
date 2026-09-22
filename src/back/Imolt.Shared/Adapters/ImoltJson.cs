@@ -17,6 +17,11 @@ public static class ImoltJson
   private static JsonSerializerOptions Create()
   {
     var options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+    // Необязательное поле без значения не пишется вовсе. Договор объявляет
+    // пустоту допустимой лишь там, где сказано «nullable», и лишний null в
+    // остальных местах его нарушает. Поля, где пустота обязана быть видимой,
+    // помечаются на месте объявления.
+    options.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
     options.Converters.Add(new MoneyJsonConverter());
     return options;
   }

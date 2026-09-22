@@ -527,6 +527,7 @@
       "imolt.api": {
         "type": "Project",
         "dependencies": {
+          "Dapper": "[2.1.86, )",
           "Imolt.Calculations": "[1.0.0, )",
           "Imolt.Database": "[1.0.0, )",
           "Imolt.Deals": "[1.0.0, )",
@@ -559,7 +560,9 @@
       "imolt.references": {
         "type": "Project",
         "dependencies": {
-          "Imolt.Shared": "[1.0.0, )"
+          "Dapper": "[2.1.86, )",
+          "Imolt.Shared": "[1.0.0, )",
+          "Npgsql": "[10.0.3, )"
         }
       },
       "imolt.shared": {

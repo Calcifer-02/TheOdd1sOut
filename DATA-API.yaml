@@ -45,6 +45,13 @@ roles:
 mandatoryChecks:
   - getHealth
   - getReadiness
+  - listWasteGroups
+  - getWasteGroup
+  - listLandfills
+  - getLandfill
+  - listLandfillReviews
+  - getDataFreshness
+  - suggestAddresses
 
 # Что именно не определено заказчиком и потому не проверяется по существу:
 # разграничение доступа между гостем и подпиской — открытый вопрос Q-011.
@@ -81,7 +88,7 @@ checks:
   - id: listWasteGroups
     name: Справочник групп отходов
     area: справочники
-    state: объявлено
+    state: реализовано
     method: GET
     path: /v1/waste-groups
     role: guest
@@ -103,7 +110,7 @@ checks:
   - id: getWasteGroup
     name: Карточка группы отходов
     area: справочники
-    state: объявлено
+    state: реализовано
     method: GET
     path: /v1/waste-groups/{wasteGroupId}
     role: guest
@@ -134,7 +141,7 @@ checks:
   - id: listLandfills
     name: Реестр полигонов
     area: справочники
-    state: объявлено
+    state: реализовано
     method: GET
     path: /v1/landfills
     role: guest
@@ -160,7 +167,7 @@ checks:
   - id: getLandfill
     name: Карточка полигона
     area: справочники
-    state: объявлено
+    state: реализовано
     method: GET
     path: /v1/landfills/{landfillId}
     role: guest
@@ -208,7 +215,7 @@ checks:
   - id: listLandfillReviews
     name: Отзывы и оценки полигона
     area: справочники
-    state: объявлено
+    state: реализовано
     method: GET
     path: /v1/landfills/{landfillId}/reviews
     role: guest
@@ -241,7 +248,7 @@ checks:
   - id: suggestAddresses
     name: Подсказки адреса вывоза
     area: справочники
-    state: объявлено
+    state: реализовано
     method: GET
     path: /v1/address-suggestions
     role: guest
@@ -262,7 +269,7 @@ checks:
   - id: getDataFreshness
     name: Дата актуальности цен и статусов
     area: справочники
-    state: объявлено
+    state: реализовано
     method: GET
     path: /v1/data-freshness
     role: guest

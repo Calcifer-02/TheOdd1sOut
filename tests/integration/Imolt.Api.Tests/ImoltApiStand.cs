@@ -44,19 +44,30 @@ public sealed class ImoltApiStand : IAsyncLifetime
 }
 
 /// Служба ИМОЛТ в процессе проверки. Поднимается тот же Program.cs, который
-/// уходит в образ: подменяется только строка подключения к базе.
-public sealed class ImoltApiFactory(string? connectionString) : WebApplicationFactory<Program>
+/// уходит в образ: подменяются только строка подключения к базе и настройки,
+/// которые проверке нужно объявить явно (адрес и ключ внешней службы).
+public sealed class ImoltApiFactory(
+    string? connectionString,
+    IReadOnlyDictionary<string, string?>? settings = null) : WebApplicationFactory<Program>
 {
   protected override void ConfigureWebHost(IWebHostBuilder builder)
   {
+    var values = new Dictionary<string, string?>
+    {
+      ["DATABASE_URL"] = connectionString ?? string.Empty,
+    };
+
+    // Настройки проверки кладутся поверх строки подключения, а не вместо
+    // неё: сценарию внешней службы нужна и работающая база.
+    foreach (var (key, value) in settings ?? new Dictionary<string, string?>())
+    {
+      values[key] = value;
+    }
+
     // Источник добавляется последним и поэтому перекрывает переменную
     // окружения машины: иначе проверка «службы без DATABASE_URL» молча
     // подхватила бы чужую строку подключения и стала бы подтверждающей.
-    builder.ConfigureAppConfiguration(configuration =>
-        configuration.AddInMemoryCollection(new Dictionary<string, string?>
-        {
-          ["DATABASE_URL"] = connectionString ?? string.Empty,
-        }));
+    builder.ConfigureAppConfiguration(configuration => configuration.AddInMemoryCollection(values));
   }
 }
 

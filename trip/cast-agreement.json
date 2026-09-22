@@ -216,5 +216,10 @@
       ]
     }
   ],
-  "deviations": []
+  "deviations": [],
+  "contractScalars": [
+    "Money",
+    "PageRequest",
+    "Page"
+  ]
 }

@@ -27,7 +27,7 @@ public sealed class PageTests
         var items = new[] { "beton-lom", "drevesina", "kirpich-lom" };
         var request = PageRequest.Create(10, 0);
 
-        var page = Page.Of<string>(items, total: 12, request);
+        var page = Pages.Of<string>(items, total: 12, request);
 
         Assert.Equal(12, page.Total);
         Assert.Equal(3, page.Items.Count);
@@ -38,7 +38,7 @@ public sealed class PageTests
     [Fact(DisplayName = "конверт списка сериализуется четырьмя полями договора")]
     public void EnvelopeSerializesWithContractFields()
     {
-        var page = Page.Of<string>(
+        var page = Pages.Of<string>(
             ["beton-lom"], total: 12, PageRequest.Create(10, 20));
 
         using var document = JsonDocument.Parse(JsonSerializer.Serialize(page, ImoltJson.Options));

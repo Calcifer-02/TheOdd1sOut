@@ -1,6 +1,8 @@
 using System.Globalization;
 using Imolt.Api;
 using Imolt.Database;
+using Imolt.References.Adapters;
+using Imolt.References.Ports;
 using Imolt.Shared;
 using Npgsql;
 
@@ -21,10 +23,15 @@ CultureInfo.DefaultThreadCurrentUICulture = culture;
 // договор, а денежная сумма уходит числом вместо строки.
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
-  options.SerializerOptions.PropertyNamingPolicy = ImoltJson.Options.PropertyNamingPolicy;
-  options.SerializerOptions.PropertyNameCaseInsensitive = ImoltJson.Options.PropertyNameCaseInsensitive;
-  options.SerializerOptions.NumberHandling = ImoltJson.Options.NumberHandling;
-  foreach (var converter in ImoltJson.Options.Converters)
+  // Настройки берутся целиком, а не по одному свойству: перенос выборочных
+  // полей уже стоил одного расхождения — необязательное поле уходило в ответ
+  // пустым там, где договор пустоты не допускает.
+  var shared = ImoltJson.Options;
+  options.SerializerOptions.PropertyNamingPolicy = shared.PropertyNamingPolicy;
+  options.SerializerOptions.PropertyNameCaseInsensitive = shared.PropertyNameCaseInsensitive;
+  options.SerializerOptions.NumberHandling = shared.NumberHandling;
+  options.SerializerOptions.DefaultIgnoreCondition = shared.DefaultIgnoreCondition;
+  foreach (var converter in shared.Converters)
   {
     options.SerializerOptions.Converters.Add(converter);
   }
@@ -34,15 +41,54 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 // (правило ARCH-025).
 builder.Services.AddSingleton<IClock, SystemClock>();
 
-var connectionString = builder.Configuration["DATABASE_URL"];
-if (!string.IsNullOrWhiteSpace(connectionString))
+// Столбцы базы именуются через подчёркивание, поля записей — словами с
+// заглавной. Сопоставление включается один раз на процесс: настройка у
+// средства доступа к данным глобальная, и второе место её задания разошлось
+// бы с первым.
+Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
+
+// Строка подключения и адрес внешней службы читаются в момент разрешения
+// зависимости, а не при сборке состава. Причина не в красоте: проверочный
+// стенд добавляет свои настройки позже, чем выполняется этот файл, и ветвление
+// по конфигурации прямо здесь оставляло службу вовсе без переходников.
+builder.Services.AddSingleton(services =>
 {
-  // Пул соединений один на службу. Соединение на каждый запрос стоит
-  // дороже самого запроса и упирается в предел соединений базы.
-  // Источник заводится вручную, без отдельного пакета расширений: одна
-  // строка не стоит ещё одной зависимости в замке версий.
-  builder.Services.AddSingleton(_ => NpgsqlDataSource.Create(connectionString));
-}
+  var connectionString = services.GetRequiredService<IConfiguration>()["DATABASE_URL"];
+
+  return string.IsNullOrWhiteSpace(connectionString)
+      ? throw new InvalidOperationException("переменная DATABASE_URL не задана")
+      : NpgsqlDataSource.Create(connectionString);
+});
+
+// Переходники области «справочники». Область наружу открывает только порты, а
+// какой переходник за портом стоит — решает состав изделия (ADR-0005).
+builder.Services.AddScoped<IWasteGroupCatalog, WasteGroupCatalog>();
+builder.Services.AddScoped<ILandfillRegistry, LandfillRegistry>();
+builder.Services.AddScoped<IDataFreshnessSource, DataFreshnessSource>();
+
+// Подсказки адреса: справочник проекта — основной источник, внешняя служба
+// включается настройкой. Целевая служба заказчиком не назначена (Q-014),
+// поэтому выбор источника остаётся настройкой, а не правкой кода области.
+builder.Services.AddScoped<AddressDirectorySuggestions>();
+builder.Services.AddHttpClient<UpstreamAddressSuggestions>(client =>
+{
+  // Граница ожидания обязательна: без неё отказ источника превращается в
+  // зависший запрос, а не в объявленный договором отказ (ADR-0002).
+  client.Timeout = TimeSpan.FromSeconds(5);
+});
+builder.Services.AddScoped<IAddressSuggestions>(services =>
+{
+  var upstream = services.GetRequiredService<IConfiguration>()["ADDRESS_SUGGESTIONS_URL"];
+
+  if (string.IsNullOrWhiteSpace(upstream))
+  {
+    return services.GetRequiredService<AddressDirectorySuggestions>();
+  }
+
+  var suggestions = services.GetRequiredService<UpstreamAddressSuggestions>();
+  suggestions.Use(new Uri(upstream));
+  return suggestions;
+});
 
 var app = builder.Build();
 
@@ -50,10 +96,11 @@ var app = builder.Build();
 // база общая с будущей службой сбора, и две единицы, молча накатывающие
 // схему на старте, дают гонку (ADR-0002, инвариант 6). Признак задаётся
 // окружением и включён в compose.
-if (builder.Configuration.GetValue("IMOLT_APPLY_MIGRATIONS", false)
-    && !string.IsNullOrWhiteSpace(connectionString))
+var databaseUrl = app.Configuration["DATABASE_URL"];
+if (app.Configuration.GetValue("IMOLT_APPLY_MIGRATIONS", false)
+    && !string.IsNullOrWhiteSpace(databaseUrl))
 {
-  var applied = await MigrationRunner.ApplyAsync(connectionString, CancellationToken.None);
+  var applied = await MigrationRunner.ApplyAsync(databaseUrl, CancellationToken.None);
   app.Logger.LogInformation(
       "Схема базы данных приведена к последней версии, применено миграций: {Count}", applied.Count);
 }
@@ -68,6 +115,7 @@ app.UseExceptionHandler(ProblemResponses.ExceptionHandler);
 // трассируемости, — в операторах верхнего уровня крепить его не к чему.
 app.MapContractEndpoints();
 app.MapServiceEndpoints();
+app.MapReferenceEndpoints();
 
 // Неизвестный путь отвечает тем же документом об ошибке, что и остальные
 // отказы. Пустое тело с кодом 404 клиенту разбирать нечем, а на общем узле

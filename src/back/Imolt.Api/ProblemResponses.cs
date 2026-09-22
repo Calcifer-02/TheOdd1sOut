@@ -1,4 +1,6 @@
+using System.Globalization;
 using System.Text.Json;
+using Imolt.References.Ports;
 using Imolt.Shared;
 using Microsoft.AspNetCore.Diagnostics;
 
@@ -10,7 +12,7 @@ namespace Imolt.Api;
 ///
 /// @supports: R-011
 /// @adr: ADR-0003
-internal static class ProblemResponses
+public static class ProblemResponses
 {
   /// Обработчик необработанных исключений. Предметные отказы приходят сюда
   /// уже типизированными: остальное — отказ службы, а не запроса.
@@ -19,26 +21,51 @@ internal static class ProblemResponses
       {
         var failure = context.Features.Get<IExceptionHandlerFeature>()?.Error;
 
-        var (status, type, title, detail, errors) = failure switch
+        switch (failure)
         {
-          // Пределы страницы объявлены договором, и промах по ним — это
-          // ошибка запроса. Имя параметра уходит клиенту: без него он не
-          // знает, что именно поправить.
-          ArgumentOutOfRangeException range => (
+          // Пределы запроса объявлены договором, и промах по ним — ошибка
+          // запроса. Имя параметра уходит клиенту: без него он не знает, что
+          // именно поправить.
+          //
+          // Именно «вне диапазона», а не любое ArgumentException: негодная
+          // строка подключения — тоже ArgumentException, но это отказ службы,
+          // и выдавать его за вину клиента нельзя.
+          case ArgumentOutOfRangeException request:
+            await WriteAsync(
+                context,
                 StatusCodes.Status400BadRequest,
                 Problems.Validation,
                 "Запрос не прошёл проверку",
-                range.Message,
-                new[] { new ProblemField(range.ParamName ?? string.Empty, range.Message) }),
-          _ => (
+                request.Message,
+                [new ProblemField(request.ParamName ?? string.Empty, request.Message)]);
+            break;
+
+          // Отказ внешнего источника не равен отказу обслуживания: заголовок
+          // называет, через сколько повторять (ADR-0002, инвариант 5).
+          case UpstreamUnavailableException upstream:
+            // Заголовок читает не человек, а клиент: культура здесь инвариантная,
+            // иначе в русской локали число уедет с разделителем разрядов.
+            context.Response.Headers.RetryAfter =
+                upstream.RetryAfterSeconds.ToString(CultureInfo.InvariantCulture);
+            await WriteAsync(
+                context,
+                StatusCodes.Status503ServiceUnavailable,
+                Problems.DistanceServiceUnavailable,
+                "Внешняя служба не ответила",
+                upstream.Message,
+                []);
+            break;
+
+          default:
+            await WriteAsync(
+                context,
                 StatusCodes.Status500InternalServerError,
                 "about:blank",
                 "Внутренняя ошибка службы",
                 "Повторите попытку позже",
-                Array.Empty<ProblemField>()),
-        };
-
-        await WriteAsync(context, status, type, title, detail, errors);
+                []);
+            break;
+        }
       });
 
   /// Неизвестный путь. Ответ тем же документом, что и остальные отказы:
@@ -51,7 +78,15 @@ internal static class ProblemResponses
       $"Служба не обслуживает путь {context.Request.Path}",
       []);
 
-  private static async Task WriteAsync(
+  /// Запись справочника не найдена. Отдельный ответ, а не пустое тело:
+  /// опечатка в идентификаторе не должна читаться как «такого просто нет».
+  public static IResult NotFound(string detail) => Results.Json(
+      Document(Problems.NotFound, "Запись не найдена", StatusCodes.Status404NotFound, detail, null, []),
+      ImoltJson.Options,
+      contentType: "application/problem+json; charset=utf-8",
+      statusCode: StatusCodes.Status404NotFound);
+
+  private static Task WriteAsync(
       HttpContext context,
       int status,
       string type,
@@ -59,27 +94,47 @@ internal static class ProblemResponses
       string? detail,
       IReadOnlyCollection<ProblemField> errors)
   {
-    context.Response.Clear();
     context.Response.StatusCode = status;
     context.Response.ContentType = "application/problem+json; charset=utf-8";
 
+    var document = Document(type, title, status, detail, context.Request.Path.Value, errors);
+
+    return context.Response.WriteAsync(
+        JsonSerializer.Serialize(document, ImoltJson.Options),
+        context.RequestAborted);
+  }
+
+  private static Dictionary<string, object?> Document(
+      string type,
+      string title,
+      int status,
+      string? detail,
+      string? instance,
+      IReadOnlyCollection<ProblemField> errors)
+  {
     var document = new Dictionary<string, object?>
     {
       ["type"] = type,
       ["title"] = title,
       ["status"] = status,
-      ["detail"] = detail,
-      ["instance"] = context.Request.Path.Value,
     };
+
+    if (detail is not null)
+    {
+      document["detail"] = detail;
+    }
+
+    if (instance is not null)
+    {
+      document["instance"] = instance;
+    }
 
     if (errors.Count > 0)
     {
       document["errors"] = errors;
     }
 
-    await context.Response.WriteAsync(
-        JsonSerializer.Serialize(document, ImoltJson.Options),
-        context.RequestAborted);
+    return document;
   }
 
   private sealed record ProblemField(string Field, string Message);

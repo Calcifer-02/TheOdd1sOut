@@ -59,11 +59,13 @@ public sealed record Page<T>(int Total, int Limit, int Offset, IReadOnlyList<T> 
 
 /// Сборка страницы. Вынесена из обобщённого типа: у Page<T> статический член
 /// читается как принадлежащий конкретной подстановке, хотя таковым не является
-/// (правило CA1000).
+/// (правило CA1000). Имя во множественном числе — не украшение: сканер
+/// трассируемости ключует единицу именем символа, и второй «Page» рядом с
+/// записью Page<T> даёт повтор устойчивого ключа.
 ///
 /// @shared: imolt-shared
 /// @adr: ADR-0005
-public static class Page
+public static class Pages
 {
   public static Page<T> Of<T>(IReadOnlyList<T> items, int total, PageRequest request) =>
       new(total, request.Limit, request.Offset, items);

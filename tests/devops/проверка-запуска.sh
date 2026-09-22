@@ -92,6 +92,16 @@ proverit "расчётная часть: готовность /ready (видит
 # части: она разрабатывается по ним, не дожидаясь обработчиков (ADR-0003).
 proverit "расчётная часть: договор /v1/openapi.yaml" 200 "http://localhost:${API_PORT}/v1/openapi.yaml"
 proverit "расчётная часть: страница Swagger UI" 200 "http://localhost:${API_PORT}/swagger/index.html"
+# Справочники: семь точек области отвечают на настоящих данных начального
+# набора. Проверяется не «служба поднялась», а «справочник отдаёт записи».
+proverit "справочники: группы отходов" 200 "http://localhost:${API_PORT}/v1/waste-groups"
+proverit "справочники: карточка группы" 200 "http://localhost:${API_PORT}/v1/waste-groups/beton-lom"
+proverit "справочники: реестр полигонов" 200 "http://localhost:${API_PORT}/v1/landfills"
+proverit "справочники: карточка полигона" 200 "http://localhost:${API_PORT}/v1/landfills/vostok-timohovo"
+proverit "справочники: отзывы полигона" 200 "http://localhost:${API_PORT}/v1/landfills/vostok-timohovo/reviews"
+proverit "справочники: актуальность данных" 200 "http://localhost:${API_PORT}/v1/data-freshness"
+proverit "справочники: подсказки адреса" 200 "http://localhost:${API_PORT}/v1/address-suggestions?query=%D0%93%D0%BE%D0%B4%D0%BE%D0%B2%D0%B8%D0%BA%D0%BE%D0%B2%D0%B0"
+proverit "справочники: короткий запрос подсказок отвергается" 400 "http://localhost:${API_PORT}/v1/address-suggestions?query=%D0%93%D0%BE"
 proverit "чат-бот: живость /health" 200 "http://localhost:${BOT_PORT}/health"
 proverit "мини-приложение: страница" 200 "http://localhost:${MINIAPP_PORT}/"
 proverit "мини-приложение → расчётная часть через /api" 200 "http://localhost:${MINIAPP_PORT}/api/health"

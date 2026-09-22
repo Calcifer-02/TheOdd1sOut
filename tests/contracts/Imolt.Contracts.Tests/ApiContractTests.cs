@@ -136,7 +136,18 @@ public sealed class ApiContractTests
     // Пометка «реализовано» у чего-то ещё означала бы, что договор выдаёт
     // объявление за работающий код. Строку ниже двигает тот, кто написал
     // обработчик, — вместе с проверкой запуска.
-    string[] servedByService = ["/health", "/ready"];
+    string[] servedByService =
+    [
+      "/health",
+      "/ready",
+      "/v1/waste-groups",
+      "/v1/waste-groups/{wasteGroupId}",
+      "/v1/landfills",
+      "/v1/landfills/{landfillId}",
+      "/v1/landfills/{landfillId}/reviews",
+      "/v1/data-freshness",
+      "/v1/address-suggestions",
+    ];
 
     var implemented = Operations()
         .Where(operation => Text(operation.Operation, "x-состояние") == "реализовано")
