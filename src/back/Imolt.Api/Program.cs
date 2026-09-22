@@ -2,7 +2,8 @@ using System.Globalization;
 using Npgsql;
 
 // Плацдарм расчётной части сервиса: пока здесь только точки проверки
-// работоспособности, по которым проверяется связность служб в compose.
+// работоспособности и отдача договора API, по которому интерфейсная часть
+// разрабатывается, не дожидаясь сервера.
 // Предметные области раскладываются внутри этого проекта по документу
 // docs/РАСКЛАДКА_КОДА.md, когда появится первая из них.
 
@@ -16,6 +17,30 @@ CultureInfo.DefaultThreadCurrentCulture = culture;
 CultureInfo.DefaultThreadCurrentUICulture = culture;
 
 var app = builder.Build();
+
+// Договор API отдаётся как есть: файл contracts/openapi.yaml — источник, а не
+// производная кода, поэтому описание не порождается из контроллеров
+// (docs/architecture/ЗАПИСЬ_АРХИТЕКТУРНОГО_РЕШЕНИЯ_ADR-0003.md). Файл едет
+// рядом со сборкой: и при локальном запуске, и в образе он лежит в
+// подкаталоге contracts каталога приложения.
+var contractPath = Path.Combine(AppContext.BaseDirectory, "contracts", "openapi.yaml");
+
+app.MapGet("/v1/openapi.yaml", () =>
+    File.Exists(contractPath)
+        ? Results.File(contractPath, "application/yaml; charset=utf-8")
+        : Results.Problem(
+            title: "Договор API не найден",
+            detail: $"Ожидался файл {contractPath}",
+            statusCode: StatusCodes.Status500InternalServerError));
+
+// Страница Swagger UI смотрит на тот же файл. Средство здесь только
+// показывает договор человеку и ничего о коде не знает.
+app.UseSwaggerUI(options =>
+{
+    options.SwaggerEndpoint("/v1/openapi.yaml", "ИМОЛТ — расчётная часть, версия 1");
+    options.RoutePrefix = "swagger";
+    options.DocumentTitle = "Договор API ИМОЛТ";
+});
 
 // Живость: отвечает, пока процесс жив. Внешних зависимостей не трогает —
 // иначе перезапуск базы данных выглядел бы как отказ самой службы.

@@ -1,0 +1,2322 @@
+# Договор расчётной части сервиса ИМОЛТ.
+#
+# Этот файл — источник договора, а не производная кода: он написан раньше
+# реализации, чтобы интерфейсная часть разрабатывалась по нему, не дожидаясь
+# сервера (см. docs/architecture/ЗАПИСЬ_АРХИТЕКТУРНОГО_РЕШЕНИЯ_ADR-0003.md).
+#
+# Расширения у каждой операции:
+#   x-область    — предметная область по ADR-0001: справочники, расчёт, сделка;
+#   x-требования — требования, которые операция закрывает (реестр требований);
+#   x-вопросы    — открытые вопросы, из-за которых часть поведения не определена;
+#   x-экран      — экраны запроса на дизайн (ux/ЗАПРОС_НА_ДИЗАЙН.md);
+#   x-состояние  — «реализовано» или «объявлено»: что уже отвечает, а что пока
+#                  только описано. Поле не даёт выдать договор за работающий код.
+
+openapi: 3.0.3
+
+info:
+  title: ИМОЛТ — расчёт вывоза и утилизации отходов
+  version: 1.0.0
+  description: |
+    Договор расчётной части сервиса ИМОЛТ: расчёт стоимости вывоза и
+    утилизации строительных отходов по Москве и Московской области, подбор
+    полигонов, маршрут, коммерческое предложение и заявка.
+
+    **Как читать.** Операции сгруппированы по трём предметным областям
+    расчётной части — «Справочники», «Расчёт», «Сделка». Границы областей
+    объявлены записью ADR-0001, и группировка здесь — их внешняя проекция:
+    по метке `x-область` видно, какая часть системы отвечает за операцию.
+
+    **Что уже работает.** Отвечают только `/health` и `/ready`. Остальные
+    операции помечены `x-состояние: объявлено`: форма запроса и ответа
+    зафиксирована, сервер их пока не обслуживает. Мок поднимается из этого же
+    файла, примеры ответов взяты из раздела 7 запроса на дизайн и согласованы
+    между собой (адрес «Москва, ул. Годовикова, 9», дата актуальности
+    17.09.2026).
+
+    **Чего в договоре нет.** Поведение, не определённое заказчиком, не
+    додумано: такие места помечены `x-вопросы` со ссылкой на открытый вопрос.
+    Отложенные требования (R-047, R-062 — R-065) в версию 1 не входят.
+
+    **Соглашения.**
+
+    - Пути и имена полей — латиницей, тексты и описания — по-русски;
+      идентификаторы кода остаются латиницей по правилам проекта.
+    - Денежная сумма передаётся строкой с двумя знаками после точки: двоичная
+      дробь округляет рубли по дороге, а смета этого не прощает.
+    - Идентификатор непрозрачен для клиента: его форму задаёт сервер.
+    - Ошибка возвращается документом `application/problem+json` (RFC 9457).
+    - Расчёт предварительный: это состояние объявлено полем, а не примечанием
+      в макете (R-059).
+  contact:
+    name: ИМОЛТ
+    email: hello@imolt.com
+  license:
+    name: Условия использования — у владельца проекта
+    url: https://имолт.рф
+
+servers:
+  - url: http://localhost:18080
+    description: расчётная часть напрямую (порт API_PORT из .env)
+  - url: http://localhost:15173/api
+    description: через мини-приложение — nginx снимает префикс /api
+  - url: http://localhost:4010
+    description: мок по этому договору (prism), сервер не нужен
+
+tags:
+  - name: Служебное
+    description: Живость и готовность службы. Единственное, что уже отвечает.
+  - name: Справочники
+    description: |
+      Область «справочники» по ADR-0001: группы отходов, полигоны, адреса,
+      актуальность данных и их обновление. Данные сюда пишет служба `sync`
+      (ADR-0002), расчёт их только читает.
+  - name: Расчёт
+    description: |
+      Область «расчёт» по ADR-0001: пересчёт мер, стоимость по полигонам,
+      сортировка и фильтры, выбор, распределение объёма и маршрут. Формула
+      живёт здесь и только здесь.
+  - name: Сделка
+    description: |
+      Область «сделка» по ADR-0001: коммерческое предложение, заявка на вывоз,
+      услуги по документации и подписка.
+  - name: Доступ
+    description: |
+      Вход по телефону, сессия и профиль. Что именно закрыто подпиской —
+      открытый вопрос Q-011, поэтому договор объявляет форму, а не политику.
+
+security:
+  - {}
+  - bearerAuth: []
+
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      tags: [Служебное]
+      summary: Живость службы
+      description: |
+        Отвечает, пока процесс жив. Внешних зависимостей не трогает — иначе
+        перезапуск базы данных выглядел бы как отказ самой службы.
+      security: []
+      x-область: служебное
+      x-требования: [R-011]
+      x-состояние: реализовано
+      responses:
+        '200':
+          description: служба жива
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/HealthStatus' }
+              example: { service: api, status: ok }
+
+  /ready:
+    get:
+      operationId: getReadiness
+      tags: [Служебное]
+      summary: Готовность службы
+      description: |
+        Подтверждает, что служба видит базу данных по строке подключения из
+        окружения. Эта точка ловит разорванную связку api → db.
+      security: []
+      x-область: служебное
+      x-требования: [R-011]
+      x-состояние: реализовано
+      responses:
+        '200':
+          description: служба готова обслуживать запросы
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReadinessStatus' }
+              example: { service: api, status: ready, database: reachable }
+        '503':
+          description: база данных недоступна или строка подключения не задана
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReadinessStatus' }
+              example:
+                service: api
+                status: not_ready
+                reason: переменная DATABASE_URL не задана
+
+  /v1/waste-groups:
+    get:
+      operationId: listWasteGroups
+      tags: [Справочники]
+      summary: Справочник групп отходов
+      description: |
+        Список групп отходов с поиском по названию и коду каталога отходов. Отдаёт цену
+        перевозки за тонна-километр и коэффициент плотности: по ним
+        интерфейс показывает пересчёт меры, а расчёт — стоимость.
+      x-область: справочники
+      x-требования: [R-013, R-039, R-017, R-015]
+      x-экран: [Э-01, Э-02, Э-11]
+      x-состояние: объявлено
+      parameters:
+        - $ref: '#/components/parameters/SearchQuery'
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: страница справочника
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WasteGroupPage' }
+              examples:
+                twoWasteGroups:
+                  summary: поиск по строке «лом»
+                  value:
+                    items:
+                      - id: beton-lom
+                        name: Лом бетона и железобетона
+                        fkkoCodes: ['8 22 201 01 21 5']
+                        transportPricePerTonKm: { amount: '12.00', currency: RUB }
+                        densityTonPerCubicMeter: 2.0
+                        updatedAt: '2026-09-17'
+                      - id: kirpich-lom
+                        name: Лом кирпичной кладки
+                        fkkoCodes: ['8 23 101 01 21 5']
+                        transportPricePerTonKm: { amount: '14.00', currency: RUB }
+                        densityTonPerCubicMeter: 1.5
+                        updatedAt: '2026-09-17'
+                    total: 2
+                    limit: 10
+                    offset: 0
+        '400': { $ref: '#/components/responses/BadRequest' }
+
+  /v1/waste-groups/{wasteGroupId}:
+    parameters:
+      - $ref: '#/components/parameters/WasteGroupIdPath'
+    get:
+      operationId: getWasteGroup
+      tags: [Справочники]
+      summary: Карточка группы отходов
+      x-область: справочники
+      x-требования: [R-039]
+      x-экран: [Э-11]
+      x-состояние: объявлено
+      responses:
+        '200':
+          description: карточка группы
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WasteGroup' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      operationId: updateWasteGroup
+      tags: [Справочники]
+      summary: Изменить цену перевозки и плотность группы
+      description: |
+        Редактор цен менеджера данных. Цена перевозки вводится за
+        тонна-километр по группе и умножается на километраж в расчёте —
+        второго места, где она живёт, нет.
+
+        Кто вправе править, определяет политика доступа; она пока не
+        установлена (Q-011), поэтому договор объявляет требование сессии,
+        а не роль.
+      security:
+        - bearerAuth: []
+      x-область: справочники
+      x-требования: [R-042, R-043, R-048]
+      x-вопросы: [Q-011, Q-013]
+      x-экран: [Э-11]
+      x-состояние: объявлено
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/WasteGroupUpdate' }
+            example:
+              transportPricePerTonKm: { amount: '32.00', currency: RUB }
+      responses:
+        '200':
+          description: группа изменена, дата актуальности обновлена
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WasteGroup' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/UnprocessableContent' }
+
+  /v1/landfills:
+    get:
+      operationId: listLandfills
+      tags: [Справочники]
+      summary: Реестр полигонов
+      description: |
+        Полигоны с принимаемыми группами отходов, тарифами утилизации,
+        статусом и датой его актуальности. Режим «Справочник цен» в интерфейсе
+        и редактор данных читают один и тот же список.
+      x-область: справочники
+      x-требования: [R-040, R-004, R-028, R-048]
+      x-экран: [Э-03, Э-11]
+      x-состояние: объявлено
+      parameters:
+        - $ref: '#/components/parameters/SearchQuery'
+        - name: wasteGroupId
+          in: query
+          description: оставить полигоны, принимающие эту группу отходов
+          schema: { type: string }
+        - name: status
+          in: query
+          description: оставить полигоны с этим статусом
+          schema: { $ref: '#/components/schemas/LandfillStatus' }
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: страница реестра
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LandfillPage' }
+              examples:
+                singleLandfill:
+                  summary: фильтр по группе «Лом бетона»
+                  value:
+                    items:
+                      - id: vostok-timohovo
+                        name: Комплекс переработки «Восток»
+                        legalEntity: ООО «Восток»
+                        address: Московская обл., Богородский г. о., д. Тимохово
+                        coordinates: { latitude: 55.7286, longitude: 38.2153 }
+                        status: active
+                        statusUpdatedAt: '2026-09-17'
+                        tariffs:
+                          - wasteGroupId: beton-lom
+                            disposalPricePerTon: { amount: '450.00', currency: RUB }
+                            updatedAt: '2026-09-17'
+                    total: 1
+                    limit: 10
+                    offset: 0
+        '400': { $ref: '#/components/responses/BadRequest' }
+
+  /v1/landfills/{landfillId}:
+    parameters:
+      - $ref: '#/components/parameters/LandfillIdPath'
+    get:
+      operationId: getLandfill
+      tags: [Справочники]
+      summary: Карточка полигона
+      description: |
+        Карточка хранит историю смены юридического лица: тарифы и статусы
+        при смене владельца не теряются (R-041).
+      x-область: справочники
+      x-требования: [R-040, R-041]
+      x-экран: [Э-11]
+      x-состояние: объявлено
+      responses:
+        '200':
+          description: карточка полигона
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LandfillCard' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/landfills/{landfillId}/tariffs/{wasteGroupId}:
+    parameters:
+      - $ref: '#/components/parameters/LandfillIdPath'
+      - $ref: '#/components/parameters/WasteGroupIdPath'
+    put:
+      operationId: setLandfillTariff
+      tags: [Справочники]
+      summary: Задать тариф утилизации полигона по группе отходов
+      description: |
+        Ячейка таблицы «полигон x группа отходов» в редакторе. Запись
+        обновляет дату актуальности тарифа: расчёт показывает её пользователю.
+      security:
+        - bearerAuth: []
+      x-область: справочники
+      x-требования: [R-042, R-048]
+      x-вопросы: [Q-011]
+      x-экран: [Э-11]
+      x-состояние: объявлено
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LandfillTariffUpdate' }
+            example:
+              disposalPricePerTon: { amount: '480.00', currency: RUB }
+      responses:
+        '200':
+          description: тариф задан
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LandfillTariff' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/UnprocessableContent' }
+
+  /v1/landfills/{landfillId}/status:
+    parameters:
+      - $ref: '#/components/parameters/LandfillIdPath'
+    put:
+      operationId: setLandfillStatus
+      tags: [Справочники]
+      summary: Задать статус полигона вручную
+      description: |
+        Запасной путь к автоматическому обновлению из Telegram-канала: когда
+        сообщение не распознано или источник недоступен, статус ставит
+        менеджер данных. Ни один внешний источник не обязателен — инвариант 4
+        записи ADR-0002.
+      security:
+        - bearerAuth: []
+      x-область: справочники
+      x-требования: [R-044, R-028, R-048]
+      x-вопросы: [Q-011, Q-013]
+      x-экран: [Э-11]
+      x-состояние: объявлено
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LandfillStatusUpdate' }
+            example:
+              status: active
+              reason: подтверждено по телефону
+      responses:
+        '200':
+          description: статус задан
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LandfillStatusState' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/landfills/{landfillId}/reviews:
+    parameters:
+      - $ref: '#/components/parameters/LandfillIdPath'
+    get:
+      operationId: listLandfillReviews
+      tags: [Справочники]
+      summary: Отзывы и оценки полигона
+      description: |
+        Оценки пользователей — обратная связь по актуальности данных, а не
+        рейтинг услуги: расхождение цены или статуса с действительностью
+        видно раньше, чем его заметит менеджер данных (риск AR-002).
+
+        Экрана под эту возможность в запросе на дизайн пока нет.
+      x-область: справочники
+      x-требования: [R-031]
+      x-состояние: объявлено
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: страница отзывов
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LandfillReviewPage' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      operationId: createLandfillReview
+      tags: [Справочники]
+      summary: Оставить оценку и отзыв о полигоне
+      security:
+        - bearerAuth: []
+      x-область: справочники
+      x-требования: [R-031, R-048]
+      x-вопросы: [Q-011]
+      x-состояние: объявлено
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LandfillReviewInput' }
+            example:
+              rating: 2
+              text: тариф на месте оказался 520 ₽/т вместо 480 ₽/т
+      responses:
+        '201':
+          description: отзыв принят
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LandfillReview' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/UnprocessableContent' }
+
+  /v1/address-suggestions:
+    get:
+      operationId: suggestAddresses
+      tags: [Справочники]
+      summary: Подсказки адреса вывоза
+      description: |
+        Подсказки приходят через сервер, а не из браузера: ключ доступа к
+        внешней службе остаётся на сервере (R-056, риск AR-006). Принимаются
+        только адреса Москвы и Московской области и только с координатами —
+        без них расстояние не посчитать.
+      x-область: справочники
+      x-требования: [R-012, R-055, R-056]
+      x-вопросы: [Q-014]
+      x-экран: [Э-01]
+      x-состояние: объявлено
+      parameters:
+        - name: query
+          in: query
+          required: true
+          description: начало адреса, не короче трёх символов
+          schema: { type: string, minLength: 3, maxLength: 200 }
+          example: Годовикова 9
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: подсказки, пригодные для расчёта
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AddressSuggestionPage' }
+              example:
+                items:
+                  - id: dadata-77-godovikova-9
+                    value: г Москва, ул Годовикова, д 9
+                    coordinates: { latitude: 55.8055, longitude: 37.6206 }
+                    area: moscow
+                total: 1
+                limit: 10
+                offset: 0
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '503': { $ref: '#/components/responses/UpstreamUnavailable' }
+
+  /v1/data-freshness:
+    get:
+      operationId: getDataFreshness
+      tags: [Справочники]
+      summary: Дата актуальности цен и статусов
+      description: |
+        Полоса «Цены и статусы на 17.09.2026» над результатами расчёта.
+        Отдельная операция, потому что дата нужна и до расчёта.
+      x-область: справочники
+      x-требования: [R-048, R-007, R-028]
+      x-вопросы: [Q-001]
+      x-экран: [Э-03]
+      x-состояние: объявлено
+      responses:
+        '200':
+          description: даты последнего обновления
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DataFreshness' }
+              example:
+                pricesUpdatedAt: '2026-09-17'
+                statusesUpdatedAt: '2026-09-17'
+                landfillsWithStaleData: 1
+
+  /v1/sync-runs/latest:
+    get:
+      operationId: getLatestSyncRun
+      tags: [Справочники]
+      summary: Итог последнего обновления справочников
+      description: |
+        Панель «Обновление статусов из Telegram: сегодня 07:15, обновлено
+        12 полигонов». Данные пишет служба `sync` (ADR-0002); расчётная часть
+        только читает их и продолжает отвечать, когда сбор остановлен.
+
+        При нуле распознанных сообщений ответ несёт `recognizedMessages: 0` —
+        по этому признаку интерфейс предлагает ручной ввод.
+      security:
+        - bearerAuth: []
+      x-область: справочники
+      x-требования: [R-044, R-046, R-048, R-007]
+      x-вопросы: [Q-002, Q-011]
+      x-экран: [Э-11]
+      x-состояние: объявлено
+      responses:
+        '200':
+          description: итог последнего прогона сбора
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SyncRun' }
+              example:
+                startedAt: '2026-09-17T07:15:00+03:00'
+                finishedAt: '2026-09-17T07:15:42+03:00'
+                source: telegram
+                outcome: succeeded
+                recognizedMessages: 14
+                updatedLandfills: 12
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/reference-imports:
+    post:
+      operationId: startReferenceImport
+      tags: [Справочники]
+      summary: Загрузить справочник из файла и получить предпросмотр
+      description: |
+        Импорт двухшаговый: загрузка возвращает предпросмотр с расхождениями,
+        и только подтверждение меняет справочник. Молчаливая перезапись цен
+        файлом — не то, что откатывается взглядом.
+      security:
+        - bearerAuth: []
+      x-область: справочники
+      x-требования: [R-045, R-042]
+      x-вопросы: [Q-011, Q-014]
+      x-экран: [Э-11]
+      x-состояние: объявлено
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema: { $ref: '#/components/schemas/ReferenceImportUpload' }
+      responses:
+        '201':
+          description: файл разобран, изменения показаны без применения
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReferenceImportPreview' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '415': { $ref: '#/components/responses/UnsupportedMediaType' }
+        '422': { $ref: '#/components/responses/UnprocessableContent' }
+
+  /v1/reference-imports/{importId}/confirmation:
+    parameters:
+      - name: importId
+        in: path
+        required: true
+        description: идентификатор предпросмотра импорта
+        schema: { type: string }
+    post:
+      operationId: confirmReferenceImport
+      tags: [Справочники]
+      summary: Применить разобранный импорт
+      description: |
+        Предпросмотр устаревает, если справочник изменился после разбора:
+        тогда операция отвечает 409, и файл разбирается заново.
+      security:
+        - bearerAuth: []
+      x-область: справочники
+      x-требования: [R-045, R-048]
+      x-вопросы: [Q-011]
+      x-экран: [Э-11]
+      x-состояние: объявлено
+      responses:
+        '200':
+          description: изменения применены
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReferenceImportResult' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /v1/amount-conversions:
+    post:
+      operationId: convertAmounts
+      tags: [Расчёт]
+      summary: Пересчитать объём между тоннами и кубометрами
+      description: |
+        Подпись «≈ 7,5 т» под полем объёма. Пересчёт идёт на сервере, а не в
+        браузере: коэффициент плотности — часть справочника, и второго места,
+        где он применяется, быть не должно.
+
+        По какому адресу определяется мера расчёта — по адресу вывоза или по
+        полигону — не решено (Q-009), поэтому операция пересчитывает обе меры
+        и меру расчёта сама не выбирает.
+      x-область: расчёт
+      x-требования: [R-014, R-015, R-016]
+      x-вопросы: [Q-009]
+      x-экран: [Э-02]
+      x-состояние: объявлено
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AmountConversionRequest' }
+            example:
+              items:
+                - wasteGroupId: drevesina
+                  quantity: { value: 15, unit: m3 }
+      responses:
+        '200':
+          description: объём в обеих мерах
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AmountConversionResult' }
+              example:
+                items:
+                  - wasteGroupId: drevesina
+                    input: { value: 15, unit: m3 }
+                    tons: 7.5
+                    cubicMeters: 15
+                    densityTonPerCubicMeter: 0.5
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/calculations:
+    post:
+      operationId: createCalculation
+      tags: [Расчёт]
+      summary: Рассчитать стоимость вывоза и утилизации
+      description: |
+        Главная операция сервиса. Принимает адрес вывоза с координатами, один
+        или несколько типов отходов с объёмом и мерой, признак утилизации и
+        фильтр расстояния. Возвращает по каждой группе отходов список
+        полигонов со стоимостью перевозки, утилизации и итогом.
+
+        Стоимость считается так: перевозка = объём в тоннах x цена группы за
+        тонна-километр x расстояние по дорожной сети; утилизация = объём в
+        тоннах x тариф полигона по этой группе (R-018). Ни коэффициенты, ни
+        формула наружу не отдаются (R-058): клиент получает результат и его
+        составляющие.
+
+        Первая страница — 10 полигонов (R-029, R-060), остальные берутся
+        операцией `listPlacementOptions`.
+
+        Расчёт предварительный: поле `preliminary` истинно всегда, а
+        допустимое отклонение финальной цены пока не задано (Q-010).
+      x-область: расчёт
+      x-требования: [R-002, R-003, R-018, R-019, R-020, R-021, R-022, R-058, R-059, R-060]
+      x-вопросы: [Q-008, Q-010]
+      x-экран: [Э-01, Э-02, Э-03, Э-12]
+      x-состояние: объявлено
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CalculationRequest' }
+            examples:
+              twoWasteGroups:
+                summary: путь UC-001 — бетон 20 т и древесина 15 м³
+                value:
+                  pickupAddress:
+                    suggestionId: dadata-77-godovikova-9
+                    value: г Москва, ул Годовикова, д 9
+                    coordinates: { latitude: 55.8055, longitude: 37.6206 }
+                  items:
+                    - wasteGroupId: beton-lom
+                      quantity: { value: 20, unit: t }
+                    - wasteGroupId: drevesina
+                      quantity: { value: 15, unit: m3 }
+                  disposalRequired: true
+                  distanceFilter: { mode: atMost, km: 50 }
+      responses:
+        '201':
+          description: расчёт выполнен
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Calculation' }
+              examples:
+                concreteResult:
+                  $ref: '#/components/examples/ConcreteCalculation'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '422': { $ref: '#/components/responses/AddressOutsideServiceArea' }
+        '503': { $ref: '#/components/responses/UpstreamUnavailable' }
+    get:
+      operationId: listCalculations
+      tags: [Расчёт]
+      summary: Сохранённые расчёты кабинета
+      description: Раздел «Расчёты» личного кабинета. Гостю недоступен.
+      security:
+        - bearerAuth: []
+      x-область: расчёт
+      x-требования: [R-049, R-008]
+      x-вопросы: [Q-011]
+      x-экран: [Э-10]
+      x-состояние: объявлено
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: страница сохранённых расчётов
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CalculationSummaryPage' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /v1/calculations/{calculationId}:
+    parameters:
+      - $ref: '#/components/parameters/CalculationIdPath'
+    get:
+      operationId: getCalculation
+      tags: [Расчёт]
+      summary: Расчёт целиком
+      description: |
+        Исходные данные, пересчитанные объёмы, выбор, распределение и
+        актуальность данных. По этой операции страница восстанавливается по
+        ссылке и после перезагрузки.
+      x-область: расчёт
+      x-требования: [R-002, R-019, R-048]
+      x-экран: [Э-03, Э-04]
+      x-состояние: объявлено
+      responses:
+        '200':
+          description: расчёт
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Calculation' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/calculations/{calculationId}/options:
+    parameters:
+      - $ref: '#/components/parameters/CalculationIdPath'
+    get:
+      operationId: listPlacementOptions
+      tags: [Расчёт]
+      summary: Варианты размещения по группе отходов
+      description: |
+        Список полигонов одной вкладки: сортировка, фильтр расстояния и
+        «Показать ещё». По умолчанию список ранжирован по совокупной цене по
+        возрастанию (R-024), фильтр — «до 50 км» (R-025, R-026).
+
+        Пустой список — не ошибка: ответ несёт `emptyReason`, по которому
+        интерфейс показывает «Нет полигонов … снимите фильтр» (Э-12).
+      x-область: расчёт
+      x-требования: [R-004, R-023, R-024, R-025, R-026, R-029, R-060]
+      x-экран: [Э-03, Э-04, Э-12]
+      x-состояние: объявлено
+      parameters:
+        - name: wasteGroupId
+          in: query
+          required: true
+          description: вкладка группы отходов
+          schema: { type: string }
+        - name: sort
+          in: query
+          description: поле сортировки
+          schema:
+            type: string
+            enum: [total, transport, disposal, distance]
+            default: total
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: asc
+        - name: distanceMode
+          in: query
+          description: сторона фильтра расстояния
+          schema:
+            type: string
+            enum: [atMost, atLeast]
+            default: atMost
+        - name: distanceKm
+          in: query
+          description: граница фильтра расстояния в километрах
+          schema: { type: integer, minimum: 0, maximum: 1000, default: 50 }
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: страница вариантов размещения
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlacementOptionPage' }
+              examples:
+                emptyByDistanceFilter:
+                  summary: фильтр «не менее 60 км» не оставил полигонов
+                  value:
+                    items: []
+                    total: 0
+                    limit: 10
+                    offset: 0
+                    emptyReason: filteredOutByDistance
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/calculations/{calculationId}/selection:
+    parameters:
+      - $ref: '#/components/parameters/CalculationIdPath'
+    put:
+      operationId: setCalculationSelection
+      tags: [Расчёт]
+      summary: Выбрать полигоны и получить сводку
+      description: |
+        Флажки слева от названий полигонов. Выбор задаётся целиком, а не
+        по одному: так сводка справа всегда отвечает тому, что отмечено.
+
+        Выбор заблокированного полигона не запрещается — он остаётся за
+        пользователем, но ответ несёт предупреждение (Э-12, R-028).
+      x-область: расчёт
+      x-требования: [R-027, R-028, R-032]
+      x-экран: [Э-04, Э-12]
+      x-состояние: объявлено
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SelectionRequest' }
+            example:
+              entries:
+                - wasteGroupId: beton-lom
+                  landfillId: vostok-timohovo
+                - wasteGroupId: beton-lom
+                  landfillId: iksha
+      responses:
+        '200':
+          description: выбор сохранён, сводка пересчитана
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SelectionState' }
+              example:
+                entries:
+                  - wasteGroupId: beton-lom
+                    landfillId: vostok-timohovo
+                  - wasteGroupId: beton-lom
+                    landfillId: iksha
+                selectedLandfills: 2
+                total: { amount: '39880.00', currency: RUB }
+                warnings: []
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/UnprocessableContent' }
+
+  /v1/calculations/{calculationId}/allocation:
+    parameters:
+      - $ref: '#/components/parameters/CalculationIdPath'
+    put:
+      operationId: setCalculationAllocation
+      tags: [Расчёт]
+      summary: Распределить объём между выбранными полигонами
+      description: |
+        Панель распределения: 20 т бетона делятся как 12 т и 8 т, итог
+        пересчитывается по каждой части. Сумма частей обязана совпасть с
+        объёмом группы — иначе операция отвечает 422 и ничего не меняет.
+      x-область: расчёт
+      x-требования: [R-030, R-032]
+      x-экран: [Э-06]
+      x-состояние: объявлено
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AllocationRequest' }
+            example:
+              entries:
+                - wasteGroupId: beton-lom
+                  landfillId: vostok-timohovo
+                  quantity: { value: 12, unit: t }
+                - wasteGroupId: beton-lom
+                  landfillId: iksha
+                  quantity: { value: 8, unit: t }
+      responses:
+        '200':
+          description: распределение принято, итог пересчитан
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AllocationState' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/UnprocessableContent' }
+
+  /v1/calculations/{calculationId}/route:
+    parameters:
+      - $ref: '#/components/parameters/CalculationIdPath'
+    get:
+      operationId: getCalculationRoute
+      tags: [Расчёт]
+      summary: Маршрут и сводка по выбранным полигонам
+      description: |
+        Всплывающее окно маршрута и панель «Получить маршрут»: расстояние,
+        время в пути, ссылка на внешние карты и обременения по пути.
+
+        Гостю детали маршрута закрыты; что именно закрыто подпиской, не
+        решено (Q-011), поэтому ответ несёт поле `access`, а интерфейс по нему
+        показывает замок вместо содержимого.
+
+        Обременения (посты ДПС, весовой контроль) остаются пустыми, пока не
+        назван источник данных и не подтверждена допустимость их показа
+        (Q-003): поле в договоре есть, выдуманных значений в нём нет.
+      x-область: расчёт
+      x-требования: [R-005, R-032, R-033, R-034, R-035, R-050, R-057]
+      x-вопросы: [Q-003, Q-008, Q-011]
+      x-экран: [Э-05, Э-06]
+      x-состояние: объявлено
+      responses:
+        '200':
+          description: сводка маршрута по выбранным полигонам
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RouteSummary' }
+              examples:
+                guestWithoutSubscription:
+                  summary: гость видит расстояние, но не детали маршрута
+                  value:
+                    access: { granted: false, reason: subscriptionRequired }
+                    legs: []
+                    total: { amount: '39880.00', currency: RUB }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/UpstreamUnavailable' }
+
+  /v1/calculations/{calculationId}/quotes:
+    parameters:
+      - $ref: '#/components/parameters/CalculationIdPath'
+    post:
+      operationId: createQuote
+      tags: [Сделка]
+      summary: Сформировать коммерческое предложение
+      description: |
+        Кнопка «Скачать КП». Операция закрепляет цены на момент выпуска и
+        возвращает ссылку на документ: сам PDF отдаёт `downloadQuoteDocument`.
+        Разделение намеренное — повторное скачивание не должно выпускать
+        второе предложение с другим номером.
+
+        Срок действия цены печатается в документе, но его длительность и
+        допустимое отклонение финальной цены заказчиком не названы (Q-010),
+        как и реквизиты оформления (Q-012).
+      x-область: сделка
+      x-требования: [R-006, R-036, R-037, R-038, R-059]
+      x-вопросы: [Q-010, Q-012]
+      x-экран: [Э-07]
+      x-состояние: объявлено
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/QuoteRequest' }
+            example:
+              customerName: ООО «Подрядчик»
+      responses:
+        '201':
+          description: предложение выпущено
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Quote' }
+              example:
+                id: 0b6a8f4e-3a1d-4f2e-9d55-2f1c8a0b7e31
+                number: КП-2026-0917-014
+                issuedAt: '2026-09-17T12:04:00+03:00'
+                validUntil: '2026-09-24'
+                total: { amount: '39880.00', currency: RUB }
+                preliminary: true
+                documentUrl: /v1/quotes/0b6a8f4e-3a1d-4f2e-9d55-2f1c8a0b7e31/document
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/UnprocessableContent' }
+
+  /v1/quotes/{quoteId}/document:
+    parameters:
+      - name: quoteId
+        in: path
+        required: true
+        description: идентификатор коммерческого предложения
+        schema: { type: string }
+    get:
+      operationId: downloadQuoteDocument
+      tags: [Сделка]
+      summary: Скачать коммерческое предложение
+      description: |
+        Документ на одном листе A4 со всем составом расчёта: адрес вывоза,
+        типы отходов, количество и мера, цены за единицу, перевозка,
+        утилизация, итог, срок действия и пометка о предварительности цены.
+      x-область: сделка
+      x-требования: [R-036, R-037, R-038, R-059, R-061]
+      x-вопросы: [Q-012]
+      x-экран: [Э-07]
+      x-состояние: объявлено
+      responses:
+        '200':
+          description: файл предложения
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+          headers:
+            Content-Disposition:
+              description: имя файла для автоматического скачивания
+              schema: { type: string }
+              example: attachment; filename="КП-2026-0917-014.pdf"
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /v1/pickup-requests:
+    post:
+      operationId: createPickupRequest
+      tags: [Сделка]
+      summary: Отправить заявку на вывоз
+      description: |
+        Карточка заявки под результатами расчёта. Заявка передаётся менеджеру
+        ИМОЛТ; сейчас форма на сайте пишет только в консоль браузера (риск
+        AR-008), и эта операция закрывает разрыв.
+
+        Согласие на обработку персональных данных обязательно: без него
+        операция отвечает 422 и заявку не создаёт (R-054).
+      x-область: сделка
+      x-требования: [R-009, R-053, R-054]
+      x-экран: [Э-08]
+      x-состояние: объявлено
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PickupRequestInput' }
+            example:
+              calculationId: 5f0a1c2b-77d9-4f61-9a6f-9c3d1b2a8e40
+              landfillId: vostok-timohovo
+              contactName: Иван
+              phone: '+79161234567'
+              personalDataConsent: true
+      responses:
+        '201':
+          description: заявка принята
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PickupRequest' }
+              example:
+                id: 3c1f9a77-2b64-4f0a-8f2d-77b1c9e5a012
+                createdAt: '2026-09-17T12:10:00+03:00'
+                state: accepted
+                message: Заявка принята, менеджер свяжется в течение рабочего дня
+        '422': { $ref: '#/components/responses/UnprocessableContent' }
+
+  /v1/document-services:
+    get:
+      operationId: listDocumentServices
+      tags: [Сделка]
+      summary: Каталог услуг по документации
+      description: |
+        Разрешение ОССиГ, ордер ОАТИ, ППР и ПОД, лабораторные исследования и
+        паспорта отходов, биотестирование. Цена указывается как «от» либо
+        отсутствует — тогда `priceOnRequest` истинно.
+
+        Состав пакета и логика выборочного заказа заказчиком не подтверждены
+        (Q-005): каталог отдаётся как данные, а не зашивается в интерфейс.
+      x-область: сделка
+      x-требования: [R-052]
+      x-вопросы: [Q-005]
+      x-экран: [Э-10]
+      x-состояние: объявлено
+      responses:
+        '200':
+          description: каталог услуг
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DocumentServicePage' }
+              example:
+                items:
+                  - id: ossig-moscow
+                    name: Разрешение на перемещение ОССиГ (Москва)
+                    priceFrom: { amount: '50000.00', currency: RUB }
+                    priceOnRequest: false
+                  - id: laboratory
+                    name: Лабораторные исследования и паспорта отходов
+                    priceFrom: null
+                    priceOnRequest: true
+                total: 2
+                limit: 10
+                offset: 0
+
+  /v1/document-service-orders:
+    post:
+      operationId: createDocumentServiceOrder
+      tags: [Сделка]
+      summary: Заказать услугу по документации
+      x-область: сделка
+      x-требования: [R-009, R-052, R-054]
+      x-вопросы: [Q-005, Q-011]
+      x-экран: [Э-10]
+      x-состояние: объявлено
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DocumentServiceOrderInput' }
+            example:
+              serviceId: ossig-moscow
+              objectAddress: г Москва, ул Годовикова, д 9
+              comment: снос ангара, начало работ 01.10.2026
+              personalDataConsent: true
+      responses:
+        '201':
+          description: заказ принят
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DocumentServiceOrder' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/UnprocessableContent' }
+
+  /v1/subscription-requests:
+    post:
+      operationId: createSubscriptionRequest
+      tags: [Сделка]
+      summary: Оставить заявку на подписку
+      description: |
+        Оплата вне сервиса: операция фиксирует намерение и переводит подписку
+        в состояние «ожидает подтверждения». Тарифы и пробный период
+        заказчиком не названы (Q-004), поэтому цена в договоре не объявляется.
+      security:
+        - bearerAuth: []
+      x-область: сделка
+      x-требования: [R-008, R-049]
+      x-вопросы: [Q-004, Q-011]
+      x-экран: [Э-09]
+      x-состояние: объявлено
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SubscriptionRequestInput' }
+            example:
+              role: carrier
+              companyName: ООО «Перевозчик»
+              inn: '7701234567'
+              registeredInAisOssig: true
+      responses:
+        '201':
+          description: заявка на подписку принята
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SubscriptionRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/UnprocessableContent' }
+
+  /v1/auth/codes:
+    post:
+      operationId: requestSignInCode
+      tags: [Доступ]
+      summary: Запросить код подтверждения
+      description: |
+        Вход по телефону или почте. Ответ одинаков и для известного, и для
+        неизвестного адреса: иначе операция становится способом проверять
+        наличие учётной записи.
+      security: []
+      x-область: сделка
+      x-требования: [R-049]
+      x-вопросы: [Q-004]
+      x-экран: [Э-09]
+      x-состояние: объявлено
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SignInCodeRequest' }
+            example:
+              phone: '+79161234567'
+      responses:
+        '202':
+          description: код отправлен, если адрес пригоден
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SignInCodeState' }
+              example:
+                expiresIn: 300
+                resendAfter: 60
+        '422': { $ref: '#/components/responses/UnprocessableContent' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+
+  /v1/auth/sessions:
+    post:
+      operationId: createSession
+      tags: [Доступ]
+      summary: Подтвердить код и получить сессию
+      description: |
+        Возвращает маркер доступа для заголовка `Authorization: Bearer`.
+        Срок жизни маркера объявлен полем: клиент не угадывает его по опыту.
+      security: []
+      x-область: сделка
+      x-требования: [R-049, R-050, R-051, R-054]
+      x-вопросы: [Q-011]
+      x-экран: [Э-09]
+      x-состояние: объявлено
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SessionRequest' }
+            example:
+              phone: '+79161234567'
+              code: '4821'
+              personalDataConsent: true
+      responses:
+        '201':
+          description: сессия создана
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Session' }
+              example:
+                accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.пример.пример
+                expiresIn: 86400
+                profile:
+                  id: 9d3a7c10-52f4-4a1b-9ad8-0f6c2b5e41aa
+                  role: carrier
+                  companyName: ООО «Перевозчик»
+                  subscription: { state: pending }
+        '401':
+          description: код не подошёл или устарел
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '422': { $ref: '#/components/responses/UnprocessableContent' }
+
+  /v1/profile:
+    get:
+      operationId: getProfile
+      tags: [Доступ]
+      summary: Профиль и состояние подписки
+      description: |
+        Кабинет показывает по этой операции пометку «Подписка ожидает
+        подтверждения». Признак регистрации транспорта в АИС ОССиГ хранится
+        в профиле перевозчика (R-051).
+      security:
+        - bearerAuth: []
+      x-область: сделка
+      x-требования: [R-049, R-050, R-051]
+      x-вопросы: [Q-011]
+      x-экран: [Э-10]
+      x-состояние: объявлено
+      responses:
+        '200':
+          description: профиль
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Profile' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Маркер сессии из операции `createSession`. Расчёт и коммерческое
+        предложение задуманы доступными без входа; окончательный перечень
+        закрытых операций — открытый вопрос Q-011.
+
+  parameters:
+    SearchQuery:
+      name: query
+      in: query
+      description: 'поиск по названию; для групп отходов — ещё и по коду каталога отходов'
+      required: false
+      schema: { type: string, maxLength: 200 }
+    Limit:
+      name: limit
+      in: query
+      description: |
+        Сколько записей вернуть. По умолчанию 10: первый экран результатов
+        показывает десять полигонов, остальные догружаются (R-029, R-060).
+      required: false
+      schema: { type: integer, minimum: 1, maximum: 100, default: 10 }
+    Offset:
+      name: offset
+      in: query
+      description: сколько записей пропустить
+      required: false
+      schema: { type: integer, minimum: 0, default: 0 }
+    WasteGroupIdPath:
+      name: wasteGroupId
+      in: path
+      required: true
+      description: идентификатор группы отходов
+      schema: { type: string }
+      example: beton-lom
+    LandfillIdPath:
+      name: landfillId
+      in: path
+      required: true
+      description: идентификатор полигона
+      schema: { type: string }
+      example: vostok-timohovo
+    CalculationIdPath:
+      name: calculationId
+      in: path
+      required: true
+      description: идентификатор расчёта
+      schema: { type: string }
+      example: 5f0a1c2b-77d9-4f61-9a6f-9c3d1b2a8e40
+
+  responses:
+    BadRequest:
+      description: запрос не разобран или параметр вне допустимых значений
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example:
+            type: 'urn:imolt:problem:validation'
+            title: Запрос не прошёл проверку
+            status: 400
+            detail: Параметр limit должен быть от 1 до 100
+    NotFound:
+      description: запись не найдена
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example:
+            type: 'urn:imolt:problem:not-found'
+            title: Запись не найдена
+            status: 404
+    Unauthorized:
+      description: операция требует входа
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example:
+            type: 'urn:imolt:problem:authentication-required'
+            title: Нужен вход
+            status: 401
+    Forbidden:
+      description: |
+        Сессия есть, но операция закрыта подпиской или ролью. Перечень
+        закрытых операций не установлен — Q-011.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example:
+            type: 'urn:imolt:problem:subscription-required'
+            title: Детали доступны по подписке
+            status: 403
+    UnprocessableContent:
+      description: запрос разобран, но нарушает правило предметной области
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example:
+            type: 'urn:imolt:problem:allocation-mismatch'
+            title: Распределение не сходится с объёмом
+            status: 422
+            detail: По группе «Лом бетона» распределено 18 т из 20 т
+            errors:
+              - field: entries[1].quantity.value
+                message: увеличьте на 2 т либо уменьшите объём группы
+    AddressOutsideServiceArea:
+      description: |
+        Адрес вывоза вне Москвы и Московской области либо без координат.
+        Расчёт не запускается, поле подсвечивается (R-012).
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example:
+            type: 'urn:imolt:problem:address-outside-service-area'
+            title: Адрес вне зоны обслуживания
+            status: 422
+            detail: Сервис считает вывоз по Москве и Московской области
+    UpstreamUnavailable:
+      description: |
+        Внешняя служба расстояний или подсказок не ответила либо исчерпан
+        лимит обращений (риск AR-007). Сохранённые данные при этом остаются
+        доступны: отказ источника не равен отказу обслуживания.
+      headers:
+        Retry-After:
+          description: через сколько секунд повторить
+          schema: { type: integer }
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example:
+            type: 'urn:imolt:problem:distance-service-unavailable'
+            title: Не удалось рассчитать расстояния
+            status: 503
+            detail: Повторите попытку
+    UnsupportedMediaType:
+      description: формат загруженного файла не поддерживается
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example:
+            type: 'urn:imolt:problem:unsupported-media-type'
+            title: Формат файла не поддерживается
+            status: 415
+    Conflict:
+      description: состояние записи изменилось, и запрос к нему больше не применим
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example:
+            type: 'urn:imolt:problem:stale-preview'
+            title: Предпросмотр устарел
+            status: 409
+            detail: Справочник изменился после разбора файла, разберите его заново
+    TooManyRequests:
+      description: обращения идут чаще допустимого
+      headers:
+        Retry-After:
+          description: через сколько секунд повторить
+          schema: { type: integer }
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+          example:
+            type: 'urn:imolt:problem:too-many-requests'
+            title: Слишком частые обращения
+            status: 429
+
+  examples:
+    ConcreteCalculation:
+      summary: расчёт UC-001 — первая страница по группе «Лом бетона»
+      value:
+        id: 5f0a1c2b-77d9-4f61-9a6f-9c3d1b2a8e40
+        createdAt: '2026-09-17T12:00:00+03:00'
+        preliminary: true
+        pickupAddress:
+          value: г Москва, ул Годовикова, д 9
+          coordinates: { latitude: 55.8055, longitude: 37.6206 }
+          area: moscow
+        disposalRequired: true
+        distanceFilter: { mode: atMost, km: 50 }
+        dataFreshness:
+          pricesUpdatedAt: '2026-09-17'
+          statusesUpdatedAt: '2026-09-17'
+          landfillsWithStaleData: 1
+        items:
+          - wasteGroupId: beton-lom
+            wasteGroupName: Лом бетона и железобетона
+            input: { value: 20, unit: t }
+            tons: 20
+          - wasteGroupId: drevesina
+            wasteGroupName: Древесина от разборки
+            input: { value: 15, unit: m3 }
+            tons: 7.5
+        results:
+          - wasteGroupId: beton-lom
+            options:
+              items:
+                - landfillId: vostok-timohovo
+                  landfillName: Комплекс переработки «Восток»
+                  address: Московская обл., Богородский г. о., д. Тимохово
+                  distanceKm: 45
+                  transportCost: { amount: '10800.00', currency: RUB }
+                  disposalCost: { amount: '9000.00', currency: RUB }
+                  totalCost: { amount: '19800.00', currency: RUB }
+                  status: active
+                  statusUpdatedAt: '2026-09-17'
+                - landfillId: iksha
+                  landfillName: Площадка «Икша»
+                  address: Московская обл., Дмитровский г. о., пос. Икша
+                  distanceKm: 52
+                  transportCost: { amount: '12480.00', currency: RUB }
+                  disposalCost: { amount: '7600.00', currency: RUB }
+                  totalCost: { amount: '20080.00', currency: RUB }
+                  status: active
+                  statusUpdatedAt: '2026-09-17'
+              total: 5
+              limit: 10
+              offset: 0
+              emptyReason: null
+
+  schemas:
+
+    Money:
+      type: object
+      description: |
+        Денежная сумма. Передаётся строкой с двумя знаками после точки:
+        двоичная дробь округляет рубли по дороге, а смета этого не прощает.
+        Форматирование по локали ru-RU — работа интерфейса (R-061).
+      required: [amount, currency]
+      properties:
+        amount:
+          type: string
+          pattern: '^-?[0-9]+\.[0-9]{2}$'
+          example: '19800.00'
+        currency:
+          type: string
+          enum: [RUB]
+      additionalProperties: false
+
+    Unit:
+      type: string
+      description: мера объёма отходов — тонны либо кубические метры
+      enum: [t, m3]
+
+    Quantity:
+      type: object
+      required: [value, unit]
+      properties:
+        value: { type: number, format: double, minimum: 0, example: 20 }
+        unit: { $ref: '#/components/schemas/Unit' }
+      additionalProperties: false
+
+    Coordinates:
+      type: object
+      description: координаты точки; без них расстояние по дорожной сети не считается
+      required: [latitude, longitude]
+      properties:
+        latitude: { type: number, format: double, minimum: -90, maximum: 90 }
+        longitude: { type: number, format: double, minimum: -180, maximum: 180 }
+      additionalProperties: false
+
+    ServiceArea:
+      type: string
+      description: зона обслуживания, к которой относится адрес
+      enum: [moscow, moscowRegion]
+
+    HealthStatus:
+      type: object
+      required: [service, status]
+      properties:
+        service: { type: string, example: api }
+        status: { type: string, enum: [ok] }
+
+    ReadinessStatus:
+      type: object
+      required: [service, status]
+      properties:
+        service: { type: string, example: api }
+        status: { type: string, enum: [ready, not_ready] }
+        database: { type: string, enum: [reachable] }
+        reason:
+          type: string
+          description: причина неготовности; присутствует только при not_ready
+
+    Problem:
+      type: object
+      description: |
+        Описание ошибки по RFC 9457. Поле `type` — устойчивый код причины:
+        интерфейс ветвится по нему, а не по тексту заголовка.
+      required: [type, title, status]
+      properties:
+        type: { type: string, example: 'urn:imolt:problem:validation' }
+        title: { type: string, example: Запрос не прошёл проверку }
+        status: { type: integer, example: 400 }
+        detail: { type: string }
+        instance: { type: string, description: 'путь запроса, на котором возникла ошибка' }
+        errors:
+          type: array
+          description: разбор по полям — для форм
+          items:
+            type: object
+            required: [field, message]
+            properties:
+              field: { type: string }
+              message: { type: string }
+
+    Page:
+      type: object
+      description: общая часть страничного ответа
+      required: [total, limit, offset]
+      properties:
+        total: { type: integer, description: сколько записей всего подходит под запрос }
+        limit: { type: integer }
+        offset: { type: integer }
+
+    WasteGroup:
+      type: object
+      description: |
+        Группа отходов справочника: название, коды ФККО, цена перевозки за
+        тонна-километр и коэффициент плотности для пересчёта меры.
+      required: [id, name, fkkoCodes, transportPricePerTonKm, densityTonPerCubicMeter, updatedAt]
+      properties:
+        id: { type: string, example: beton-lom }
+        name: { type: string, example: Лом бетона и железобетона }
+        fkkoCodes:
+          type: array
+          items: { type: string }
+          example: ['8 22 201 01 21 5']
+        transportPricePerTonKm: { $ref: '#/components/schemas/Money' }
+        densityTonPerCubicMeter: { type: number, format: double, example: 2.0 }
+        updatedAt: { type: string, format: date, example: '2026-09-17' }
+
+    WasteGroupPage:
+      allOf:
+        - $ref: '#/components/schemas/Page'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items: { $ref: '#/components/schemas/WasteGroup' }
+
+    WasteGroupUpdate:
+      type: object
+      description: изменяется то, что передано; непереданное остаётся прежним
+      minProperties: 1
+      properties:
+        name: { type: string }
+        fkkoCodes:
+          type: array
+          items: { type: string }
+        transportPricePerTonKm: { $ref: '#/components/schemas/Money' }
+        densityTonPerCubicMeter: { type: number, format: double, minimum: 0 }
+      additionalProperties: false
+
+    LandfillStatus:
+      type: string
+      description: |
+        Состояние полигона: принимает отходы, заблокирован либо не подтверждён.
+        `unconfirmed` — когда сообщение источника не распознано и статус не
+        подтверждён вручную.
+      enum: [active, blocked, unconfirmed]
+
+    LandfillTariff:
+      type: object
+      required: [wasteGroupId, disposalPricePerTon, updatedAt]
+      properties:
+        wasteGroupId: { type: string, example: beton-lom }
+        disposalPricePerTon: { $ref: '#/components/schemas/Money' }
+        updatedAt: { type: string, format: date, example: '2026-09-17' }
+
+    LandfillTariffUpdate:
+      type: object
+      required: [disposalPricePerTon]
+      properties:
+        disposalPricePerTon: { $ref: '#/components/schemas/Money' }
+      additionalProperties: false
+
+    Landfill:
+      type: object
+      required: [id, name, address, coordinates, status, statusUpdatedAt, tariffs]
+      properties:
+        id: { type: string, example: vostok-timohovo }
+        name: { type: string, example: Комплекс переработки «Восток» }
+        legalEntity: { type: string, example: ООО «Восток» }
+        address: { type: string }
+        coordinates: { $ref: '#/components/schemas/Coordinates' }
+        status: { $ref: '#/components/schemas/LandfillStatus' }
+        statusUpdatedAt: { type: string, format: date }
+        tariffs:
+          type: array
+          description: тарифы утилизации по принимаемым группам отходов
+          items: { $ref: '#/components/schemas/LandfillTariff' }
+
+    LandfillPage:
+      allOf:
+        - $ref: '#/components/schemas/Page'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items: { $ref: '#/components/schemas/Landfill' }
+
+    LandfillCard:
+      allOf:
+        - $ref: '#/components/schemas/Landfill'
+        - type: object
+          properties:
+            legalEntityHistory:
+              type: array
+              description: смены юридического лица без потери тарифов и статусов (R-041)
+              items:
+                type: object
+                required: [legalEntity, since]
+                properties:
+                  legalEntity: { type: string }
+                  since: { type: string, format: date }
+                  until: { type: string, format: date, nullable: true }
+
+    LandfillStatusUpdate:
+      type: object
+      required: [status]
+      properties:
+        status: { $ref: '#/components/schemas/LandfillStatus' }
+        reason: { type: string, description: основание ручного изменения }
+      additionalProperties: false
+
+    LandfillStatusState:
+      type: object
+      required: [landfillId, status, statusUpdatedAt, source]
+      properties:
+        landfillId: { type: string }
+        status: { $ref: '#/components/schemas/LandfillStatus' }
+        statusUpdatedAt: { type: string, format: date }
+        source:
+          type: string
+          description: откуда взят статус
+          enum: [telegram, manual, registry]
+        reason: { type: string }
+
+    AddressSuggestion:
+      type: object
+      required: [id, value, coordinates, area]
+      properties:
+        id: { type: string, description: идентификатор подсказки внешней службы }
+        value: { type: string, example: 'г Москва, ул Годовикова, д 9' }
+        coordinates: { $ref: '#/components/schemas/Coordinates' }
+        area: { $ref: '#/components/schemas/ServiceArea' }
+
+    AddressSuggestionPage:
+      allOf:
+        - $ref: '#/components/schemas/Page'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items: { $ref: '#/components/schemas/AddressSuggestion' }
+
+    PickupAddress:
+      type: object
+      description: |
+        Адрес вывоза. Принимается только выбранный из подсказок: расчёт
+        опирается на координаты, а не на набранную строку.
+      required: [value, coordinates]
+      properties:
+        suggestionId: { type: string }
+        value: { type: string }
+        coordinates: { $ref: '#/components/schemas/Coordinates' }
+        area: { $ref: '#/components/schemas/ServiceArea' }
+
+    DataFreshness:
+      type: object
+      description: даты последнего обновления цен и статусов (R-048)
+      required: [pricesUpdatedAt, statusesUpdatedAt]
+      properties:
+        pricesUpdatedAt: { type: string, format: date }
+        statusesUpdatedAt: { type: string, format: date }
+        landfillsWithStaleData:
+          type: integer
+          description: сколько полигонов показывают данные старше последнего обновления
+
+    SyncRun:
+      type: object
+      description: итог прогона службы сбора `sync` (ADR-0002)
+      required: [startedAt, source, outcome]
+      properties:
+        startedAt: { type: string, format: date-time }
+        finishedAt: { type: string, format: date-time, nullable: true }
+        source:
+          type: string
+          enum: [telegram, file, registry]
+        outcome:
+          type: string
+          description: |
+            `succeeded` — прогон завершён; `partial` — часть источников не
+            ответила; `failed` — прогон не состоялся. Отказ сбора не является
+            отказом обслуживания.
+          enum: [succeeded, partial, failed]
+        recognizedMessages: { type: integer }
+        updatedLandfills: { type: integer }
+        failureReason: { type: string, nullable: true }
+
+    ReferenceImportUpload:
+      type: object
+      required: [file, kind]
+      properties:
+        file: { type: string, format: binary, description: 'книга Excel либо выгрузка каталога отходов' }
+        kind:
+          type: string
+          description: какой справочник загружается
+          enum: [wasteGroups, landfills, tariffs]
+
+    ReferenceImportPreview:
+      type: object
+      description: разобранный файл до применения — расхождения видны до записи
+      required: [id, kind, changes]
+      properties:
+        id: { type: string }
+        kind: { type: string, enum: [wasteGroups, landfills, tariffs] }
+        changes:
+          type: array
+          items:
+            type: object
+            required: [entityId, field, currentValue, fileValue]
+            properties:
+              entityId: { type: string }
+              field: { type: string }
+              currentValue: { type: string, nullable: true }
+              fileValue: { type: string }
+        rejectedRows:
+          type: array
+          description: строки, которые не разобраны; они не применяются
+          items:
+            type: object
+            required: [row, reason]
+            properties:
+              row: { type: integer }
+              reason: { type: string }
+
+    ReferenceImportResult:
+      type: object
+      required: [id, appliedChanges, updatedAt]
+      properties:
+        id: { type: string }
+        appliedChanges: { type: integer }
+        updatedAt: { type: string, format: date-time }
+
+    AmountConversionRequest:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required: [wasteGroupId, quantity]
+            properties:
+              wasteGroupId: { type: string }
+              quantity: { $ref: '#/components/schemas/Quantity' }
+
+    AmountConversionResult:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            required: [wasteGroupId, input, tons, cubicMeters, densityTonPerCubicMeter]
+            properties:
+              wasteGroupId: { type: string }
+              input: { $ref: '#/components/schemas/Quantity' }
+              tons: { type: number, format: double }
+              cubicMeters: { type: number, format: double }
+              densityTonPerCubicMeter: { type: number, format: double }
+
+    DistanceFilter:
+      type: object
+      description: |
+        Фильтр расстояния «до N км» либо «не менее N км». По умолчанию
+        «до 50 км» (R-025, R-026).
+      required: [mode, km]
+      properties:
+        mode: { type: string, enum: [atMost, atLeast], default: atMost }
+        km: { type: integer, minimum: 0, maximum: 1000, default: 50 }
+      additionalProperties: false
+
+    CalculationRequest:
+      type: object
+      required: [pickupAddress, items]
+      properties:
+        pickupAddress: { $ref: '#/components/schemas/PickupAddress' }
+        items:
+          type: array
+          minItems: 1
+          maxItems: 20
+          description: типы отходов расчёта; в одном расчёте их может быть несколько
+          items:
+            type: object
+            required: [wasteGroupId, quantity]
+            properties:
+              wasteGroupId: { type: string }
+              quantity: { $ref: '#/components/schemas/Quantity' }
+        disposalRequired:
+          type: boolean
+          default: true
+          description: |
+            Флажок «Нужна утилизация на полигоне». Когда ложно, совокупная
+            цена состоит только из перевозки (R-021).
+        distanceFilter: { $ref: '#/components/schemas/DistanceFilter' }
+      additionalProperties: false
+
+    CalculationItem:
+      type: object
+      required: [wasteGroupId, wasteGroupName, input, tons]
+      properties:
+        wasteGroupId: { type: string }
+        wasteGroupName: { type: string }
+        input: { $ref: '#/components/schemas/Quantity' }
+        tons:
+          type: number
+          format: double
+          description: объём в тоннах — мера, в которой считается стоимость
+
+    PlacementOption:
+      type: object
+      description: |
+        Вариант размещения: полигон со стоимостью перевозки, утилизации и
+        итогом по одной группе отходов.
+      required: [landfillId, landfillName, address, distanceKm, transportCost, totalCost, status, statusUpdatedAt]
+      properties:
+        landfillId: { type: string }
+        landfillName: { type: string }
+        address: { type: string }
+        distanceKm:
+          type: number
+          format: double
+          description: плечо перевозки — расстояние по автомобильной дорожной сети, не по прямой (R-020)
+        transportCost: { $ref: '#/components/schemas/Money' }
+        disposalCost:
+          allOf: [{ $ref: '#/components/schemas/Money' }]
+          nullable: true
+          description: отсутствует, когда утилизация выключена (R-021)
+        totalCost: { $ref: '#/components/schemas/Money' }
+        status: { $ref: '#/components/schemas/LandfillStatus' }
+        statusUpdatedAt: { type: string, format: date }
+
+    PlacementOptionPage:
+      allOf:
+        - $ref: '#/components/schemas/Page'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items: { $ref: '#/components/schemas/PlacementOption' }
+            emptyReason:
+              type: string
+              nullable: true
+              description: |
+                Почему список пуст. `noLandfillsForWasteGroup` — эту группу не
+                принимает ни один полигон; `filteredOutByDistance` — все
+                отсеяны фильтром расстояния. Пустой список ошибкой не является.
+              enum: [noLandfillsForWasteGroup, filteredOutByDistance, null]
+
+    Calculation:
+      type: object
+      description: |
+        Расчёт целиком: исходные данные, пересчитанные объёмы, результаты по
+        каждой группе отходов, выбор и распределение. Хранит дату
+        актуальности данных, на которых посчитан (R-048).
+      required: [id, createdAt, preliminary, pickupAddress, disposalRequired, items, results, dataFreshness]
+      properties:
+        id: { type: string }
+        createdAt: { type: string, format: date-time }
+        preliminary:
+          type: boolean
+          description: |
+            Расчёт предварительный всегда (R-059). Допустимое отклонение
+            финальной цены заказчиком не названо — Q-010.
+        pickupAddress: { $ref: '#/components/schemas/PickupAddress' }
+        disposalRequired: { type: boolean }
+        distanceFilter: { $ref: '#/components/schemas/DistanceFilter' }
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/CalculationItem' }
+        results:
+          type: array
+          description: по одной вкладке на группу отходов
+          items:
+            type: object
+            required: [wasteGroupId, options]
+            properties:
+              wasteGroupId: { type: string }
+              options: { $ref: '#/components/schemas/PlacementOptionPage' }
+        selection: { $ref: '#/components/schemas/SelectionState' }
+        allocation: { $ref: '#/components/schemas/AllocationState' }
+        dataFreshness: { $ref: '#/components/schemas/DataFreshness' }
+
+    CalculationSummary:
+      type: object
+      required: [id, createdAt, pickupAddress, total]
+      properties:
+        id: { type: string }
+        createdAt: { type: string, format: date-time }
+        pickupAddress: { type: string }
+        total: { $ref: '#/components/schemas/Money' }
+        quoteNumber: { type: string, nullable: true }
+
+    CalculationSummaryPage:
+      allOf:
+        - $ref: '#/components/schemas/Page'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items: { $ref: '#/components/schemas/CalculationSummary' }
+
+    SelectionEntry:
+      type: object
+      required: [wasteGroupId, landfillId]
+      properties:
+        wasteGroupId: { type: string }
+        landfillId: { type: string }
+      additionalProperties: false
+
+    SelectionRequest:
+      type: object
+      required: [entries]
+      properties:
+        entries:
+          type: array
+          description: выбор задаётся целиком; пустой массив снимает выбор
+          items: { $ref: '#/components/schemas/SelectionEntry' }
+      additionalProperties: false
+
+    SelectionState:
+      type: object
+      required: [entries, selectedLandfills, total, warnings]
+      properties:
+        entries:
+          type: array
+          items: { $ref: '#/components/schemas/SelectionEntry' }
+        selectedLandfills: { type: integer }
+        total: { $ref: '#/components/schemas/Money' }
+        warnings:
+          type: array
+          description: |
+            Предупреждения выбора. Заблокированный полигон остаётся выбранным
+            по решению пользователя — предупреждение не отменяет выбор (Э-12).
+          items:
+            type: object
+            required: [code, landfillId, message]
+            properties:
+              code: { type: string, enum: [landfillBlocked, landfillDataStale] }
+              landfillId: { type: string }
+              message: { type: string }
+
+    AllocationEntry:
+      type: object
+      required: [wasteGroupId, landfillId, quantity]
+      properties:
+        wasteGroupId: { type: string }
+        landfillId: { type: string }
+        quantity: { $ref: '#/components/schemas/Quantity' }
+      additionalProperties: false
+
+    AllocationRequest:
+      type: object
+      required: [entries]
+      properties:
+        entries:
+          type: array
+          items: { $ref: '#/components/schemas/AllocationEntry' }
+      additionalProperties: false
+
+    AllocationState:
+      type: object
+      required: [entries, total]
+      properties:
+        entries:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/AllocationEntry'
+              - type: object
+                required: [transportCost, totalCost]
+                properties:
+                  transportCost: { $ref: '#/components/schemas/Money' }
+                  disposalCost:
+                    allOf: [{ $ref: '#/components/schemas/Money' }]
+                    nullable: true
+                  totalCost: { $ref: '#/components/schemas/Money' }
+        total: { $ref: '#/components/schemas/Money' }
+
+    Access:
+      type: object
+      description: |
+        Доступ к содержимому ответа. Когда `granted` ложно, содержательные
+        поля пусты, а интерфейс показывает замок вместо выдумки. Что именно
+        закрыто подпиской, не установлено — Q-011.
+      required: [granted]
+      properties:
+        granted: { type: boolean }
+        reason:
+          type: string
+          nullable: true
+          enum: [subscriptionRequired, authenticationRequired, null]
+
+    Encumbrance:
+      type: object
+      description: |
+        Обременение по пути: пост ДПС либо пункт весового контроля.
+        Источник данных и допустимость показа не подтверждены (Q-003),
+        поэтому до ответа список остаётся пустым.
+      required: [kind, title]
+      properties:
+        kind: { type: string, enum: [trafficPolicePost, weightControl] }
+        title: { type: string }
+        coordinates: { $ref: '#/components/schemas/Coordinates' }
+
+    RouteLeg:
+      type: object
+      required: [landfillId, distanceKm]
+      properties:
+        landfillId: { type: string }
+        distanceKm: { type: number, format: double }
+        durationMinutes: { type: integer, nullable: true }
+        externalMapUrl:
+          type: string
+          nullable: true
+          description: ссылка на маршрут во внешних картах (R-034, R-057)
+        encumbrances:
+          type: array
+          items: { $ref: '#/components/schemas/Encumbrance' }
+
+    RouteSummary:
+      type: object
+      required: [access, legs, total]
+      properties:
+        access: { $ref: '#/components/schemas/Access' }
+        legs:
+          type: array
+          items: { $ref: '#/components/schemas/RouteLeg' }
+        total: { $ref: '#/components/schemas/Money' }
+
+    QuoteRequest:
+      type: object
+      description: необязательные реквизиты получателя предложения
+      properties:
+        customerName: { type: string }
+        comment: { type: string }
+      additionalProperties: false
+
+    Quote:
+      type: object
+      required: [id, number, issuedAt, validUntil, total, preliminary, documentUrl]
+      properties:
+        id: { type: string }
+        number: { type: string, example: КП-2026-0917-014 }
+        issuedAt: { type: string, format: date-time }
+        validUntil:
+          type: string
+          format: date
+          description: срок действия цены; его длительность не задана — Q-010
+        total: { $ref: '#/components/schemas/Money' }
+        preliminary: { type: boolean }
+        documentUrl: { type: string, description: путь к файлу предложения }
+
+    PickupRequestInput:
+      type: object
+      required: [contactName, phone, personalDataConsent]
+      properties:
+        calculationId: { type: string }
+        landfillId: { type: string }
+        contactName: { type: string, maxLength: 200 }
+        phone: { type: string, pattern: '^\+7[0-9]{10}$', example: '+79161234567' }
+        personalDataConsent:
+          type: boolean
+          description: |
+            Явное согласие на обработку персональных данных. Без него заявка
+            не создаётся (R-054): признак обязателен и проверяется на сервере.
+      additionalProperties: false
+
+    PickupRequest:
+      type: object
+      required: [id, createdAt, state]
+      properties:
+        id: { type: string }
+        createdAt: { type: string, format: date-time }
+        state: { type: string, enum: [accepted] }
+        message: { type: string }
+
+    DocumentService:
+      type: object
+      required: [id, name, priceOnRequest]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        priceFrom:
+          allOf: [{ $ref: '#/components/schemas/Money' }]
+          nullable: true
+          description: цена «от»; отсутствует, когда цена по запросу
+        priceOnRequest: { type: boolean }
+
+    DocumentServicePage:
+      allOf:
+        - $ref: '#/components/schemas/Page'
+        - type: object
+          required: [items]
+          properties:
+            items:
+              type: array
+              items: { $ref: '#/components/schemas/DocumentService' }
+
+    DocumentServiceOrderInput:
+      type: object
+      required: [serviceId, objectAddress, personalDataConsent]
+      properties:
+        serviceId: { type: string }
+        objectAddress: { type: string }
+        comment: { type: string }
+        personalDataConsent: { type: boolean }
+      additionalProperties: false
+
+    DocumentServiceOrder:
+      type: object
+      required: [id, serviceId, createdAt, state]
+      properties:
+        id: { type: string }
+        serviceId: { type: string }
+        createdAt: { type: string, format: date-time }
+        state: { type: string, enum: [accepted] }
+        message: { type: string }
+
+    SubscriberRole:
+      type: string
+      description: роль подписчика — перевозчик либо демонтажная компания
+      enum: [carrier, demolitionCompany]
+
+    SubscriptionState:
+      type: object
+      required: [state]
+      properties:
+        state:
+          type: string
+          description: |
+            `none` — подписки нет; `pending` — заявка оставлена, оплата идёт
+            вне сервиса; `active` — подписка подтверждена.
+          enum: [none, pending, active]
+        activeUntil: { type: string, format: date, nullable: true }
+
+    SubscriptionRequestInput:
+      type: object
+      required: [role, companyName, inn]
+      properties:
+        role: { $ref: '#/components/schemas/SubscriberRole' }
+        companyName: { type: string }
+        inn: { type: string, pattern: '^[0-9]{10}$|^[0-9]{12}$' }
+        registeredInAisOssig:
+          type: boolean
+          description: транспорт зарегистрирован в АИС ОССиГ (R-051)
+      additionalProperties: false
+
+    SubscriptionRequest:
+      type: object
+      required: [id, createdAt, subscription]
+      properties:
+        id: { type: string }
+        createdAt: { type: string, format: date-time }
+        subscription: { $ref: '#/components/schemas/SubscriptionState' }
+        message: { type: string }
+
+    SignInCodeRequest:
+      type: object
+      description: адрес входа — телефон либо почта; передаётся ровно один
+      minProperties: 1
+      maxProperties: 1
+      properties:
+        phone: { type: string, pattern: '^\+7[0-9]{10}$' }
+        email: { type: string, format: email }
+      additionalProperties: false
+
+    SignInCodeState:
+      type: object
+      required: [expiresIn, resendAfter]
+      properties:
+        expiresIn: { type: integer, description: сколько секунд код действует }
+        resendAfter: { type: integer, description: через сколько секунд можно запросить повторно }
+
+    SessionRequest:
+      type: object
+      required: [code, personalDataConsent]
+      properties:
+        phone: { type: string, pattern: '^\+7[0-9]{10}$' }
+        email: { type: string, format: email }
+        code: { type: string, minLength: 4, maxLength: 8 }
+        personalDataConsent: { type: boolean }
+      additionalProperties: false
+
+    Profile:
+      type: object
+      required: [id, subscription]
+      properties:
+        id: { type: string }
+        role:
+          allOf: [{ $ref: '#/components/schemas/SubscriberRole' }]
+          nullable: true
+        companyName: { type: string, nullable: true }
+        inn: { type: string, nullable: true }
+        registeredInAisOssig: { type: boolean, nullable: true }
+        subscription: { $ref: '#/components/schemas/SubscriptionState' }
+
+    Session:
+      type: object
+      required: [accessToken, expiresIn, profile]
+      properties:
+        accessToken: { type: string }
+        expiresIn: { type: integer, description: сколько секунд маркер действует }
+        profile: { $ref: '#/components/schemas/Profile' }
+
+    LandfillReviewInput:
+      type: object
+      required: [rating]
+      properties:
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        text: { type: string, maxLength: 2000 }
+      additionalProperties: false
+
+    LandfillReview:
+      type: object
+      required: [id, landfillId, rating, createdAt]
+      properties:
+        id: { type: string }
+        landfillId: { type: string }
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        text: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+
+    LandfillReviewPage:
+      allOf:
+        - $ref: '#/components/schemas/Page'
+        - type: object
+          required: [items, averageRating]
+          properties:
+            items:
+              type: array
+              items: { $ref: '#/components/schemas/LandfillReview' }
+            averageRating: { type: number, format: double, nullable: true }
