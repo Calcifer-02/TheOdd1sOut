@@ -55,8 +55,16 @@ public readonly record struct PageRequest
 ///
 /// @shared: imolt-shared
 /// @adr: ADR-0005
-public sealed record Page<T>(int Total, int Limit, int Offset, IReadOnlyList<T> Items)
+public sealed record Page<T>(int Total, int Limit, int Offset, IReadOnlyList<T> Items);
+
+/// Сборка страницы. Вынесена из обобщённого типа: у Page<T> статический член
+/// читается как принадлежащий конкретной подстановке, хотя таковым не является
+/// (правило CA1000).
+///
+/// @shared: imolt-shared
+/// @adr: ADR-0005
+public static class Page
 {
-  public static Page<T> Of(IReadOnlyList<T> items, int total, PageRequest request) =>
+  public static Page<T> Of<T>(IReadOnlyList<T> items, int total, PageRequest request) =>
       new(total, request.Limit, request.Offset, items);
 }

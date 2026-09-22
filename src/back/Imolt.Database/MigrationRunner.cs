@@ -111,7 +111,7 @@ public static class MigrationRunner
     return recorded;
   }
 
-  private static IReadOnlyList<Migration> Load()
+  private static List<Migration> Load()
   {
     var assembly = Assembly.GetExecutingAssembly();
 
