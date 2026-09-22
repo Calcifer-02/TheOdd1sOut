@@ -18,8 +18,8 @@ namespace Imolt.Api.Tests;
 ///
 ///   dotnet test tests/integration/Imolt.Api.Tests
 ///
-/// @ac: AC-011a
-/// @supports: R-011
+/// @ac: AC-067a
+/// @supports: R-067
 public sealed class HealthEndpointTests : IAsyncLifetime
 {
   private readonly PostgreSqlContainer database = new PostgreSqlBuilder("postgres:17-alpine")

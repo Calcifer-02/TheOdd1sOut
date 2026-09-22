@@ -84,7 +84,7 @@ checks:
     - 200
     expectedContentType: application/json
     requirements:
-    - R-067
+    - R-068
   - id: listWasteGroups
     name: Справочник групп отходов
     area: справочники

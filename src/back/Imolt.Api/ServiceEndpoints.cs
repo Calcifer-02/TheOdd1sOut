@@ -6,7 +6,7 @@ namespace Imolt.Api;
 /// и оркестратор решают, отдавать ли службе трафик, поэтому они отвечают
 /// раньше любой предметной логики и не зависят от неё.
 ///
-/// @req: R-067
+/// @req: R-067, R-068
 /// @adr: ADR-0004
 public static class ServiceEndpoints
 {
@@ -23,7 +23,7 @@ public static class ServiceEndpoints
 
     // Готовность: подтверждает, что служба видит базу данных по строке
     // подключения из окружения. Именно эта точка ловит разорванную связку
-    // api → db в compose (AC-067b, AC-067c).
+    // api → db в compose (AC-068a, AC-068b).
     app.MapGet("/ready", ReadinessAsync);
   }
 
