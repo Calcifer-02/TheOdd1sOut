@@ -45,7 +45,13 @@ public sealed class ApiContractTests
     private static readonly string[] HttpMethods =
         ["get", "post", "put", "patch", "delete", "head", "options", "trace"];
 
+    // Конфигурация проверки для организаторов трека: тот же перечень точек,
+    // что в договоре, в форме, которую требуют условия сдачи.
+    private static readonly string DeliveryConfigPath = Path.Combine(RepositoryRoot, "DATA-API.yaml");
+
     private static IDictionary<object, object>? contract;
+
+    private static IDictionary<object, object>? deliveryConfig;
 
     [Fact(DisplayName = "договор разбирается оснасткой OpenAPI без ошибок")]
     public async Task ContractParsesWithoutErrors()
@@ -164,6 +170,62 @@ public sealed class ApiContractTests
     // Идентификаторы берутся из строк таблиц реестра, а не из всего текста:
     // в пояснениях реестра встречаются примеры вроде «после R-999», и по ним
     // проверка молча признала бы существующим любой номер.
+    [Fact(DisplayName = "перечень точек DATA-API.yaml совпадает с договором")]
+    public void DeliveryChecksMatchTheContract()
+    {
+        var operations = Operations().ToDictionary(
+            operation => Text(operation.Operation, "operationId")!,
+            operation => operation);
+
+        foreach (var check in DeliveryChecks())
+        {
+            var id = Text(check, "id")!;
+            Assert.True(operations.ContainsKey(id), $"DATA-API.yaml: точки {id} нет в договоре");
+
+            var (path, method, operation) = operations[id];
+            Assert.Equal(method.ToUpperInvariant(), Text(check, "method"));
+            Assert.Equal(path, Text(check, "path"));
+            Assert.Equal(Text(operation, "x-состояние"), Text(check, "state"));
+            Assert.Equal(Text(operation, "x-область"), Text(check, "area"));
+
+            var declared = Map(operation, "responses").Keys
+                .OfType<string>()
+                .Where(code => code.StartsWith('2'))
+                .Select(int.Parse)
+                .OrderBy(code => code)
+                .ToList();
+            var expected = ((IEnumerable<object>)check["expectedStatus"])
+                .Select(code => int.Parse((string)code))
+                .OrderBy(code => code)
+                .ToList();
+            Assert.Equal(declared, expected);
+        }
+
+        Assert.Equal(operations.Count, DeliveryChecks().Count);
+    }
+
+    [Fact(DisplayName = "DATA-API.yaml объявляет тот же базовый адрес и только работающие проверки")]
+    public void DeliveryConfigNamesTheStandAndWhatItServes()
+    {
+        var servers = (IEnumerable<object>)Contract()["servers"];
+        var firstServer = (IDictionary<object, object>)servers.First();
+
+        Assert.Equal(Text(firstServer, "url"), Text(DeliveryConfig(), "baseUrl"));
+
+        var mandatory = ((IEnumerable<object>)DeliveryConfig()["mandatoryChecks"])
+            .Cast<string>()
+            .OrderBy(id => id, StringComparer.Ordinal)
+            .ToList();
+
+        var implemented = Operations()
+            .Where(operation => Text(operation.Operation, "x-состояние") == "реализовано")
+            .Select(operation => Text(operation.Operation, "operationId")!)
+            .OrderBy(id => id, StringComparer.Ordinal)
+            .ToList();
+
+        Assert.Equal(implemented, mandatory);
+    }
+
     private static IReadOnlyCollection<string> IdentifiersFromRegistry(string pattern)
         => IdentifiersFrom(RequirementsPath, pattern);
 
@@ -206,6 +268,20 @@ public sealed class ApiContractTests
 
         return contract;
     }
+
+    private static IDictionary<object, object> DeliveryConfig()
+    {
+        deliveryConfig ??= new DeserializerBuilder()
+            .Build()
+            .Deserialize<Dictionary<object, object>>(File.ReadAllText(DeliveryConfigPath));
+
+        return deliveryConfig;
+    }
+
+    private static List<IDictionary<object, object>> DeliveryChecks()
+        => ((IEnumerable<object>)DeliveryConfig()["checks"])
+            .Cast<IDictionary<object, object>>()
+            .ToList();
 
     private static IDictionary<object, object> Map(IDictionary<object, object> node, string key)
         => (IDictionary<object, object>)node[key];
