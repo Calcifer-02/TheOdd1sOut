@@ -8,7 +8,7 @@ namespace Imolt.Shared;
 /// @adr: ADR-0005
 public interface IClock
 {
-    DateTimeOffset Now { get; }
+  DateTimeOffset Now { get; }
 
-    DateOnly Today { get; }
+  DateOnly Today { get; }
 }

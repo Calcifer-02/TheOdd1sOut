@@ -22,53 +22,53 @@ namespace Imolt.Api.Tests;
 /// @supports: R-011
 public sealed class HealthEndpointTests : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer database = new PostgreSqlBuilder("postgres:17-alpine")
-        .WithDatabase("imolt")
-        .WithUsername("imolt")
-        .WithPassword("imolt")
-        .Build();
+  private readonly PostgreSqlContainer database = new PostgreSqlBuilder("postgres:17-alpine")
+      .WithDatabase("imolt")
+      .WithUsername("imolt")
+      .WithPassword("imolt")
+      .Build();
 
-    private ImoltApiFactory? service;
+  private ImoltApiFactory? service;
 
-    private HttpClient client = null!;
+  private HttpClient client = null!;
 
-    public async Task InitializeAsync()
-    {
-        await database.StartAsync();
+  public async Task InitializeAsync()
+  {
+    await database.StartAsync();
 
-        service = new ImoltApiFactory(database.GetConnectionString());
-        client = service.CreateClient();
-    }
+    service = new ImoltApiFactory(database.GetConnectionString());
+    client = service.CreateClient();
+  }
 
-    public async Task DisposeAsync()
-    {
-        client?.Dispose();
-        service?.Dispose();
-        await database.DisposeAsync();
-    }
+  public async Task DisposeAsync()
+  {
+    client?.Dispose();
+    service?.Dispose();
+    await database.DisposeAsync();
+  }
 
-    [Fact(DisplayName = "с остановленной базой служба остаётся живой, но перестаёт быть готовой")]
-    public async Task HealthSurvivesTheDatabaseOutage()
-    {
-        var beforeOutage = await client.GetAsync("/ready");
-        Assert.Equal(HttpStatusCode.OK, beforeOutage.StatusCode);
+  [Fact(DisplayName = "с остановленной базой служба остаётся живой, но перестаёт быть готовой")]
+  public async Task HealthSurvivesTheDatabaseOutage()
+  {
+    var beforeOutage = await client.GetAsync("/ready");
+    Assert.Equal(HttpStatusCode.OK, beforeOutage.StatusCode);
 
-        await database.StopAsync();
+    await database.StopAsync();
 
-        var health = await client.GetAsync("/health");
-        var body = await health.Content.ReadAsStringAsync();
+    var health = await client.GetAsync("/health");
+    var body = await health.Content.ReadAsStringAsync();
 
-        Assert.Equal(HttpStatusCode.OK, health.StatusCode);
+    Assert.Equal(HttpStatusCode.OK, health.StatusCode);
 
-        var violations = ContractOracle.FromContract().Violations("getHealth", 200, body);
-        Assert.True(violations.Count == 0, "ответ /health разошёлся с договором: " + string.Join("; ", violations));
+    var violations = ContractOracle.FromContract().Violations("getHealth", 200, body);
+    Assert.True(violations.Count == 0, "ответ /health разошёлся с договором: " + string.Join("; ", violations));
 
-        using var document = JsonDocument.Parse(body);
-        Assert.Equal("ok", document.RootElement.GetProperty("status").GetString());
+    using var document = JsonDocument.Parse(body);
+    Assert.Equal("ok", document.RootElement.GetProperty("status").GetString());
 
-        // Без этого утверждения проверка прошла бы и при неостановленной базе:
-        // тогда «живость не зависит от базы» ничем не подтверждалось бы.
-        var readiness = await client.GetAsync("/ready");
-        Assert.Equal(HttpStatusCode.ServiceUnavailable, readiness.StatusCode);
-    }
+    // Без этого утверждения проверка прошла бы и при неостановленной базе:
+    // тогда «живость не зависит от базы» ничем не подтверждалось бы.
+    var readiness = await client.GetAsync("/ready");
+    Assert.Equal(HttpStatusCode.ServiceUnavailable, readiness.StatusCode);
+  }
 }

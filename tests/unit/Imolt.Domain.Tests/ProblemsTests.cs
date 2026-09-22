@@ -20,33 +20,33 @@ namespace Imolt.Domain.Tests;
 /// @supports: R-011
 public sealed class ProblemsTests
 {
-    private const string ContractNamespace = "urn:imolt:problem:";
+  private const string ContractNamespace = "urn:imolt:problem:";
 
-    [Fact(DisplayName = "каждый код причины принадлежит пространству имён договора")]
-    public void EveryCodeBelongsToTheContractNamespace()
-    {
-        Assert.NotEmpty(Problems.All);
+  [Fact(DisplayName = "каждый код причины принадлежит пространству имён договора")]
+  public void EveryCodeBelongsToTheContractNamespace()
+  {
+    Assert.NotEmpty(Problems.All);
 
-        var foreign = Problems.All
-            .Where(code => !code.StartsWith(ContractNamespace, StringComparison.Ordinal))
-            .ToList();
+    var foreign = Problems.All
+        .Where(code => !code.StartsWith(ContractNamespace, StringComparison.Ordinal))
+        .ToList();
 
-        Assert.True(
-            foreign.Count == 0,
-            "коды вне пространства имён договора: " + string.Join(", ", foreign));
-    }
+    Assert.True(
+        foreign.Count == 0,
+        "коды вне пространства имён договора: " + string.Join(", ", foreign));
+  }
 
-    [Fact(DisplayName = "коды причин не повторяются")]
-    public void CodesAreNotRepeated()
-    {
-        var repeated = Problems.All
-            .GroupBy(code => code, StringComparer.Ordinal)
-            .Where(group => group.Count() > 1)
-            .Select(group => group.Key)
-            .ToList();
+  [Fact(DisplayName = "коды причин не повторяются")]
+  public void CodesAreNotRepeated()
+  {
+    var repeated = Problems.All
+        .GroupBy(code => code, StringComparer.Ordinal)
+        .Where(group => group.Count() > 1)
+        .Select(group => group.Key)
+        .ToList();
 
-        Assert.True(
-            repeated.Count == 0,
-            "коды объявлены дважды: " + string.Join(", ", repeated));
-    }
+    Assert.True(
+        repeated.Count == 0,
+        "коды объявлены дважды: " + string.Join(", ", repeated));
+  }
 }

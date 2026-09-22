@@ -18,24 +18,24 @@ namespace Imolt.Api.Tests;
 [Collection(ImoltApiCollection.Name)]
 public sealed class ProblemDocumentTests(ImoltApiStand stand)
 {
-    [Fact(DisplayName = "неизвестный путь отвечает документом об ошибке по RFC 9457")]
-    public async Task UnknownPathAnswersWithProblemDocument()
+  [Fact(DisplayName = "неизвестный путь отвечает документом об ошибке по RFC 9457")]
+  public async Task UnknownPathAnswersWithProblemDocument()
+  {
+    var response = await stand.Client.GetAsync("/v1/nope");
+    var body = await response.Content.ReadAsStringAsync();
+
+    Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+
+    using var document = JsonDocument.Parse(body);
+
+    string[] required = ["type", "title", "status"];
+
+    foreach (var field in required)
     {
-        var response = await stand.Client.GetAsync("/v1/nope");
-        var body = await response.Content.ReadAsStringAsync();
-
-        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
-
-        using var document = JsonDocument.Parse(body);
-
-        string[] required = ["type", "title", "status"];
-
-        foreach (var field in required)
-        {
-            Assert.True(
-                document.RootElement.TryGetProperty(field, out _),
-                $"в документе об ошибке нет обязательного по договору поля {field}: {body}");
-        }
+      Assert.True(
+          document.RootElement.TryGetProperty(field, out _),
+          $"в документе об ошибке нет обязательного по договору поля {field}: {body}");
     }
+  }
 }

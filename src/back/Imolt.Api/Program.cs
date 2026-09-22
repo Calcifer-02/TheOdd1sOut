@@ -21,13 +21,13 @@ CultureInfo.DefaultThreadCurrentUICulture = culture;
 // договор, а денежная сумма уходит числом вместо строки.
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
-    options.SerializerOptions.PropertyNamingPolicy = ImoltJson.Options.PropertyNamingPolicy;
-    options.SerializerOptions.PropertyNameCaseInsensitive = ImoltJson.Options.PropertyNameCaseInsensitive;
-    options.SerializerOptions.NumberHandling = ImoltJson.Options.NumberHandling;
-    foreach (var converter in ImoltJson.Options.Converters)
-    {
-        options.SerializerOptions.Converters.Add(converter);
-    }
+  options.SerializerOptions.PropertyNamingPolicy = ImoltJson.Options.PropertyNamingPolicy;
+  options.SerializerOptions.PropertyNameCaseInsensitive = ImoltJson.Options.PropertyNameCaseInsensitive;
+  options.SerializerOptions.NumberHandling = ImoltJson.Options.NumberHandling;
+  foreach (var converter in ImoltJson.Options.Converters)
+  {
+    options.SerializerOptions.Converters.Add(converter);
+  }
 });
 
 // Время приходит в области портом: домен не обращается к системным часам
@@ -37,11 +37,11 @@ builder.Services.AddSingleton<IClock, SystemClock>();
 var connectionString = builder.Configuration["DATABASE_URL"];
 if (!string.IsNullOrWhiteSpace(connectionString))
 {
-    // Пул соединений один на службу. Соединение на каждый запрос стоит
-    // дороже самого запроса и упирается в предел соединений базы.
-    // Источник заводится вручную, без отдельного пакета расширений: одна
-    // строка не стоит ещё одной зависимости в замке версий.
-    builder.Services.AddSingleton(_ => NpgsqlDataSource.Create(connectionString));
+  // Пул соединений один на службу. Соединение на каждый запрос стоит
+  // дороже самого запроса и упирается в предел соединений базы.
+  // Источник заводится вручную, без отдельного пакета расширений: одна
+  // строка не стоит ещё одной зависимости в замке версий.
+  builder.Services.AddSingleton(_ => NpgsqlDataSource.Create(connectionString));
 }
 
 var app = builder.Build();
@@ -53,9 +53,9 @@ var app = builder.Build();
 if (builder.Configuration.GetValue("IMOLT_APPLY_MIGRATIONS", false)
     && !string.IsNullOrWhiteSpace(connectionString))
 {
-    var applied = await MigrationRunner.ApplyAsync(connectionString, CancellationToken.None);
-    app.Logger.LogInformation(
-        "Схема базы данных приведена к последней версии, применено миграций: {Count}", applied.Count);
+  var applied = await MigrationRunner.ApplyAsync(connectionString, CancellationToken.None);
+  app.Logger.LogInformation(
+      "Схема базы данных приведена к последней версии, применено миграций: {Count}", applied.Count);
 }
 
 // Единственное место, где исключение превращается в документ об ошибке

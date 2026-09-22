@@ -19,66 +19,66 @@ namespace Imolt.Domain.Tests;
 /// @supports: R-061
 public sealed class MoneyTests
 {
-    // Образец взят из договора: components/schemas/Money.properties.amount.pattern
-    // (src/back/Imolt.Api/contracts/openapi.yaml). Сверку этой строки с самим
-    // файлом договора ведёт интеграционный проект — модульный работает без
-    // обращений к файловой системе.
-    private const string ContractAmountPattern = @"^-?[0-9]+\.[0-9]{2}$";
+  // Образец взят из договора: components/schemas/Money.properties.amount.pattern
+  // (src/back/Imolt.Api/contracts/openapi.yaml). Сверку этой строки с самим
+  // файлом договора ведёт интеграционный проект — модульный работает без
+  // обращений к файловой системе.
+  private const string ContractAmountPattern = @"^-?[0-9]+\.[0-9]{2}$";
 
-    [Fact(DisplayName = "сумма сериализуется с точкой, даже когда текущая культура ru-RU")]
-    public void MoneyKeepsDotSeparatorUnderRussianCulture()
+  [Fact(DisplayName = "сумма сериализуется с точкой, даже когда текущая культура ru-RU")]
+  public void MoneyKeepsDotSeparatorUnderRussianCulture()
+  {
+    // Служба выставляет ru-RU глобально (Program.cs, раздел о локали),
+    // поэтому подмена культуры здесь воспроизводит боевое окружение,
+    // а не выдумывает его.
+    var previous = CultureInfo.CurrentCulture;
+    CultureInfo.CurrentCulture = new CultureInfo("ru-RU");
+
+    try
     {
-        // Служба выставляет ru-RU глобально (Program.cs, раздел о локали),
-        // поэтому подмена культуры здесь воспроизводит боевое окружение,
-        // а не выдумывает его.
-        var previous = CultureInfo.CurrentCulture;
-        CultureInfo.CurrentCulture = new CultureInfo("ru-RU");
+      var json = JsonSerializer.Serialize(Money.Rubles(10800m), ImoltJson.Options);
 
-        try
-        {
-            var json = JsonSerializer.Serialize(Money.Rubles(10800m), ImoltJson.Options);
-
-            Assert.Equal("{\"amount\":\"10800.00\",\"currency\":\"RUB\"}", json);
-        }
-        finally
-        {
-            CultureInfo.CurrentCulture = previous;
-        }
+      Assert.Equal("{\"amount\":\"10800.00\",\"currency\":\"RUB\"}", json);
     }
-
-    [Theory(DisplayName = "сумма сериализуется ровно с двумя знаками после точки")]
-    [InlineData(10800, "10800.00")]
-    [InlineData(19800.5, "19800.50")]
-    public void MoneyAlwaysCarriesTwoFractionDigits(decimal amount, string expected)
+    finally
     {
-        Assert.Equal(expected, SerializedAmount(Money.Rubles(amount)));
+      CultureInfo.CurrentCulture = previous;
     }
+  }
 
-    [Fact(DisplayName = "сериализованная сумма совпадает с образцом договора")]
-    public void SerializedAmountMatchesContractPattern()
-    {
-        var serialized = SerializedAmount(Money.Rubles(19800m));
+  [Theory(DisplayName = "сумма сериализуется ровно с двумя знаками после точки")]
+  [InlineData(10800, "10800.00")]
+  [InlineData(19800.5, "19800.50")]
+  public void MoneyAlwaysCarriesTwoFractionDigits(decimal amount, string expected)
+  {
+    Assert.Equal(expected, SerializedAmount(Money.Rubles(amount)));
+  }
 
-        Assert.Matches(ContractAmountPattern, serialized);
-    }
+  [Fact(DisplayName = "сериализованная сумма совпадает с образцом договора")]
+  public void SerializedAmountMatchesContractPattern()
+  {
+    var serialized = SerializedAmount(Money.Rubles(19800m));
 
-    [Fact(DisplayName = "отрицательная сумма сериализуется со знаком и проходит образец договора")]
-    public void NegativeAmountKeepsSignAndMatchesContractPattern()
-    {
-        var serialized = SerializedAmount(Money.Rubles(-19800m));
+    Assert.Matches(ContractAmountPattern, serialized);
+  }
 
-        Assert.Equal("-19800.00", serialized);
-        Assert.Matches(ContractAmountPattern, serialized);
-    }
+  [Fact(DisplayName = "отрицательная сумма сериализуется со знаком и проходит образец договора")]
+  public void NegativeAmountKeepsSignAndMatchesContractPattern()
+  {
+    var serialized = SerializedAmount(Money.Rubles(-19800m));
 
-    // Сумма достаётся из готового документа, а не из свойства объекта:
-    // договор нарушает именно то представление, которое уходит по сети.
-    private static string SerializedAmount(Money money)
-    {
-        using var document = JsonDocument.Parse(JsonSerializer.Serialize(money, ImoltJson.Options));
-        var amount = document.RootElement.GetProperty("amount");
+    Assert.Equal("-19800.00", serialized);
+    Assert.Matches(ContractAmountPattern, serialized);
+  }
 
-        Assert.Equal(JsonValueKind.String, amount.ValueKind);
-        return amount.GetString()!;
-    }
+  // Сумма достаётся из готового документа, а не из свойства объекта:
+  // договор нарушает именно то представление, которое уходит по сети.
+  private static string SerializedAmount(Money money)
+  {
+    using var document = JsonDocument.Parse(JsonSerializer.Serialize(money, ImoltJson.Options));
+    var amount = document.RootElement.GetProperty("amount");
+
+    Assert.Equal(JsonValueKind.String, amount.ValueKind);
+    return amount.GetString()!;
+  }
 }

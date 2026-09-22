@@ -16,24 +16,24 @@ namespace Imolt.Api.Tests;
 /// @supports: R-011
 public sealed class ProblemCodesTests
 {
-    [Fact(DisplayName = "перечень кодов причин в коде совпадает с договором")]
-    public void ProblemCodesMatchTheContract()
-    {
-        var declared = ContractOracle.FromContract().ProblemCodes();
-        var implemented = Problems.All.ToHashSet(StringComparer.Ordinal);
+  [Fact(DisplayName = "перечень кодов причин в коде совпадает с договором")]
+  public void ProblemCodesMatchTheContract()
+  {
+    var declared = ContractOracle.FromContract().ProblemCodes();
+    var implemented = Problems.All.ToHashSet(StringComparer.Ordinal);
 
-        var missing = declared.Except(implemented, StringComparer.Ordinal)
-            .OrderBy(code => code, StringComparer.Ordinal)
-            .ToList();
-        var extra = implemented.Except(declared, StringComparer.Ordinal)
-            .OrderBy(code => code, StringComparer.Ordinal)
-            .ToList();
+    var missing = declared.Except(implemented, StringComparer.Ordinal)
+        .OrderBy(code => code, StringComparer.Ordinal)
+        .ToList();
+    var extra = implemented.Except(declared, StringComparer.Ordinal)
+        .OrderBy(code => code, StringComparer.Ordinal)
+        .ToList();
 
-        Assert.True(
-            missing.Count == 0,
-            "договор объявляет коды, которых нет в перечне службы: " + string.Join(", ", missing));
-        Assert.True(
-            extra.Count == 0,
-            "служба объявляет коды, которых нет в договоре: " + string.Join(", ", extra));
-    }
+    Assert.True(
+        missing.Count == 0,
+        "договор объявляет коды, которых нет в перечне службы: " + string.Join(", ", missing));
+    Assert.True(
+        extra.Count == 0,
+        "служба объявляет коды, которых нет в договоре: " + string.Join(", ", extra));
+  }
 }

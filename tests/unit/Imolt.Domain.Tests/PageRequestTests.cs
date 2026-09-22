@@ -19,34 +19,34 @@ namespace Imolt.Domain.Tests;
 /// @supports: R-060
 public sealed class PageRequestTests
 {
-    [Fact(DisplayName = "без параметров страница берёт значения по умолчанию из договора")]
-    public void MissingParametersFallBackToContractDefaults()
-    {
-        var page = PageRequest.Create(null, null);
+  [Fact(DisplayName = "без параметров страница берёт значения по умолчанию из договора")]
+  public void MissingParametersFallBackToContractDefaults()
+  {
+    var page = PageRequest.Create(null, null);
 
-        Assert.Equal(10, page.Limit);
-        Assert.Equal(0, page.Offset);
-    }
+    Assert.Equal(10, page.Limit);
+    Assert.Equal(0, page.Offset);
+  }
 
-    [Theory(DisplayName = "значение вне границ договора отвергается как ошибка проверки данных")]
-    [InlineData(101, null, "limit")]
-    [InlineData(0, null, "limit")]
-    [InlineData(null, -1, "offset")]
-    public void OutOfRangeValuesAreRejected(int? limit, int? offset, string expectedParameter)
-    {
-        var failure = Assert.Throws<ArgumentOutOfRangeException>(() => PageRequest.Create(limit, offset));
+  [Theory(DisplayName = "значение вне границ договора отвергается как ошибка проверки данных")]
+  [InlineData(101, null, "limit")]
+  [InlineData(0, null, "limit")]
+  [InlineData(null, -1, "offset")]
+  public void OutOfRangeValuesAreRejected(int? limit, int? offset, string expectedParameter)
+  {
+    var failure = Assert.Throws<ArgumentOutOfRangeException>(() => PageRequest.Create(limit, offset));
 
-        // Имя параметра — не украшение: по нему служба собирает поле errors
-        // документа об ошибке, а пользователь узнаёт, что именно поправить.
-        Assert.Equal(expectedParameter, failure.ParamName);
-    }
+    // Имя параметра — не украшение: по нему служба собирает поле errors
+    // документа об ошибке, а пользователь узнаёт, что именно поправить.
+    Assert.Equal(expectedParameter, failure.ParamName);
+  }
 
-    [Fact(DisplayName = "верхняя граница limit допустима: договор объявляет её включительно")]
-    public void UpperBoundIsInclusive()
-    {
-        var page = PageRequest.Create(100, 0);
+  [Fact(DisplayName = "верхняя граница limit допустима: договор объявляет её включительно")]
+  public void UpperBoundIsInclusive()
+  {
+    var page = PageRequest.Create(100, 0);
 
-        Assert.Equal(100, page.Limit);
-        Assert.Equal(0, page.Offset);
-    }
+    Assert.Equal(100, page.Limit);
+    Assert.Equal(0, page.Offset);
+  }
 }

@@ -9,44 +9,44 @@ namespace Imolt.Shared;
 /// @adr: ADR-0005
 public readonly record struct PageRequest
 {
-    private PageRequest(int limit, int offset)
+  private PageRequest(int limit, int offset)
+  {
+    Limit = limit;
+    Offset = offset;
+  }
+
+  /// Первая страница — десять записей (R-029, R-060).
+  public const int DefaultLimit = 10;
+
+  public const int MaxLimit = 100;
+
+  public int Limit { get; }
+
+  public int Offset { get; }
+
+  public static PageRequest Create(int? limit, int? offset)
+  {
+    var resolvedLimit = limit ?? DefaultLimit;
+    var resolvedOffset = offset ?? 0;
+
+    if (resolvedLimit is < 1 or > MaxLimit)
     {
-        Limit = limit;
-        Offset = offset;
+      throw new ArgumentOutOfRangeException(
+          nameof(limit),
+          resolvedLimit,
+          $"число записей на странице — от 1 до {MaxLimit}");
     }
 
-    /// Первая страница — десять записей (R-029, R-060).
-    public const int DefaultLimit = 10;
-
-    public const int MaxLimit = 100;
-
-    public int Limit { get; }
-
-    public int Offset { get; }
-
-    public static PageRequest Create(int? limit, int? offset)
+    if (resolvedOffset < 0)
     {
-        var resolvedLimit = limit ?? DefaultLimit;
-        var resolvedOffset = offset ?? 0;
-
-        if (resolvedLimit is < 1 or > MaxLimit)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(limit),
-                resolvedLimit,
-                $"число записей на странице — от 1 до {MaxLimit}");
-        }
-
-        if (resolvedOffset < 0)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(offset),
-                resolvedOffset,
-                "смещение не может быть отрицательным");
-        }
-
-        return new PageRequest(resolvedLimit, resolvedOffset);
+      throw new ArgumentOutOfRangeException(
+          nameof(offset),
+          resolvedOffset,
+          "смещение не может быть отрицательным");
     }
+
+    return new PageRequest(resolvedLimit, resolvedOffset);
+  }
 }
 
 /// Страница списка в форме договора: общее число записей, предел, смещение и
@@ -57,6 +57,6 @@ public readonly record struct PageRequest
 /// @adr: ADR-0005
 public sealed record Page<T>(int Total, int Limit, int Offset, IReadOnlyList<T> Items)
 {
-    public static Page<T> Of(IReadOnlyList<T> items, int total, PageRequest request) =>
-        new(total, request.Limit, request.Offset, items);
+  public static Page<T> Of(IReadOnlyList<T> items, int total, PageRequest request) =>
+      new(total, request.Limit, request.Offset, items);
 }

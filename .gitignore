@@ -60,3 +60,6 @@ obj/
 ux/support.js
 ux/doc-page.js
 ux/image-slot.js
+
+# Отчёты средств и каталоги посторонних инструментов: порождаются локально.
+.qoder/
