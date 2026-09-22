@@ -71,7 +71,7 @@ checks:
     - 200
     expectedContentType: application/json
     requirements:
-    - R-011
+    - R-067
   - id: getReadiness
     name: Готовность службы
     area: служебное
@@ -84,7 +84,7 @@ checks:
     - 200
     expectedContentType: application/json
     requirements:
-    - R-011
+    - R-067
   - id: listWasteGroups
     name: Справочник групп отходов
     area: справочники

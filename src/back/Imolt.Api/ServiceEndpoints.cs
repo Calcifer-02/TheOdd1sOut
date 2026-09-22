@@ -6,7 +6,7 @@ namespace Imolt.Api;
 /// и оркестратор решают, отдавать ли службе трафик, поэтому они отвечают
 /// раньше любой предметной логики и не зависят от неё.
 ///
-/// @req: R-011
+/// @req: R-067
 /// @adr: ADR-0004
 public static class ServiceEndpoints
 {
@@ -14,7 +14,7 @@ public static class ServiceEndpoints
   {
     // Живость: отвечает, пока процесс жив. Внешних зависимостей не
     // трогает — иначе перезапуск базы данных выглядел бы как отказ самой
-    // службы (критерий приёмки AC-011a).
+    // службы (критерий приёмки AC-067a).
     app.MapGet("/health", () => Results.Ok(new
     {
       service = "api",
@@ -23,7 +23,7 @@ public static class ServiceEndpoints
 
     // Готовность: подтверждает, что служба видит базу данных по строке
     // подключения из окружения. Именно эта точка ловит разорванную связку
-    // api → db в compose (AC-011b, AC-011c).
+    // api → db в compose (AC-067b, AC-067c).
     app.MapGet("/ready", ReadinessAsync);
   }
 
