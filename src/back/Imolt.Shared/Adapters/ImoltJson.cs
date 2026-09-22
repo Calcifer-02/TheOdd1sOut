@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.RegularExpressions;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -49,10 +50,7 @@ internal sealed class MoneyJsonConverter : JsonConverter<Money>
       switch (name)
       {
         case "amount":
-          amount = decimal.Parse(
-              reader.GetString() ?? throw new JsonException("поле amount пусто"),
-              NumberStyles.Number,
-              CultureInfo.InvariantCulture);
+          amount = ParseAmount(reader.GetString());
           break;
         case "currency":
           currency = reader.GetString();
@@ -72,6 +70,31 @@ internal sealed class MoneyJsonConverter : JsonConverter<Money>
 
     return Money.Rubles(amount.Value);
   }
+
+  /// Сумма сверяется с образцом договора до разбора. Без этого инвариантная
+  /// культура читает запятую как разделитель разрядов, и «10800,00» молча
+  /// становится 1 080 000: договор нарушен, а ошибки нет.
+  private static decimal ParseAmount(string? raw)
+  {
+    if (string.IsNullOrEmpty(raw))
+    {
+      throw new JsonException("поле amount пусто");
+    }
+
+    if (!AmountFormat.IsMatch(raw))
+    {
+      throw new JsonException(
+          $"сумма «{raw}» не совпадает с образцом договора «{Money.AmountPattern}»");
+    }
+
+    return decimal.Parse(
+        raw,
+        NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint,
+        CultureInfo.InvariantCulture);
+  }
+
+  private static readonly Regex AmountFormat =
+      new(Money.AmountPattern, RegexOptions.CultureInvariant);
 
   public override void Write(Utf8JsonWriter writer, Money value, JsonSerializerOptions options)
   {

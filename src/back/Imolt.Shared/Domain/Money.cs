@@ -17,6 +17,11 @@ public readonly record struct Money
   /// Единственная валюта сервиса: расчёт ведётся по Москве и области (R-061).
   public const string RubleCode = "RUB";
 
+  /// Образец суммы на границе службы, дословно из договора
+  /// (components/schemas/Money.properties.amount.pattern). Держится здесь же,
+  /// чтобы разбор и сборка не разошлись между собой.
+  public const string AmountPattern = @"^-?[0-9]+\.[0-9]{2}$";
+
   public decimal Amount { get; }
 
   public string Currency { get; }
