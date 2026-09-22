@@ -4,8 +4,10 @@
 #
 # Проверка фальсифицируема: она падает, если сломать compose.yaml, убрать
 # службу, разорвать проксирование мини-приложения на расчётную часть,
-# отобрать у расчётной части доступ к базе данных или перестать отдавать
-# договор API и страницу Swagger UI, по которым работает интерфейсная часть.
+# отобрать у расчётной части доступ к базе данных, перестать отдавать
+# договор API и страницу Swagger UI, по которым работает интерфейсная часть,
+# или сломать расчёт — его числа сверяются с примером договора, а не с
+# кодом ответа.
 #
 # Запуск:  sh tests/devops/проверка-запуска.sh
 # Условия трека, разд. 6.1 п. 3 (запуск одной командой) и п. 5 (состав
@@ -107,7 +109,75 @@ proverit "мини-приложение: страница" 200 "http://localhost
 proverit "мини-приложение → расчётная часть через /api" 200 "http://localhost:${MINIAPP_PORT}/api/health"
 
 echo
-echo "== 5. Схема базы данных"
+echo "== 5. Расчёт от края до края"
+# Не «точка отвечает», а «расчёт считает»: числа сверяются с каноническим
+# примером договора (20 т лома бетона, полигон «Восток» в 45 км — 10 800,00 ₽
+# перевозки, 9 000,00 ₽ утилизации, 19 800,00 ₽ итого). Код 201 сам по себе
+# прошёл бы и на нулевых суммах.
+# Тело запроса уходит файлом, а не доводом командной строки: в адресе есть
+# кириллица, и на Windows довод доезжает до curl в кодировке консоли — служба
+# получает обрывок вместо UTF-8 и отвечает отказом разбора.
+ZAPROS=$(mktemp)
+cat > "$ZAPROS" <<'JSON'
+{"pickupAddress":{"value":"г Москва, ул Годовикова, д 9","coordinates":{"latitude":55.8055,"longitude":37.6206},"area":"moscow"},"items":[{"wasteGroupId":"beton-lom","quantity":{"value":20,"unit":"t"}}],"disposalRequired":true,"distanceFilter":{"mode":"atMost","km":60}}
+JSON
+RASCHET=$(curl -s --max-time 15 -X POST -H 'Content-Type: application/json'   --data-binary "@$ZAPROS" "http://localhost:${API_PORT}/v1/calculations" 2>/dev/null)
+rm -f "$ZAPROS"
+# Идентификатор — первое значение тела ответа: схема Calculation ставит
+# `id` первым полем. Разбирать JSON в оболочке нечем, а тянуть сюда jq
+# значило бы добавить проверке зависимость ради одной строки.
+ID_RASCHETA=$(printf '%s' "$RASCHET" | cut -d'"' -f4)
+
+if [ -n "$ID_RASCHETA" ]; then
+  soobshchit "расчёт: создан ($ID_RASCHETA)" "ок"
+else
+  soobshchit "расчёт: создан" "ОТКАЗ (идентификатора в ответе нет)"
+  OSHIBKI=$((OSHIBKI + 1))
+fi
+
+for summa in 10800.00 9000.00 19800.00; do
+  if printf '%s' "$RASCHET" | grep -q "\"amount\":\"${summa}\""; then
+    soobshchit "расчёт: сумма ${summa} из примера договора" "ок"
+  else
+    soobshchit "расчёт: сумма ${summa} из примера договора" "ОТКАЗ (нет в ответе)"
+    OSHIBKI=$((OSHIBKI + 1))
+  fi
+done
+
+if [ -n "$ID_RASCHETA" ]; then
+  proverit "расчёт: чтение по идентификатору" 200     "http://localhost:${API_PORT}/v1/calculations/${ID_RASCHETA}"
+  proverit "расчёт: варианты размещения" 200     "http://localhost:${API_PORT}/v1/calculations/${ID_RASCHETA}/options?wasteGroupId=beton-lom&distanceKm=60"
+
+  VYBOR=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 -X PUT     -H 'Content-Type: application/json'     -d '{"entries":[{"wasteGroupId":"beton-lom","landfillId":"vostok-timohovo"}]}'     "http://localhost:${API_PORT}/v1/calculations/${ID_RASCHETA}/selection" 2>/dev/null)
+  if [ "$VYBOR" = "200" ]; then
+    soobshchit "расчёт: выбор полигона сохранён" "ок (200)"
+  else
+    soobshchit "расчёт: выбор полигона сохранён" "ОТКАЗ (получен ${VYBOR:-нет ответа})"
+    OSHIBKI=$((OSHIBKI + 1))
+  fi
+
+  # Несходящееся распределение обязано быть отвергнутым целиком: 12 из 20 тонн.
+  RAZLOZHENIE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 -X PUT     -H 'Content-Type: application/json'     -d '{"entries":[{"wasteGroupId":"beton-lom","landfillId":"vostok-timohovo","quantity":{"value":12,"unit":"t"}}]}'     "http://localhost:${API_PORT}/v1/calculations/${ID_RASCHETA}/allocation" 2>/dev/null)
+  if [ "$RAZLOZHENIE" = "422" ]; then
+    soobshchit "расчёт: несходящееся распределение отвергнуто" "ок (422)"
+  else
+    soobshchit "расчёт: несходящееся распределение отвергнуто" "ОТКАЗ (получен ${RAZLOZHENIE:-нет ответа})"
+    OSHIBKI=$((OSHIBKI + 1))
+  fi
+fi
+
+# Пересчёт мер — операция POST, и проверяется не код, а результат: 15 м³
+# древесины при плотности 0,5 т/м³ дают 7,5 тонны (начальный набор данных).
+PERESCHET=$(curl -s --max-time 15 -X POST -H 'Content-Type: application/json'   -d '{"items":[{"wasteGroupId":"drevesina","quantity":{"value":15,"unit":"m3"}}]}'   "http://localhost:${API_PORT}/v1/amount-conversions" 2>/dev/null)
+if printf '%s' "$PERESCHET" | grep -q '"tons":7.5'; then
+  soobshchit "расчёт: 15 м³ древесины — это 7,5 т" "ок"
+else
+  soobshchit "расчёт: 15 м³ древесины — это 7,5 т" "ОТКАЗ (ответ: ${PERESCHET:-нет ответа})"
+  OSHIBKI=$((OSHIBKI + 1))
+fi
+
+echo
+echo "== 6. Схема базы данных"
 # Схему накатывает расчётная часть при старте, когда включён признак
 # IMOLT_APPLY_MIGRATIONS (ADR-0002). Проверяем не «база отвечает», а
 # «схема на месте»: пустая база тоже отвечает, и отличить это иначе нельзя.
@@ -121,7 +191,7 @@ else
 fi
 
 echo
-echo "== 6. Приём обновления чат-ботом"
+echo "== 7. Приём обновления чат-ботом"
 kod=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 \
   -X POST -H 'Content-Type: application/json' -d '{"проверка":true}' \
   "http://localhost:${BOT_PORT}/max/webhook" 2>/dev/null)

@@ -4,10 +4,11 @@ using Xunit;
 
 namespace Imolt.Api.Tests;
 
-/// Общая часть проверок области «справочники»: сверка ответа с договором и
-/// разбор страницы. Живёт одним местом, потому что иначе договорный оракул
-/// вызывался бы в каждой проверке по-своему и форма ответа проверялась бы
-/// где-то строже, где-то мягче.
+/// Общая часть проверок точек договора: сверка ответа с договором и разбор
+/// страницы. Живёт одним местом, потому что иначе договорный оракул вызывался
+/// бы в каждой проверке по-своему и форма ответа проверялась бы где-то строже,
+/// где-то мягче. Заведена для области «справочники», областью «расчёт»
+/// переиспользуется: оракул общий, и второй его обёртки быть не должно.
 ///
 /// @supports: R-011
 internal static class ReferenceChecks
@@ -17,15 +18,25 @@ internal static class ReferenceChecks
   private static readonly Lazy<ContractOracle> Oracle = new(ContractOracle.FromContract);
 
   /// Успешный ответ: код 200 и тело, совпадающее со схемой операции.
-  public static async Task<JsonDocument> OkAsync(HttpResponseMessage response, string operationId)
+  public static Task<JsonDocument> OkAsync(HttpResponseMessage response, string operationId)
+      => SuccessAsync(response, operationId, HttpStatusCode.OK);
+
+  /// Успешный ответ с объявленным договором кодом состояния. Код передаётся
+  /// отдельно, потому что создание расчёта отвечает 201, а не 200, и схема
+  /// сверяется с той записью договора, которая этому коду соответствует.
+  public static async Task<JsonDocument> SuccessAsync(
+      HttpResponseMessage response,
+      string operationId,
+      HttpStatusCode expectedStatus)
   {
     var body = await response.Content.ReadAsStringAsync();
 
     Assert.True(
-        response.StatusCode == HttpStatusCode.OK,
-        $"операция {operationId} ответила кодом {(int)response.StatusCode} вместо 200: {Shorten(body)}");
+        response.StatusCode == expectedStatus,
+        $"операция {operationId} ответила кодом {(int)response.StatusCode} "
+            + $"вместо {(int)expectedStatus}: {Shorten(body)}");
 
-    var violations = Oracle.Value.Violations(operationId, 200, body);
+    var violations = Oracle.Value.Violations(operationId, (int)expectedStatus, body);
     Assert.True(
         violations.Count == 0,
         $"ответ операции {operationId} разошёлся с договором: {string.Join("; ", violations)}");

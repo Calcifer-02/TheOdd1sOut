@@ -29,6 +29,11 @@ public interface ILandfillRegistry
 
   Task<bool> ExistsAsync(string id, CancellationToken cancellationToken);
 
+  /// Все полигоны, принимающие заданную группу отходов, — без страниц.
+  /// Подбор вариантов размещения обязан видеть список целиком: полигон,
+  /// не поместившийся на страницу, молча выпал бы из расчёта (R-004, R-040).
+  Task<IReadOnlyList<Landfill>> AcceptingAsync(string wasteGroupId, CancellationToken cancellationToken);
+
   /// Средняя оценка пуста, когда отзывов нет: ноль означал бы «оценили на
   /// ноль», а такой оценки в договоре нет (R-031).
   Task<(Page<LandfillReview> Reviews, double? AverageRating)> ReviewsAsync(

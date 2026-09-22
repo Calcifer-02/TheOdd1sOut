@@ -629,7 +629,7 @@ paths:
       x-требования: [R-014, R-015, R-016]
       x-вопросы: [Q-009]
       x-экран: [Э-02]
-      x-состояние: объявлено
+      x-состояние: реализовано
       requestBody:
         required: true
         content:
@@ -681,7 +681,7 @@ paths:
       x-требования: [R-002, R-003, R-018, R-019, R-020, R-021, R-022, R-058, R-059, R-060]
       x-вопросы: [Q-008, Q-010]
       x-экран: [Э-01, Э-02, Э-03, Э-12]
-      x-состояние: объявлено
+      x-состояние: реализовано
       requestBody:
         required: true
         content:
@@ -701,7 +701,7 @@ paths:
                     - wasteGroupId: drevesina
                       quantity: { value: 15, unit: m3 }
                   disposalRequired: true
-                  distanceFilter: { mode: atMost, km: 50 }
+                  distanceFilter: { mode: atMost, km: 60 }
       responses:
         '201':
           description: расчёт выполнен
@@ -751,7 +751,7 @@ paths:
       x-область: расчёт
       x-требования: [R-002, R-019, R-048]
       x-экран: [Э-03, Э-04]
-      x-состояние: объявлено
+      x-состояние: реализовано
       responses:
         '200':
           description: расчёт
@@ -777,7 +777,7 @@ paths:
       x-область: расчёт
       x-требования: [R-004, R-023, R-024, R-025, R-026, R-029, R-060]
       x-экран: [Э-03, Э-04, Э-12]
-      x-состояние: объявлено
+      x-состояние: реализовано
       parameters:
         - name: wasteGroupId
           in: query
@@ -844,7 +844,7 @@ paths:
       x-область: расчёт
       x-требования: [R-027, R-028, R-032]
       x-экран: [Э-04, Э-12]
-      x-состояние: объявлено
+      x-состояние: реализовано
       requestBody:
         required: true
         content:
@@ -888,7 +888,7 @@ paths:
       x-область: расчёт
       x-требования: [R-030, R-032]
       x-экран: [Э-06]
-      x-состояние: объявлено
+      x-состояние: реализовано
       requestBody:
         required: true
         content:
@@ -1431,7 +1431,7 @@ components:
           coordinates: { latitude: 55.8055, longitude: 37.6206 }
           area: moscow
         disposalRequired: true
-        distanceFilter: { mode: atMost, km: 50 }
+        distanceFilter: { mode: atMost, km: 60 }
         dataFreshness:
           pricesUpdatedAt: '2026-09-17'
           statusesUpdatedAt: '2026-09-17'

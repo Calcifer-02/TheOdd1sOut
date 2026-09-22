@@ -52,6 +52,12 @@ mandatoryChecks:
   - listLandfillReviews
   - getDataFreshness
   - suggestAddresses
+  - convertAmounts
+  - createCalculation
+  - getCalculation
+  - listPlacementOptions
+  - setCalculationSelection
+  - setCalculationAllocation
 
 # Что именно не определено заказчиком и потому не проверяется по существу:
 # разграничение доступа между гостем и подпиской — открытый вопрос Q-011.
@@ -338,7 +344,7 @@ checks:
   - id: convertAmounts
     name: Пересчитать объём между тоннами и кубометрами
     area: расчёт
-    state: объявлено
+    state: реализовано
     method: POST
     path: /v1/amount-conversions
     role: guest
@@ -375,7 +381,7 @@ checks:
   - id: createCalculation
     name: Рассчитать стоимость вывоза и утилизации
     area: расчёт
-    state: объявлено
+    state: реализовано
     method: POST
     path: /v1/calculations
     role: guest
@@ -400,7 +406,7 @@ checks:
   - id: getCalculation
     name: Расчёт целиком
     area: расчёт
-    state: объявлено
+    state: реализовано
     method: GET
     path: /v1/calculations/{calculationId}
     role: guest
@@ -415,7 +421,7 @@ checks:
   - id: listPlacementOptions
     name: Варианты размещения по группе отходов
     area: расчёт
-    state: объявлено
+    state: реализовано
     method: GET
     path: /v1/calculations/{calculationId}/options
     role: guest
@@ -448,7 +454,7 @@ checks:
   - id: setCalculationSelection
     name: Выбрать полигоны и получить сводку
     area: расчёт
-    state: объявлено
+    state: реализовано
     method: PUT
     path: /v1/calculations/{calculationId}/selection
     role: guest
@@ -463,7 +469,7 @@ checks:
   - id: setCalculationAllocation
     name: Распределить объём между выбранными полигонами
     area: расчёт
-    state: объявлено
+    state: реализовано
     method: PUT
     path: /v1/calculations/{calculationId}/allocation
     role: guest

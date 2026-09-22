@@ -132,10 +132,9 @@ public sealed class ApiContractTests
   [Fact(DisplayName = "реализованными объявлены только те пути, которые служба действительно отдаёт")]
   public void OnlyServedPathsAreMarkedImplemented()
   {
-    // Расчётная часть пока отвечает только на точки живости и готовности.
-    // Пометка «реализовано» у чего-то ещё означала бы, что договор выдаёт
-    // объявление за работающий код. Строку ниже двигает тот, кто написал
-    // обработчик, — вместе с проверкой запуска.
+    // Пометка «реализовано» у пути, которого служба не отдаёт, означала бы,
+    // что договор выдаёт объявление за работающий код. Строку ниже двигает
+    // тот, кто написал обработчик, — вместе с проверкой запуска.
     string[] servedByService =
     [
       "/health",
@@ -147,6 +146,12 @@ public sealed class ApiContractTests
       "/v1/landfills/{landfillId}/reviews",
       "/v1/data-freshness",
       "/v1/address-suggestions",
+      "/v1/amount-conversions",
+      "/v1/calculations",
+      "/v1/calculations/{calculationId}",
+      "/v1/calculations/{calculationId}/options",
+      "/v1/calculations/{calculationId}/selection",
+      "/v1/calculations/{calculationId}/allocation",
     ];
 
     var implemented = Operations()

@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.Json;
+using Imolt.Calculations.Ports;
 using Imolt.References.Ports;
 using Imolt.Shared;
 using Microsoft.AspNetCore.Diagnostics;
@@ -38,6 +39,55 @@ public static class ProblemResponses
                 "Запрос не прошёл проверку",
                 request.Message,
                 [new ProblemField(request.ParamName ?? string.Empty, request.Message)]);
+            break;
+
+          // Запись справочника не заведена. Отдельный исход, а не ошибка
+          // запроса: клиент назвал существующее поле, но записи за ним нет.
+          case ReferenceMissingException missing:
+            await WriteAsync(
+                context,
+                StatusCodes.Status404NotFound,
+                Problems.NotFound,
+                "Запись не найдена",
+                missing.Message,
+                []);
+            break;
+
+          // Распределение не сходится с объёмом группы. Договор объявляет
+          // 422: запрос разобран, но нарушает правило предметной области.
+          case AllocationMismatchException mismatch:
+            await WriteAsync(
+                context,
+                StatusCodes.Status422UnprocessableEntity,
+                Problems.AllocationMismatch,
+                "Распределение не сходится с объёмом",
+                mismatch.Message,
+                []);
+            break;
+
+          // Полигон не годится для этой строки расчёта. Тоже 422, но код
+          // причины другой: клиент ветвится по нему, а не по заголовку.
+          case PlacementUnavailableException placement:
+            await WriteAsync(
+                context,
+                StatusCodes.Status422UnprocessableEntity,
+                Problems.Validation,
+                "Полигон недоступен для этой группы отходов",
+                placement.Message,
+                []);
+            break;
+
+          // Плеча перевозки нет. Заголовка «повторите через N секунд» здесь
+          // нет намеренно: расстояние не появится само по себе, и обещание
+          // повтора было бы ложным (R-020).
+          case RoadDistanceUnavailableException distance:
+            await WriteAsync(
+                context,
+                StatusCodes.Status503ServiceUnavailable,
+                Problems.DistanceServiceUnavailable,
+                "Не удалось рассчитать расстояния",
+                distance.Message,
+                []);
             break;
 
           // Отказ внешнего источника не равен отказу обслуживания: заголовок

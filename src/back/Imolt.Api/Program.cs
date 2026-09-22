@@ -1,5 +1,8 @@
 using System.Globalization;
 using Imolt.Api;
+using Imolt.Calculations.Adapters;
+using Imolt.Calculations.Application;
+using Imolt.Calculations.Ports;
 using Imolt.Database;
 using Imolt.References.Adapters;
 using Imolt.References.Ports;
@@ -90,6 +93,15 @@ builder.Services.AddScoped<IAddressSuggestions>(services =>
   return suggestions;
 });
 
+// Область «расчёт». Справочные данные приходят переходником к соседней
+// области, а расстояния, коэффициенты и хранение расчёта — её собственные
+// переходники: это её данные, а не справочник (R-020, R-022, R-058).
+builder.Services.AddScoped<IReferenceData, CalculationReferences>();
+builder.Services.AddScoped<IRoadDistances, RoadDistances>();
+builder.Services.AddScoped<ITransportCoefficients, TransportCoefficients>();
+builder.Services.AddScoped<ICalculationStore, CalculationStore>();
+builder.Services.AddScoped<CalculationScenarios>();
+
 var app = builder.Build();
 
 // Схему применяет тот, кто разворачивает, а не служба при каждом старте:
@@ -116,6 +128,7 @@ app.UseExceptionHandler(ProblemResponses.ExceptionHandler);
 app.MapContractEndpoints();
 app.MapServiceEndpoints();
 app.MapReferenceEndpoints();
+app.MapCalculationEndpoints();
 
 // Неизвестный путь отвечает тем же документом об ошибке, что и остальные
 // отказы. Пустое тело с кодом 404 клиенту разбирать нечем, а на общем узле

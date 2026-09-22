@@ -112,6 +112,38 @@ public sealed class LandfillRegistry(NpgsqlDataSource dataSource) : ILandfillReg
         history.Select(period => new LegalEntityPeriod(period.LegalEntity, period.Since, period.Until)).ToList());
   }
 
+  public async Task<IReadOnlyList<Landfill>> AcceptingAsync(
+      string wasteGroupId,
+      CancellationToken cancellationToken)
+  {
+    await using var connection = await dataSource.OpenConnectionAsync(cancellationToken);
+
+    var rows = await connection.QueryAsync<LandfillRow>(new CommandDefinition(
+        $"""
+        {Columns}
+         where exists (select 1
+                         from landfill_tariff t
+                        where t.landfill_id = l.id
+                          and t.waste_group_id = @wasteGroupId)
+         order by l.id
+        """,
+        new { wasteGroupId },
+        cancellationToken: cancellationToken));
+
+    var landfills = rows.ToList();
+    var tariffs = await TariffsAsync(connection, [.. landfills.Select(row => row.Id)], cancellationToken);
+
+    return [.. landfills.Select(row => new Landfill(
+        row.Id,
+        row.Name,
+        row.LegalEntity,
+        row.Address,
+        new Coordinates(row.Latitude, row.Longitude),
+        row.Status,
+        row.StatusUpdatedAt,
+        tariffs.TryGetValue(row.Id, out var own) ? own : []))];
+  }
+
   public async Task<bool> ExistsAsync(string id, CancellationToken cancellationToken)
   {
     await using var connection = await dataSource.OpenConnectionAsync(cancellationToken);
