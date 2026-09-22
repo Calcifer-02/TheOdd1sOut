@@ -12,6 +12,16 @@
 
   <ItemGroup>
     <PackageReference Include="Npgsql" Version="10.0.3" />
+    <!-- Только страница Swagger UI, без порождения описания из кода: договор
+         написан руками и лежит в contracts/openapi.yaml, а средство здесь
+         показывает его человеку (ADR-0003). -->
+    <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.2.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Договор едет в образ рядом со сборкой: служба отдаёт тот же файл,
+         который лежит в репозитории, а не его копию. -->
+    <Content Include="contracts\openapi.yaml" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

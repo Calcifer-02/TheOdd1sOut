@@ -1,4 +1,5 @@
 <Solution>
   <Project Path="Imolt.Api/Imolt.Api.csproj" />
   <Project Path="Imolt.Bot/Imolt.Bot.csproj" />
+  <Project Path="../../tests/contracts/Imolt.Contracts.Tests/Imolt.Contracts.Tests.csproj" />
 </Solution>

@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <!-- Версии зависимостей фиксируются замком наравне с расчётной частью:
+         проверка договора обязана давать один и тот же вердикт на машине
+         участника и в конвейере. -->
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Разбор и проверка договора тем же средством, что читает его оснастка
+         OpenAPI: свой разборщик YAML разошёлся бы с ним молча. -->
+    <PackageReference Include="Microsoft.OpenApi" Version="2.7.5" />
+    <PackageReference Include="Microsoft.OpenApi.YamlReader" Version="2.7.5" />
+    <!-- Разбор того же файла как обычного YAML: по нему проверяются
+         проектные расширения договора — область, требования, состояние. -->
+    <PackageReference Include="YamlDotNet" Version="16.2.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+  </ItemGroup>
+
+</Project>
