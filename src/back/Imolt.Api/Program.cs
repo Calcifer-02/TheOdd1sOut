@@ -2,7 +2,6 @@ using System.Globalization;
 using Imolt.Api;
 using Imolt.Database;
 using Imolt.Shared;
-using Microsoft.AspNetCore.Diagnostics;
 using Npgsql;
 
 // Вход расчётной части: хост, состав зависимостей, маршруты и отдача
@@ -64,82 +63,11 @@ if (builder.Configuration.GetValue("IMOLT_APPLY_MIGRATIONS", false)
 // ошибках у одной службы.
 app.UseExceptionHandler(ProblemResponses.ExceptionHandler);
 
-// Договор API отдаётся как есть: файл contracts/openapi.yaml — источник, а не
-// производная кода, поэтому описание не порождается из контроллеров
-// (docs/architecture/ЗАПИСЬ_АРХИТЕКТУРНОГО_РЕШЕНИЯ_ADR-0003.md). Файл едет
-// рядом со сборкой: и при локальном запуске, и в образе он лежит в
-// подкаталоге contracts каталога приложения.
-var contractPath = Path.Combine(AppContext.BaseDirectory, "contracts", "openapi.yaml");
-
-app.MapGet("/v1/openapi.yaml", () =>
-    File.Exists(contractPath)
-        ? Results.File(contractPath, "application/yaml; charset=utf-8")
-        : Results.Problem(
-            title: "Договор API не найден",
-            detail: $"Ожидался файл {contractPath}",
-            statusCode: StatusCodes.Status500InternalServerError));
-
-// Страница Swagger UI смотрит на тот же файл. Средство здесь только
-// показывает договор человеку и ничего о коде не знает.
-app.UseSwaggerUI(options =>
-{
-    // Адрес договора задан относительно страницы, а не от корня узла.
-    // Снаружи служба стоит за префиксом /api, который внешний узел срезает:
-    // абсолютный путь ушёл бы мимо службы, на страницу мини-приложения, и
-    // Swagger UI получил бы разметку вместо договора.
-    options.SwaggerEndpoint("../v1/openapi.yaml", "ИМОЛТ — расчётная часть, версия 1");
-    options.RoutePrefix = "swagger";
-    options.DocumentTitle = "Договор API ИМОЛТ";
-});
-
-// Живость: отвечает, пока процесс жив. Внешних зависимостей не трогает —
-// иначе перезапуск базы данных выглядел бы как отказ самой службы.
-app.MapGet("/health", () => Results.Ok(new
-{
-    service = "api",
-    status = "ok"
-}));
-
-// Готовность: подтверждает, что служба видит базу данных по строке
-// подключения из окружения. Именно эта точка ловит разорванную связку
-// api → db в compose.
-app.MapGet("/ready", async (IConfiguration configuration, CancellationToken cancellationToken) =>
-{
-    var connectionString = configuration["DATABASE_URL"];
-    if (string.IsNullOrWhiteSpace(connectionString))
-    {
-        return Results.Json(new
-        {
-            service = "api",
-            status = "not_ready",
-            reason = "переменная DATABASE_URL не задана"
-        }, statusCode: StatusCodes.Status503ServiceUnavailable);
-    }
-
-    try
-    {
-        await using var connection = new NpgsqlConnection(connectionString);
-        await connection.OpenAsync(cancellationToken);
-        await using var command = new NpgsqlCommand("select 1", connection);
-        await command.ExecuteScalarAsync(cancellationToken);
-    }
-    catch (NpgsqlException exception)
-    {
-        return Results.Json(new
-        {
-            service = "api",
-            status = "not_ready",
-            reason = exception.Message
-        }, statusCode: StatusCodes.Status503ServiceUnavailable);
-    }
-
-    return Results.Ok(new
-    {
-        service = "api",
-        status = "ready",
-        database = "reachable"
-    });
-});
+// Маршруты собраны единицами по назначению: договор отдельно, служебные
+// точки отдельно. Так у каждой есть символ, к которому крепится якорь
+// трассируемости, — в операторах верхнего уровня крепить его не к чему.
+app.MapContractEndpoints();
+app.MapServiceEndpoints();
 
 // Неизвестный путь отвечает тем же документом об ошибке, что и остальные
 // отказы. Пустое тело с кодом 404 клиенту разбирать нечем, а на общем узле
