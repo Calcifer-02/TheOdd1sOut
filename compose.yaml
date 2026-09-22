@@ -31,6 +31,11 @@ services:
       dockerfile: Imolt.Api/Dockerfile
     environment:
       DATABASE_URL: "Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+      # Схему применяет тот, кто разворачивает, а не служба при каждом старте:
+      # база общая с будущей службой сбора, и две единицы, молча накатывающие
+      # схему, дают гонку (ADR-0002). Здесь признак включён намеренно —
+      # локальный запуск и стенд поднимают одну расчётную часть.
+      IMOLT_APPLY_MIGRATIONS: "true"
     ports:
       - "127.0.0.1:${API_PORT}:8080"
     depends_on:

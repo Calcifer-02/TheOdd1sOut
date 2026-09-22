@@ -1093,8 +1093,8 @@ paths:
               schema: { $ref: '#/components/schemas/DocumentServicePage' }
               example:
                 items:
-                  - id: ossig-moscow
-                    name: Разрешение на перемещение ОССиГ (Москва)
+                  - id: ossig-mo
+                    name: Разрешение на перемещение ОССиГ (Московская область)
                     priceFrom: { amount: '50000.00', currency: RUB }
                     priceOnRequest: false
                   - id: laboratory
@@ -1123,7 +1123,7 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/DocumentServiceOrderInput' }
             example:
-              serviceId: ossig-moscow
+              serviceId: ossig-mo
               objectAddress: г Москва, ул Годовикова, д 9
               comment: снос ангара, начало работ 01.10.2026
               personalDataConsent: true

@@ -173,10 +173,24 @@
       "context": "deals"
     },
     {
-      "id": "shared-kernel",
-      "role": "контракт данных",
+      "id": "shared-domain",
+      "role": "домен",
       "paths": [
-        "src/back/Imolt.Shared/**"
+        "src/back/Imolt.Shared/Domain/**"
+      ]
+    },
+    {
+      "id": "shared-ports",
+      "role": "порты",
+      "paths": [
+        "src/back/Imolt.Shared/Ports/**"
+      ]
+    },
+    {
+      "id": "shared-adapters",
+      "role": "адаптеры",
+      "paths": [
+        "src/back/Imolt.Shared/Adapters/**"
       ]
     },
     {

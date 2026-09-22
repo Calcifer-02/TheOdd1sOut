@@ -23,20 +23,13 @@
           "Microsoft.TestPlatform.TestHost": "17.14.1"
         }
       },
-      "Microsoft.OpenApi": {
+      "Npgsql": {
         "type": "Direct",
-        "requested": "[2.7.5, )",
-        "resolved": "2.7.5",
-        "contentHash": "0FA67RSnRM4tcBKqiqVu/HPdZ9+QOKbmeRjxRUGTCjPU4C0bmUhd97Dso7Yild5P7nOV6GxJ2xrK0Kv/O9xp0w=="
-      },
-      "Microsoft.OpenApi.YamlReader": {
-        "type": "Direct",
-        "requested": "[2.7.5, )",
-        "resolved": "2.7.5",
-        "contentHash": "IDzNlclDyWci87dNyrAvmbSdcbnPUYc11HCDSh/Otsb+d7KyHGnBaCS5NhTySg/v1j3wB+jPhAfz2+X+n8iMAg==",
+        "requested": "[10.0.3, )",
+        "resolved": "10.0.3",
+        "contentHash": "7nb5YzXuvWWJxB0J8DiyL3we+X4FOctZrt0fIBnucOIaIevFEEwGQVZKtiu9olXdlNAK1eNgqSral6r/jlhI4w==",
         "dependencies": {
-          "Microsoft.OpenApi": "2.7.5",
-          "SharpYaml": "2.1.4"
+          "Microsoft.Extensions.Logging.Abstractions": "10.0.0"
         }
       },
       "Testcontainers.PostgreSql": {
@@ -64,6 +57,12 @@
         "requested": "[3.1.5, )",
         "resolved": "3.1.5",
         "contentHash": "tKi7dSTwP4m5m9eXPM2Ime4Kn7xNf4x4zT9sdLO/G4hZVnQCRiMTWoSZqI/pYTVeI27oPPqHBKYI/DjJ9GsYgA=="
+      },
+      "YamlDotNet": {
+        "type": "Direct",
+        "requested": "[16.2.1, )",
+        "resolved": "16.2.1",
+        "contentHash": "im6zTVgesjcfTRfuMpnx51Rg2svWenp/3q5XBfcIzgj8PNIkkSD2xEl9HWcVi2SaJPP9XcXUdzed9gSDEuf1TA=="
       },
       "BouncyCastle.Cryptography": {
         "type": "Transitive",
@@ -448,19 +447,6 @@
         "type": "Transitive",
         "resolved": "13.0.3",
         "contentHash": "HrC5BXdl00IP9zeV+0Z848QWPAoCr9P3bDEZguI+gkLcBKAOxix/tLEAAHC+UvDNPv4a2d18lOReHMOagPa+zQ=="
-      },
-      "Npgsql": {
-        "type": "Transitive",
-        "resolved": "10.0.3",
-        "contentHash": "7nb5YzXuvWWJxB0J8DiyL3we+X4FOctZrt0fIBnucOIaIevFEEwGQVZKtiu9olXdlNAK1eNgqSral6r/jlhI4w==",
-        "dependencies": {
-          "Microsoft.Extensions.Logging.Abstractions": "10.0.0"
-        }
-      },
-      "SharpYaml": {
-        "type": "Transitive",
-        "resolved": "2.1.4",
-        "contentHash": "/iwULhVBpTjD4wPZhLU+eUWBanDvri/2AGx5YbaAj5kp9kXzhqUfJEy56H5Yi+c+OXsdm/oKD1aTKB24BFp8cw=="
       },
       "SharpZipLib": {
         "type": "Transitive",

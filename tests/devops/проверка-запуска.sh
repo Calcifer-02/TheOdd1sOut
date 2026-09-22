@@ -97,7 +97,21 @@ proverit "мини-приложение: страница" 200 "http://localhost
 proverit "мини-приложение → расчётная часть через /api" 200 "http://localhost:${MINIAPP_PORT}/api/health"
 
 echo
-echo "== 5. Приём обновления чат-ботом"
+echo "== 5. Схема базы данных"
+# Схему накатывает расчётная часть при старте, когда включён признак
+# IMOLT_APPLY_MIGRATIONS (ADR-0002). Проверяем не «база отвечает», а
+# «схема на месте»: пустая база тоже отвечает, и отличить это иначе нельзя.
+tablic=$(docker compose exec -T db psql -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" -tAc   "select count(*) from information_schema.tables where table_schema='public'" 2>/dev/null | tr -d '[:space:]')
+primeneno=$(docker compose exec -T db psql -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" -tAc   "select count(*) from schema_migration" 2>/dev/null | tr -d '[:space:]')
+if [ "${tablic:-0}" -ge 22 ] && [ "${primeneno:-0}" -ge 1 ]; then
+  soobshchit "схема применена (таблиц ${tablic}, миграций ${primeneno})" "ок"
+else
+  soobshchit "схема применена" "ОТКАЗ (таблиц ${tablic:-0}, миграций ${primeneno:-0})"
+  OSHIBKI=$((OSHIBKI + 1))
+fi
+
+echo
+echo "== 6. Приём обновления чат-ботом"
 kod=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 \
   -X POST -H 'Content-Type: application/json' -d '{"проверка":true}' \
   "http://localhost:${BOT_PORT}/max/webhook" 2>/dev/null)
