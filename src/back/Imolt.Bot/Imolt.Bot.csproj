@@ -1,13 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <!-- Версии зависимостей фиксируются файлом packages.lock.json: сборка
-         в образе идёт в режиме замка (locked mode) и падает, если состав
-         изменился без обновления замка. Условия трека, разд. 6.1 п. 4. -->
-    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
-  </PropertyGroup>
+  <!-- Чат-бот платформы MAX (КОМП-07). Общие свойства сборок серверной части
+       вынесены в Directory.Build.props рядом: условия трека, разд. 6.1 п. 4
+       требуют закреплённых версий, и требование это одно на все сборки. -->
 
 </Project>

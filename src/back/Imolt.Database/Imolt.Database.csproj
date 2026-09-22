@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Схема базы данных и её применение (КНТ-02). Общий компонент расчётной
+       части и будущей службы сбора: схема — общий контракт, и меняется она
+       двумя единицами совместно (ADR-0002). -->
+
+  <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.1.86" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.12" />
+    <PackageReference Include="Npgsql" Version="10.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Файлы миграций едут внутри сборки: применять схему должен тот, кто
+         её несёт, а не тот, кто угадал путь к каталогу. -->
+    <EmbeddedResource Include="Migrations\*.sql" />
+  </ItemGroup>
+
+</Project>

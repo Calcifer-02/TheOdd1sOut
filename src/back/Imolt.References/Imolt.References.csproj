@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Область «справочники» (ADR-0001). Наружу открыты только зоны Ports и
+       Contracts; ссылок на другие области нет. -->
+  <ItemGroup>
+    <ProjectReference Include="..\Imolt.Shared\Imolt.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

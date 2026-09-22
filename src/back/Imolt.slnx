@@ -1,5 +1,12 @@
 <Solution>
+  <Project Path="Imolt.Shared/Imolt.Shared.csproj" />
+  <Project Path="Imolt.Database/Imolt.Database.csproj" />
+  <Project Path="Imolt.References/Imolt.References.csproj" />
+  <Project Path="Imolt.Calculations/Imolt.Calculations.csproj" />
+  <Project Path="Imolt.Deals/Imolt.Deals.csproj" />
   <Project Path="Imolt.Api/Imolt.Api.csproj" />
   <Project Path="Imolt.Bot/Imolt.Bot.csproj" />
   <Project Path="../../tests/contracts/Imolt.Contracts.Tests/Imolt.Contracts.Tests.csproj" />
+  <Project Path="../../tests/unit/Imolt.Domain.Tests/Imolt.Domain.Tests.csproj" />
+  <Project Path="../../tests/integration/Imolt.Api.Tests/Imolt.Api.Tests.csproj" />
 </Solution>

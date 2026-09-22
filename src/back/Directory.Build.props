@@ -1,0 +1,19 @@
+<Project>
+
+  <!-- Общие свойства сборок серверной части. Держатся в одном месте: копия
+       расходится с оригиналом и становится ложью (правила проекта, раздел
+       «Конвенции кода»). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Версии зависимостей фиксируются файлом packages.lock.json: сборка с
+         другим составом падает, а не тянет другие версии молча. -->
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <!-- Предупреждение — это найденный дефект. Новое нарушение останавливает
+         сборку, иначе оно теряется среди прежних (практика PRACT-003). -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+</Project>
