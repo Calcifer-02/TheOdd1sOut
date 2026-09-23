@@ -303,9 +303,12 @@ public sealed class CalculationScenarios(
   {
     foreach (var group in entries.GroupBy(entry => entry.WasteGroupId))
     {
+      // Отказ читает пользователь, поэтому группа называется именем, а не
+      // идентификатором справочника (R-058). Здесь имени ещё нет — группы нет
+      // в расчёте, и справочник за ним не спрашивают.
       var item = calculation.Items.FirstOrDefault(stored => stored.WasteGroupId == group.Key)
           ?? throw new AllocationMismatchException(
-              $"Группы отходов {group.Key} в расчёте нет: распределять нечего");
+              "Этой группы отходов в расчёте нет: распределять нечего");
 
       var pricing = await GroupAsync(group.Key, cancellationToken);
       var allocated = group.Sum(entry => AmountConversion.ToTons(
@@ -316,7 +319,7 @@ public sealed class CalculationScenarios(
       if (decimal.Round(allocated, 3) != decimal.Round(item.Tons, 3))
       {
         throw new AllocationMismatchException(
-            $"По группе {group.Key} разложено {allocated:0.###} т из {item.Tons:0.###} т");
+            $"По группе «{pricing.Name}» разложено {allocated:0.###} т из {item.Tons:0.###} т");
       }
     }
   }

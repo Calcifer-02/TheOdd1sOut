@@ -21,7 +21,7 @@ namespace Imolt.Api.Tests;
 ///
 ///   dotnet test tests/integration/Imolt.Api.Tests
 ///
-/// @ac: AC-030a, AC-030b
+/// @ac: AC-030a, AC-030b, AC-058b
 [Collection(ImoltCalculationsCollection.Name)]
 public sealed class CalculationAllocationEndpointTests(ImoltCalculationsStand stand)
 {
@@ -76,6 +76,12 @@ public sealed class CalculationAllocationEndpointTests(ImoltCalculationsStand st
     Assert.False(
         string.IsNullOrWhiteSpace(detail),
         "отказ не называет расхождение: по такому ответу непонятно, сколько тонн не разложено");
+
+    // AC-058b: отказ читает пользователь, а не разработчик. Группа названа
+    // именем справочника; идентификатор в тексте означал бы, что интерфейсу
+    // придётся либо показать его, либо придумать свой текст вместо ответа.
+    Assert.Contains("Лом бетона и железобетона", detail);
+    Assert.DoesNotContain("beton-lom", detail);
 
     // AC-030b: «целиком» — значит первая часть тоже не применилась. Код отказа
     // без этой проверки ничего не доказывает: служба могла записать 12 тонн и
