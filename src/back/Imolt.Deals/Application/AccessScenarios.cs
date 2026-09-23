@@ -14,7 +14,7 @@ namespace Imolt.Deals.Application;
 /// заказчиком не установлено (Q-011), поэтому здесь объявлено её состояние, а
 /// не политика доступа.
 ///
-/// @req: R-008, R-009, R-049, R-050, R-051, R-052, R-054, R-056
+/// @req: R-049, R-050, R-051, R-052, R-054, R-056
 /// @adr: ADR-0006
 public sealed class AccessScenarios(
     ISubscriberStore subscribers,

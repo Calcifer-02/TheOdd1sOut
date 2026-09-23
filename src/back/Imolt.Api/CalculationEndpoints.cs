@@ -11,7 +11,7 @@ namespace Imolt.Api;
 /// со сценариями области — формула и правила живут в самой области
 /// (ADR-0001, ADR-0005).
 ///
-/// @req: R-008, R-014, R-018, R-023, R-024, R-025, R-027, R-030, R-032, R-050
+/// @req: R-014, R-018, R-023, R-024, R-025, R-027, R-030, R-032, R-049, R-050
 /// @adr: ADR-0003
 public static class CalculationEndpoints
 {

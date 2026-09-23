@@ -16,7 +16,7 @@ namespace Imolt.Deals.Adapters;
 /// Повторный вход не заводит второго участника: учётная запись платформы —
 /// естественный ключ, и она объявлена единственной в схеме.
 ///
-/// @req: R-008, R-049, R-051
+/// @req: R-049, R-051
 /// @adr: ADR-0005
 public sealed class SubscriberStore(NpgsqlDataSource dataSource, IClock clock) : ISubscriberStore
 {
@@ -175,7 +175,7 @@ public sealed class SubscriberStore(NpgsqlDataSource dataSource, IClock clock) :
 
 /// Заказы услуг по документации поверх PostgreSQL (СУЩ-10).
 ///
-/// @req: R-009, R-052, R-054
+/// @req: R-052, R-054
 /// @adr: ADR-0005
 public sealed class DocumentServiceOrderStore(NpgsqlDataSource dataSource) : IDocumentServiceOrderStore
 {

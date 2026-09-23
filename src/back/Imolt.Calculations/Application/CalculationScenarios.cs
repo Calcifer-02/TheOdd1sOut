@@ -121,7 +121,7 @@ public sealed class CalculationScenarios(
             calculation, await ResultsAsync(calculation, cancellationToken), cancellationToken);
   }
 
-  /// Сохранённые расчёты кабинета (R-008, R-049). Гостевые расчёты сюда не
+  /// Сохранённые расчёты кабинета (R-049). Гостевые расчёты сюда не
   /// попадают: у них нет владельца.
   public async Task<Page<CalculationSummary>> ListAsync(
       string subscriberId,

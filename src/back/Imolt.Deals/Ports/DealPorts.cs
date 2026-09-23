@@ -112,7 +112,7 @@ public sealed class ConsentMissingException(string message) : Exception(message)
 /// Запись заводится только при сошедшейся подписи и данном согласии: отказ,
 /// оставивший учётную запись, снаружи неотличим от честного (R-049, R-054).
 ///
-/// @supports: R-008, R-049, R-051
+/// @supports: R-049, R-051
 public interface ISubscriberStore
 {
   /// Заводит учётную запись или возвращает прежнюю по учётной записи
@@ -131,7 +131,7 @@ public interface ISubscriberStore
 
 /// Заказы услуг по документации (СУЩ-10).
 ///
-/// @supports: R-009, R-052, R-054
+/// @supports: R-052, R-054
 public interface IDocumentServiceOrderStore
 {
   Task<bool> ServiceExistsAsync(string serviceId, CancellationToken cancellationToken);
