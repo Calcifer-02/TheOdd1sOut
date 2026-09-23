@@ -5,6 +5,7 @@
  * службы, ни ключи в браузер не попадают (R-056, ADR-0008, инвариант 3).
  * Формы ответов объявлены отдельным модулем: здесь поведение, там словарь.
  *
+ * @shared: imolt-miniapp
  * @adr: ADR-0008
  */
 import type {
@@ -113,7 +114,7 @@ export function convertAmounts(
   });
 }
 
-/** @supports: R-002, R-018 */
+/** @supports: R-014, R-018, R-021 */
 export function createCalculation(body: CalculationRequest): Promise<Calculation> {
   return request<Calculation>('/v1/calculations', { method: 'POST', body: JSON.stringify(body) });
 }
