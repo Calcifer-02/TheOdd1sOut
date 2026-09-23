@@ -11,8 +11,8 @@
 // параметре, потеряйте поле при круговом прогоне или замените значение по
 // умолчанию — они упадут.
 import { describe, expect, it } from 'vitest';
-import type { ViewState } from '../src/viewState';
-import { DEFAULT_VIEW_STATE, parseViewState, viewStateToHash } from '../src/viewState';
+import type { ViewState } from '@/shared/lib/viewState';
+import { DEFAULT_VIEW_STATE, parseViewState, viewStateToHash } from '@/shared/lib/viewState';
 import { CALCULATION_ID, CONCRETE_GROUP } from './apiStub';
 
 /** Выборка со всеми полями, отличными от значений по умолчанию. */

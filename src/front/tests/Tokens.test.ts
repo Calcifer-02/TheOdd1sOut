@@ -9,7 +9,7 @@ import { sourceFiles } from './repository';
 /** Цвет, записанный значением: шестнадцатеричный код или функция rgb. */
 const DIRECT_COLOR = /#[0-9a-fA-F]{3,8}\b|\brgba?\(/g;
 
-const TOKENS_FILE = 'src/front/miniapp/src/tokens.ts';
+const TOKENS_FILE = 'src/front/src/shared/ui/tokens.ts';
 
 describe('оформление мини-приложения', () => {
   it('держит прямые визуальные значения только в модуле токенов', () => {

@@ -67,7 +67,7 @@ fi
 echo
 echo "== 2. Состав служб"
 SLUZHBY=$(docker compose config --services | sort | tr '\n' ' ')
-OZHIDAEMYE="api bot db miniapp "
+OZHIDAEMYE="api bot db web "
 if [ "$SLUZHBY" = "$OZHIDAEMYE" ]; then
   soobshchit "службы: $SLUZHBY" "ок"
 else

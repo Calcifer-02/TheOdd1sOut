@@ -20,7 +20,7 @@ import type {
   SelectionEntry,
   SelectionState,
   WasteGroup,
-} from './contracts';
+} from '@/shared/api/contracts';
 import {
   ApiProblem,
   convertAmounts,
@@ -35,18 +35,11 @@ import {
   setAllocation,
   setSelection,
   suggestAddresses,
-} from './api';
-import {
-  Field,
-  Notice,
-  OptionCard,
-  RadioPills,
-  Sheet,
-  SuggestList,
-  SummaryBar,
-  badgeStatus,
-} from './components';
-import type { Unit } from './formatting';
+} from '@/shared/api/imolt';
+import { Field, Notice, RadioPills, Sheet, SuggestList } from '@/shared/ui';
+import { OptionCard, badgeStatus } from '@/entities/landfill';
+import { SummaryBar } from '@/widgets/selection-summary';
+import type { Unit } from '@/shared/lib/formatting';
 import {
   formatDate,
   formatDistance,
@@ -54,9 +47,9 @@ import {
   formatNumber,
   formatQuantity,
   unitName,
-} from './formatting';
-import type { SortField, ViewState } from './viewState';
-import { DEFAULT_VIEW_STATE, parseViewState, viewStateToHash } from './viewState';
+} from '@/shared/lib/formatting';
+import type { SortField, ViewState } from '@/shared/lib/viewState';
+import { DEFAULT_VIEW_STATE, parseViewState, viewStateToHash } from '@/shared/lib/viewState';
 
 /** Первая страница — десять полигонов, остальные по «Показать ещё» (R-029). */
 const PAGE_SIZE = 10;
@@ -90,7 +83,7 @@ function formatDuration(minutes: number): string {
   return hours > 0 ? `~${hours} ч ${rest} мин` : `~${rest} мин`;
 }
 
-export function CalculatorScreen() {
+export function CalculatorMobile() {
   const [view, setView] = useState<ViewState>(() => parseViewState(window.location.hash));
   const [addressQuery, setAddressQuery] = useState('');
   const [addressPicked, setAddressPicked] = useState<AddressSuggestion | null>(null);

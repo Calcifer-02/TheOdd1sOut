@@ -8,8 +8,8 @@
  * @shared: imolt-miniapp
  * @adr: ADR-0008
  */
-import type { Money, Unit } from './formatting';
-import type { DistanceMode, SortField, SortOrder } from './viewState';
+import type { Money, Unit } from '@/shared/lib/formatting';
+import type { DistanceMode, SortField, SortOrder } from '@/shared/lib/viewState';
 
 export type { SortField, SortOrder, DistanceMode };
 

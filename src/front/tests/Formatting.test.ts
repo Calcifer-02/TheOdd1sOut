@@ -9,7 +9,7 @@
 // через `new Date(...)` без учёта часового пояса или напишите «м3» вместо
 // «м³» — они упадут.
 import { describe, expect, it } from 'vitest';
-import { formatDate, formatMoney, formatNumber, formatQuantity } from '../src/formatting';
+import { formatDate, formatMoney, formatNumber, formatQuantity } from '@/shared/lib/formatting';
 
 /** Неразрывный пробел U+00A0 — единственный разделитель разрядов в ru-RU. */
 const NBSP = ' ';

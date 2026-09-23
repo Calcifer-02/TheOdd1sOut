@@ -18,7 +18,7 @@ export function repositoryRoot(): string {
   return directory;
 }
 
-export const miniappSource = join(repositoryRoot(), 'src', 'front', 'miniapp', 'src');
+export const miniappSource = join(repositoryRoot(), 'src', 'front', 'src');
 
 export const contractPath = join(
   repositoryRoot(),

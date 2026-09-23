@@ -9,8 +9,8 @@
  * @adr: ADR-0008
  */
 import { useEffect } from 'react';
-import { CalculatorScreen } from './CalculatorScreen';
-import { THEME_CSS } from './theme';
+import { CalculatorMobile } from '@/pages/calculator';
+import { THEME_CSS } from '@/shared/ui';
 
 export function App() {
   useEffect(() => {
@@ -23,5 +23,5 @@ export function App() {
     return () => style.remove();
   }, []);
 
-  return <CalculatorScreen />;
+  return <CalculatorMobile />;
 }

@@ -55,17 +55,17 @@ jobs:
         with:
           node-version: "24"
           cache: npm
-          cache-dependency-path: src/front/miniapp/package-lock.json
+          cache-dependency-path: src/front/package-lock.json
 
       # npm ci ставит строго по package-lock.json и падает при расхождении
       # с package.json.
       - name: Установка зависимостей по замку
         run: npm ci --no-audit --no-fund
-        working-directory: src/front/miniapp
+        working-directory: src/front
 
       - name: Сборка
         run: npm run build
-        working-directory: src/front/miniapp
+        working-directory: src/front
 
   zapusk:
     name: Запуск решения одной командой

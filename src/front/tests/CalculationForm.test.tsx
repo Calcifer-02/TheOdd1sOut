@@ -13,7 +13,7 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { App } from '../src/App';
+import { App } from '@/app/App';
 import type { ApiStub } from './apiStub';
 import {
   CONCRETE_GROUP,

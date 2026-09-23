@@ -1,3 +1,4 @@
+import { fileURLToPath, URL } from 'node:url';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
@@ -6,6 +7,13 @@ import react from '@vitejs/plugin-react';
 // а при локальной разработке — этот прокси.
 export default defineConfig({
   plugins: [react()],
+  // Один алиас на корень исходников: слой видно прямо в пути подключения
+  // («@/entities/landfill»), и счёт «../» при переносе слайса больше не
+  // меняется. Проверка направления подключений опирается на тот же вид
+  // пути (PRACT-012).
+  resolve: {
+    alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
+  },
   server: {
     port: 5173,
     proxy: {

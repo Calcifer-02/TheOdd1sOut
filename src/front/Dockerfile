@@ -1,5 +1,5 @@
 # Образ мини-приложения MAX: сборка статики и отдача её nginx.
-# Контекст сборки — src/front/miniapp.
+# Контекст сборки — src/front.
 
 FROM node:24-alpine AS build
 WORKDIR /src
