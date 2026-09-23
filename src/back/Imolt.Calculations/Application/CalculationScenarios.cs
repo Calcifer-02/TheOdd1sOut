@@ -14,8 +14,7 @@ namespace Imolt.Calculations.Application;
 /// другое — адрес, объёмы, предел расстояния и дата актуальности данных
 /// (R-048).
 ///
-/// @req: R-014, R-018, R-020, R-021, R-023, R-024, R-025, R-026, R-027,
-///       R-028, R-029, R-030, R-032, R-058, R-059, R-060
+/// @req: R-014, R-018, R-020, R-021, R-023, R-024, R-025, R-026, R-027, R-028, R-029, R-030, R-032, R-058, R-059, R-060
 /// @adr: ADR-0001
 public sealed class CalculationScenarios(
     IReferenceData references,

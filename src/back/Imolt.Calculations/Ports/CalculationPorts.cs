@@ -77,7 +77,7 @@ public sealed record StoredItem(string WasteGroupId, Quantity Input, decimal Ton
 /// справочников при каждом чтении, и снимок цен делается только при выпуске
 /// коммерческого предложения (R-036).
 ///
-/// @supports: R-002, R-027, R-030, R-048
+/// @supports: R-027, R-030, R-048
 public sealed record StoredCalculation(
     string Id,
     DateTimeOffset CreatedAt,
@@ -94,7 +94,7 @@ public sealed record StoredCalculation(
 /// читают варианты размещения, задают выбор, распределяют объём и выпускают
 /// коммерческое предложение.
 ///
-/// @supports: R-002, R-027, R-030
+/// @supports: R-027, R-030
 public interface ICalculationStore
 {
   Task SaveAsync(StoredCalculation calculation, CancellationToken cancellationToken);
@@ -121,24 +121,32 @@ public interface ICalculationStore
 /// смету молча (R-020).
 ///
 /// @supports: R-020
-public sealed class RoadDistanceUnavailableException(string message) : Exception(message);
+public sealed class RoadDistanceUnavailableException(string message) : Exception(message)
+{
+}
 
 /// Распределение объёма не сходится с объёмом группы. Применяется целиком или
 /// не применяется вовсе: частичное применение оставило бы расчёт в состоянии,
 /// которого пользователь не задавал (R-030).
 ///
 /// @supports: R-030
-public sealed class AllocationMismatchException(string message) : Exception(message);
+public sealed class AllocationMismatchException(string message) : Exception(message)
+{
+}
 
 /// Запись справочника, на которую ссылается запрос, не заведена. Нулевой
 /// результат был бы хуже отказа: по нему клиент решил бы, что отходов нет.
 ///
 /// @supports: R-014
-public sealed class ReferenceMissingException(string message) : Exception(message);
+public sealed class ReferenceMissingException(string message) : Exception(message)
+{
+}
 
 /// Полигон не годится для этой строки расчёта: он не принимает группу отходов
 /// либо до него не сохранено плечо перевозки. Договор объявляет такой исход
 /// кодом 422 — запрос разобран, но нарушает правило предметной области.
 ///
 /// @supports: R-027, R-030
-public sealed class PlacementUnavailableException(string message) : Exception(message);
+public sealed class PlacementUnavailableException(string message) : Exception(message)
+{
+}

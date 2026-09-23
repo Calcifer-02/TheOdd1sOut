@@ -12,7 +12,7 @@ namespace Imolt.Calculations.Adapters;
 /// данные справочников, и снимок цен делается один раз, при выпуске
 /// коммерческого предложения (R-036).
 ///
-/// @req: R-002, R-027, R-030, R-048
+/// @req: R-027, R-030, R-048
 /// @adr: ADR-0005
 public sealed class CalculationStore(NpgsqlDataSource dataSource) : ICalculationStore
 {
