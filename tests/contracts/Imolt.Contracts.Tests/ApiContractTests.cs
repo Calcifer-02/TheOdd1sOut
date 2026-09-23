@@ -159,6 +159,11 @@ public sealed class ApiContractTests
       "/v1/profile",
       "/v1/subscription-requests",
       "/v1/document-service-orders",
+      "/v1/landfills/{landfillId}/status",
+      "/v1/landfills/{landfillId}/tariffs/{wasteGroupId}",
+      "/v1/reference-imports",
+      "/v1/reference-imports/{importId}/confirmation",
+      "/v1/sync-runs/latest",
     ];
 
     var implemented = Operations()

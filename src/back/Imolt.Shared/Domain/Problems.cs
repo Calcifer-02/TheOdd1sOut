@@ -15,6 +15,9 @@ public static class Problems
   public const string NotFound = "urn:imolt:problem:not-found";
   public const string AuthenticationRequired = "urn:imolt:problem:authentication-required";
   public const string SubscriptionRequired = "urn:imolt:problem:subscription-required";
+  /// Отличается от SubscriptionRequired действием пользователя: подписку он
+  /// оформляет сам, а право ему выдаёт владелец данных (ADR-0007).
+  public const string RoleRequired = "urn:imolt:problem:role-required";
   public const string AllocationMismatch = "urn:imolt:problem:allocation-mismatch";
   public const string AddressOutsideServiceArea = "urn:imolt:problem:address-outside-service-area";
   public const string DistanceServiceUnavailable = "urn:imolt:problem:distance-service-unavailable";
@@ -28,6 +31,7 @@ public static class Problems
         NotFound,
         AuthenticationRequired,
         SubscriptionRequired,
+        RoleRequired,
         AllocationMismatch,
         AddressOutsideServiceArea,
         DistanceServiceUnavailable,

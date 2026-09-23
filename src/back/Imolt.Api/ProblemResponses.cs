@@ -142,6 +142,43 @@ public static class ProblemResponses
                 []);
             break;
 
+          // Право отделено от подписки отдельным кодом: пользователю по этим
+          // отказам предстоят разные действия (ADR-0007).
+          case PermissionRequiredException permission:
+            await WriteAsync(
+                context,
+                StatusCodes.Status403Forbidden,
+                Problems.RoleRequired,
+                "Операция доступна менеджеру данных",
+                permission.Message,
+                []);
+            break;
+
+          // Книга не принята до разбора. Формат файла и его содержимое —
+          // разные отказы: одному надо сохранить файл иначе, другому —
+          // исправить его (R-045).
+          case WorkbookRefusedException workbook:
+            await WriteAsync(
+                context,
+                workbook.UnsupportedMedia
+                    ? StatusCodes.Status415UnsupportedMediaType
+                    : StatusCodes.Status422UnprocessableEntity,
+                workbook.UnsupportedMedia ? Problems.UnsupportedMediaType : Problems.Validation,
+                workbook.UnsupportedMedia ? "Формат файла не поддерживается" : "Книга не принята",
+                workbook.Message,
+                []);
+            break;
+
+          case StalePreviewException stale:
+            await WriteAsync(
+                context,
+                StatusCodes.Status409Conflict,
+                Problems.StalePreview,
+                "Предпросмотр устарел",
+                stale.Message,
+                []);
+            break;
+
           // Отказ внешнего источника не равен отказу обслуживания: заголовок
           // называет, через сколько повторять (ADR-0002, инвариант 5).
           case UpstreamUnavailableException upstream:

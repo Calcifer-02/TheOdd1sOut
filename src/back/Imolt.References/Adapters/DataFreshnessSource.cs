@@ -25,10 +25,16 @@ public sealed class DataFreshnessSource(NpgsqlDataSource dataSource, IClock cloc
 
     // Берётся наибольшая дата: сводка отвечает «данные не старше этого дня».
     // Наименьшая говорила бы о самой запущенной записи, а не о справочнике.
+    //
+    // Цена — это и цена перевозки группы, и тариф утилизации полигона. Счёт
+    // по одним группам оставлял бы дату актуальности цен неподвижной после
+    // правки тарифа, а правка тарифа — такое же обновление цен (R-042, R-048).
     var row = await connection.QuerySingleAsync<FreshnessRow>(new CommandDefinition(
         """
         select
-          (select max(updated_at) from waste_group)              as prices_updated_at,
+          greatest(
+            (select max(updated_at) from waste_group),
+            (select max(updated_at) from landfill_tariff))       as prices_updated_at,
           (select max(status_updated_at) from landfill)          as statuses_updated_at,
           (select count(*) from landfill where status_updated_at < @stale) as stale_landfills
         """,

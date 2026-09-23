@@ -312,6 +312,52 @@ else
   OSHIBKI=$((OSHIBKI + 1))
 fi
 
+
+echo
+echo "== 10. Ведение справочников"
+# Проверяется не «точка отвечает», а «точка закрыта по умолчанию». Редактор
+# цен меняет то, что уходит в коммерческие предложения клиентам, и открытый
+# всем редактор хуже отсутствующего (ADR-0007).
+PRAVKA='{"transportPricePerTonKm":{"amount":"33.00","currency":"RUB"}}'
+
+BEZ_VHODA=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 \
+  -X PATCH -H 'Content-Type: application/json' -d "$PRAVKA" \
+  "http://localhost:${API_PORT}/v1/waste-groups/beton-lom" 2>/dev/null)
+PROGONY_BEZ_VHODA=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 \
+  "http://localhost:${API_PORT}/v1/sync-runs/latest" 2>/dev/null)
+
+if [ "$BEZ_VHODA" = "401" ] && [ "$PROGONY_BEZ_VHODA" = "401" ]; then
+  soobshchit "справочники: правка и итог обновления закрыты без входа" "ок (401 и 401)"
+else
+  soobshchit "справочники: правка и итог обновления закрыты без входа" \
+    "ОТКАЗ (${BEZ_VHODA:-нет} и ${PROGONY_BEZ_VHODA:-нет})"
+  OSHIBKI=$((OSHIBKI + 1))
+fi
+
+# Второй шаг возможен только с маркером: он проверяет, что сессии мало —
+# нужно ещё и право. Без ключа бота маркера нет, и шаг честно пропускается.
+if [ -n "${MARKER:-}" ]; then
+  OTVET=$(curl -s --max-time 15 \
+    -X PATCH -H 'Content-Type: application/json' \
+    -H "Authorization: Bearer ${MARKER}" -d "$PRAVKA" \
+    "http://localhost:${API_PORT}/v1/waste-groups/beton-lom" 2>/dev/null)
+  PRICHINA=$(printf '%s' "$OTVET" | grep -o '"type":"[^"]*"' | head -1 | cut -d'"' -f4)
+
+  # Пустой список обладателей права — состояние по умолчанию: тогда ответ
+  # обязан быть отказом по праву, а не по подписке и не успехом.
+  if [ -z "${IMOLT_DATA_MANAGERS:-}" ]; then
+    if [ "$PRICHINA" = "urn:imolt:problem:role-required" ]; then
+      soobshchit "справочники: сессии без права не хватает" "ок (role-required)"
+    else
+      soobshchit "справочники: сессии без права не хватает" "ОТКАЗ (${PRICHINA:-нет причины})"
+      OSHIBKI=$((OSHIBKI + 1))
+    fi
+  else
+    soobshchit "справочники: право выдано развёртыванием" "пропущено (IMOLT_DATA_MANAGERS задан)"
+  fi
+else
+  soobshchit "справочники: проверка права" "пропущено (маркера нет)"
+fi
 echo
 if [ "$OSHIBKI" -eq 0 ]; then
   echo "Плацдарм развёртывания проверен: отказов нет."

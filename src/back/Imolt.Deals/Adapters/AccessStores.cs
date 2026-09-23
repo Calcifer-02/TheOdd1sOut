@@ -173,6 +173,77 @@ public sealed class SubscriberStore(NpgsqlDataSource dataSource, IClock clock) :
   }
 }
 
+/// Права участника поверх PostgreSQL (ADR-0007).
+///
+/// Право читается при каждом запросе, а не кладётся в маркер доступа: иначе
+/// снятое право продолжало бы действовать до конца срока маркера, и отозванный
+/// сотрудник правил бы цены ещё час.
+///
+/// @req: R-042, R-045
+/// @adr: ADR-0007
+public sealed class ParticipantPermissionStore(NpgsqlDataSource dataSource, IClock clock)
+  : IParticipantPermissions
+{
+  public async Task<bool> HasAsync(
+      string subscriberId,
+      string permission,
+      CancellationToken cancellationToken)
+  {
+    // Негодный идентификатор — то же, что отсутствие права: спорить о форме
+    // строки здесь не с чем, прав у такого участника нет в любом случае.
+    if (!Guid.TryParse(subscriberId, out var key))
+    {
+      return false;
+    }
+
+    await using var connection = await dataSource.OpenConnectionAsync(cancellationToken);
+
+    return await connection.ExecuteScalarAsync<bool>(new CommandDefinition(
+        """
+        select exists (
+          select 1 from subscriber_permission
+           where subscriber_id = @key and permission = @permission)
+        """,
+        new { key, permission },
+        cancellationToken: cancellationToken));
+  }
+
+  public async Task SetAsync(
+      string subscriberId,
+      IReadOnlyCollection<string> permissions,
+      CancellationToken cancellationToken)
+  {
+    var key = Guid.Parse(subscriberId);
+    var granted = permissions.ToArray();
+
+    await using var connection = await dataSource.OpenConnectionAsync(cancellationToken);
+    await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+
+    // Сначала снимается лишнее, потом выдаётся недостающее: состав прав
+    // приводится к объявленному, а не дополняется им.
+    await connection.ExecuteAsync(new CommandDefinition(
+        "delete from subscriber_permission where subscriber_id = @key and not (permission = any(@granted))",
+        new { key, granted },
+        transaction,
+        cancellationToken: cancellationToken));
+
+    foreach (var permission in granted)
+    {
+      await connection.ExecuteAsync(new CommandDefinition(
+          """
+          insert into subscriber_permission (subscriber_id, permission, granted_at)
+          values (@key, @permission, @grantedAt)
+          on conflict (subscriber_id, permission) do nothing
+          """,
+          new { key, permission, grantedAt = clock.Now.ToUniversalTime() },
+          transaction,
+          cancellationToken: cancellationToken));
+    }
+
+    await transaction.CommitAsync(cancellationToken);
+  }
+}
+
 /// Заказы услуг по документации поверх PostgreSQL (СУЩ-10).
 ///
 /// @req: R-052, R-054

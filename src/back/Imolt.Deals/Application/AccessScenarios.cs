@@ -20,8 +20,10 @@ public sealed class AccessScenarios(
     ISubscriberStore subscribers,
     IDocumentServiceOrderStore orders,
     IAccessTokens tokens,
+    IParticipantPermissions permissions,
     IClock clock,
-    MaxIdentitySettings settings)
+    MaxIdentitySettings settings,
+    DataManagerSettings dataManagers)
 {
   /// Обмен стартовых параметров на сессию (R-049).
   public async Task<Session> SignInAsync(SessionRequest? request, CancellationToken cancellationToken)
@@ -50,9 +52,38 @@ public sealed class AccessScenarios(
     }
 
     var profile = await subscribers.EnrolAsync(parameters.MaxUserId, parameters.DisplayName, cancellationToken);
+
+    await ApplyGrantsAsync(profile.Id, parameters.MaxUserId, cancellationToken);
+
     var (token, expiresIn) = tokens.Issue(new Participant(profile.Id, profile.MaxUserId));
 
     return new Session(token, expiresIn, profile);
+  }
+
+  /// Приведение прав участника к составу, объявленному развёртыванием
+  /// (ADR-0007). Это единственное место, где право связано с учётной записью
+  /// поставщика личности: проверка права о поставщике уже не знает.
+  ///
+  /// Маркер доступа прав не несёт, поэтому выданное здесь действует со
+  /// следующего же запроса, а снятое — перестаёт действовать сразу.
+  private async Task ApplyGrantsAsync(
+      string subscriberId,
+      string subject,
+      CancellationToken cancellationToken)
+  {
+    // Незаданный состав прав не трогает вовсе. Иначе первое же развёртывание
+    // без переменной окружения снимало бы права, выданные другим способом, —
+    // а такой способ появится, когда управление правами переедет в сервис.
+    if (dataManagers.Subjects.Count == 0)
+    {
+      return;
+    }
+
+    var granted = dataManagers.Subjects.Contains(subject, StringComparer.Ordinal)
+        ? new[] { Permissions.ManageReferences }
+        : [];
+
+    await permissions.SetAsync(subscriberId, granted, cancellationToken);
   }
 
   public Task<Profile?> ProfileAsync(string subscriberId, CancellationToken cancellationToken)
@@ -150,4 +181,27 @@ public sealed record MaxIdentitySettings(string BotToken, TimeSpan InitDataLifet
   /// Срок давности по умолчанию. Помечен демонстрационным: заказчик его не
   /// называл, и выдавать пять минут за его решение нельзя.
   public static TimeSpan DemonstrationLifetime { get; } = TimeSpan.FromMinutes(5);
+}
+
+/// Состав обладателей права вести справочники, объявленный развёртыванием
+/// (ADR-0007).
+///
+/// Перечисляются учётные записи действующего поставщика личности — сегодня
+/// это MAX. Имя записи намеренно не называет платформу: сменится поставщик —
+/// сменится содержимое списка, а не его смысл.
+///
+/// Это решение развёртывания, а не заказчика: владельца данных заказчик не
+/// назначал (Q-013), и выдавать список за утверждённую политику нельзя.
+public sealed record DataManagerSettings(IReadOnlyList<string> Subjects)
+{
+  public static DataManagerSettings None { get; } = new([]);
+
+  /// Разбор списка из переменной окружения. Пустые и повторяющиеся значения
+  /// отбрасываются: строка правится руками, и лишняя запятая не должна
+  /// заводить обладателя права с пустым именем.
+  public static DataManagerSettings Parse(string? value) => new(
+      (value ?? string.Empty)
+          .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+          .Distinct(StringComparer.Ordinal)
+          .ToList());
 }

@@ -78,6 +78,25 @@ public static class AccessEndpoints
           ?? throw new AuthenticationRequiredException(
               "Операция доступна участнику с сессией: откройте мини-приложение в MAX");
 
+  /// Участник, которому разрешено вести справочники (ADR-0007).
+  ///
+  /// Порядок отказов не случаен: сначала личность, потом право. Ответить
+  /// «нет права» тому, кто не назвался, значит сообщить, что такое право
+  /// вообще существует и кому-то выдано.
+  public static async Task<Participant> DataManagerAsync(
+      HttpContext context,
+      IAccessTokens tokens,
+      IParticipantPermissions permissions,
+      CancellationToken cancellationToken)
+  {
+    var participant = Participant(context, tokens);
+
+    return await permissions.HasAsync(participant.Id, Permissions.ManageReferences, cancellationToken)
+        ? participant
+        : throw new PermissionRequiredException(
+            "Ведение справочников закреплено за владельцем данных: обратитесь к нему за правом");
+  }
+
   /// Участник, если он назвался. Пусто означает гостя — договор объявляет
   /// расчёт доступным без входа (R-050).
   public static Participant? Guest(HttpContext context, IAccessTokens tokens)
@@ -98,5 +117,14 @@ public static class AccessEndpoints
 ///
 /// @supports: R-050
 public sealed class AuthenticationRequiredException(string message) : Exception(message)
+{
+}
+
+/// Участник назвался, но права на операцию у него нет. Отличается от отказа
+/// по подписке действием пользователя: подписку он оформляет сам, а право ему
+/// выдаёт владелец данных (ADR-0007).
+///
+/// @supports: R-042
+public sealed class PermissionRequiredException(string message) : Exception(message)
 {
 }

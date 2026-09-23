@@ -129,6 +129,42 @@ public interface ISubscriberStore
       CancellationToken cancellationToken);
 }
 
+/// Права участника: что ему разрешено в сервисе (ADR-0007).
+///
+/// Порт объявлен отдельно от ISubscriberStore намеренно. Учётная запись
+/// отвечает на вопрос «кто этот участник в обороте отходов», права — на
+/// вопрос «что ему здесь можно», и смешивать их в одном порте значит звать на
+/// проверку права то, что к ней отношения не имеет.
+///
+/// Проверка права ничего не знает о поставщике личности: в ней нет ни
+/// платформы, ни стартовых параметров, ни ключа бота. Это инвариант 3
+/// решения ADR-0007, и собственный вход по R-066 не должен его трогать.
+///
+/// @supports: R-042, R-045
+/// @adr: ADR-0007
+public interface IParticipantPermissions
+{
+  Task<bool> HasAsync(string subscriberId, string permission, CancellationToken cancellationToken);
+
+  /// Приводит набор прав участника к заданному. Применяется при входе по
+  /// составу, объявленному развёртыванием: право, снятое из состава, должно
+  /// сниматься и у участника, иначе список перестаёт быть источником истины.
+  Task SetAsync(
+      string subscriberId,
+      IReadOnlyCollection<string> permissions,
+      CancellationToken cancellationToken);
+}
+
+/// Права, объявленные проектом. В версии 1 оно одно: перечень растёт вместе с
+/// операциями, которые кому-то закрыты.
+///
+/// @supports: R-042
+/// @adr: ADR-0007
+public static class Permissions
+{
+  public const string ManageReferences = "manageReferences";
+}
+
 /// Заказы услуг по документации (СУЩ-10).
 ///
 /// @supports: R-052, R-054

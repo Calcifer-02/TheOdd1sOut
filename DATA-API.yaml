@@ -40,6 +40,12 @@ roles:
       запись MAX, из которой открыто мини-приложение. Проверяющий получает
       маркер, открыв мини-приложение в MAX.
 
+      Пяти операциям ведения справочников сессии мало: нужно ещё право
+      manageReferences. Отдельной роли для него в этом файле нет намеренно —
+      роль сверяется с договором машинно, а договор различает только вход по
+      маркеру. Право выдаётся развёртыванием и живёт в учётной записи
+      участника (ADR-0007).
+
 # Какие проверки можно выполнить на стенде сегодня. Остальные точки объявлены
 # договором, но обработчиков не имеют — на них служба отвечает 404.
 mandatoryChecks:
@@ -69,6 +75,16 @@ mandatoryChecks:
   - listCalculations
   - createLandfillReview
   - createDocumentServiceOrder
+  # Ведение справочников. Сессии для них мало: нужно ещё право, которое
+  # назначает переменная окружения IMOLT_DATA_MANAGERS (ADR-0007). Пока она
+  # пуста, все пять правящих операций отвечают 403 — это рабочее состояние
+  # стенда, а не отказ. Итог обновления справочников права не требует.
+  - updateWasteGroup
+  - setLandfillTariff
+  - setLandfillStatus
+  - startReferenceImport
+  - confirmReferenceImport
+  - getLatestSyncRun
 
 # Что именно не определено заказчиком и потому не проверяется по существу:
 # разграничение доступа между гостем и подпиской — открытый вопрос Q-011.
@@ -140,7 +156,7 @@ checks:
   - id: updateWasteGroup
     name: Изменить цену перевозки и плотность группы
     area: справочники
-    state: объявлено
+    state: реализовано
     method: PATCH
     path: /v1/waste-groups/{wasteGroupId}
     role: authenticated
@@ -198,7 +214,7 @@ checks:
   - id: setLandfillTariff
     name: Задать тариф утилизации полигона по группе отходов
     area: справочники
-    state: объявлено
+    state: реализовано
     method: PUT
     path: /v1/landfills/{landfillId}/tariffs/{wasteGroupId}
     role: authenticated
@@ -214,7 +230,7 @@ checks:
   - id: setLandfillStatus
     name: Задать статус полигона вручную
     area: справочники
-    state: объявлено
+    state: реализовано
     method: PUT
     path: /v1/landfills/{landfillId}/status
     role: authenticated
@@ -303,7 +319,7 @@ checks:
   - id: getLatestSyncRun
     name: Итог последнего обновления справочников
     area: справочники
-    state: объявлено
+    state: реализовано
     method: GET
     path: /v1/sync-runs/latest
     role: authenticated
@@ -322,7 +338,7 @@ checks:
   - id: startReferenceImport
     name: Загрузить справочник из файла и получить предпросмотр
     area: справочники
-    state: объявлено
+    state: реализовано
     method: POST
     path: /v1/reference-imports
     role: authenticated
@@ -339,7 +355,7 @@ checks:
   - id: confirmReferenceImport
     name: Применить разобранный импорт
     area: справочники
-    state: объявлено
+    state: реализовано
     method: POST
     path: /v1/reference-imports/{importId}/confirmation
     role: authenticated

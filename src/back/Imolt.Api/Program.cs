@@ -8,6 +8,7 @@ using Imolt.Deals.Adapters;
 using Imolt.Deals.Application;
 using Imolt.Deals.Ports;
 using Imolt.References.Adapters;
+using Imolt.References.Application;
 using Imolt.References.Ports;
 using Imolt.Shared;
 using Npgsql;
@@ -72,6 +73,15 @@ builder.Services.AddScoped<IWasteGroupCatalog, WasteGroupCatalog>();
 builder.Services.AddScoped<ILandfillRegistry, LandfillRegistry>();
 builder.Services.AddScoped<IDataFreshnessSource, DataFreshnessSource>();
 
+// Ведение справочников (R-042, R-044, R-045). Читатель книги объявлен портом:
+// библиотека разбора — вариант переходника, а не правило проекта, и её замена
+// не должна трогать сценарий импорта (карточка практики PRACT-033).
+builder.Services.AddScoped<IReferenceEditor, ReferenceEditor>();
+builder.Services.AddScoped<IReferenceImports, ReferenceImportStore>();
+builder.Services.AddScoped<ISyncRuns, SyncRunStore>();
+builder.Services.AddSingleton<IWorkbookReader, WorkbookReader>();
+builder.Services.AddScoped<ReferenceImportScenarios>();
+
 // Подсказки адреса: справочник проекта — основной источник, внешняя служба
 // включается настройкой. Целевая служба заказчиком не назначена (Q-014),
 // поэтому выбор источника остаётся настройкой, а не правкой кода области.
@@ -122,6 +132,7 @@ builder.Services.AddScoped<DealScenarios>();
 // параметров читаются настройками в момент разрешения зависимости: ключ —
 // секрет, которому не место в коде (R-056), а срок договором не назван.
 builder.Services.AddScoped<ISubscriberStore, SubscriberStore>();
+builder.Services.AddScoped<IParticipantPermissions, ParticipantPermissionStore>();
 builder.Services.AddScoped<IDocumentServiceOrderStore, DocumentServiceOrderStore>();
 builder.Services.AddSingleton<IAccessTokens>(services =>
 {
@@ -141,6 +152,11 @@ builder.Services.AddScoped(services =>
             "MAX_INIT_DATA_TTL_SECONDS",
             (int)MaxIdentitySettings.DemonstrationLifetime.TotalSeconds)));
 });
+// Состав обладателей права вести справочники называет развёртывание:
+// владельца данных заказчик не назначал (Q-013, ADR-0007). Незаданная
+// переменная прав не трогает вовсе.
+builder.Services.AddScoped(services => DataManagerSettings.Parse(
+    services.GetRequiredService<IConfiguration>()["IMOLT_DATA_MANAGERS"]));
 builder.Services.AddScoped<AccessScenarios>();
 
 var app = builder.Build();
@@ -169,6 +185,7 @@ app.UseExceptionHandler(ProblemResponses.ExceptionHandler);
 app.MapContractEndpoints();
 app.MapServiceEndpoints();
 app.MapReferenceEndpoints();
+app.MapReferenceMaintenanceEndpoints();
 app.MapCalculationEndpoints();
 app.MapDealEndpoints();
 app.MapAccessEndpoints();
