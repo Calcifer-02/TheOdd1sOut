@@ -53,7 +53,14 @@ public sealed class DealScenarios(
 
     var issuedAt = clock.Now;
     var day = DateOnly.FromDateTime(issuedAt.DateTime);
-    var number = QuoteNumber.Of(day, await quotes.IssuedOnAsync(day, cancellationToken) + 1);
+
+    // Сутки берутся у часов службы теми же, по которым сложен номер. Счёт по
+    // календарной дате в запросе давал бы другой день в окно между полуночью
+    // Москвы и полуночью UTC: счётчик обнулялся раньше номера, и второе
+    // предложение этой ночи получало номер первого.
+    var dayStart = clock.StartOfDay(day);
+    var issuedToday = await quotes.IssuedBetweenAsync(dayStart, dayStart.AddDays(1), cancellationToken);
+    var number = QuoteNumber.Of(day, issuedToday + 1);
     var id = Guid.NewGuid().ToString();
     var total = calculation.Lines.Aggregate(Money.Rubles(0), (sum, line) => sum + line.TotalCost);
 

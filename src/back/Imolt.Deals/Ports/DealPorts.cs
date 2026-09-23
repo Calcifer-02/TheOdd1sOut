@@ -46,9 +46,14 @@ public interface IQuoteStore
       QuoteDocumentModel document,
       CancellationToken cancellationToken);
 
-  /// Сколько предложений уже выпущено сегодня — из этого складывается
-  /// порядковый номер дня (R-036).
-  Task<int> IssuedOnAsync(DateOnly day, CancellationToken cancellationToken);
+  /// Сколько предложений уже выпущено за сутки — из этого складывается
+  /// порядковый номер дня (R-036). Границы суток приходят готовыми, а не
+  /// считаются в запросе: календарь дня принадлежит часам службы, и второе
+  /// место его вычисления неизбежно разойдётся с первым.
+  Task<int> IssuedBetweenAsync(
+      DateTimeOffset from,
+      DateTimeOffset to,
+      CancellationToken cancellationToken);
 }
 
 /// Заявки на вывоз. Заявка обязана дойти до хранилища, а не остаться ответом:
