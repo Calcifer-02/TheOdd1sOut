@@ -38,6 +38,13 @@ jobs:
       - name: Сборка
         run: dotnet build src/back/Imolt.slnx -c Release --no-restore
 
+      # Проверки гоняются здесь же: собранное, но не проверенное решение —
+      # это зелёный прогон без проверки. Интеграционные проверки поднимают
+      # одноразовую базу данных в контейнере, поэтому нужен Docker — он есть
+      # на ubuntu-latest.
+      - name: Проверки
+        run: dotnet test src/back/Imolt.slnx -c Release --no-build --logger "console;verbosity=normal"
+
   front:
     name: Сборка мини-приложения
     runs-on: ubuntu-latest

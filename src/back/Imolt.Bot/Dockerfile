@@ -5,6 +5,9 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
+# Общие свойства сборок нужны ещё на восстановлении: без них у проекта нет
+# целевой платформы, и restore падает.
+COPY Directory.Build.props ./
 COPY Imolt.Bot/Imolt.Bot.csproj Imolt.Bot/packages.lock.json Imolt.Bot/
 # Режим замка: состав и версии зависимостей обязаны совпасть с
 # packages.lock.json, иначе сборка падает, а не тянет другие версии молча.

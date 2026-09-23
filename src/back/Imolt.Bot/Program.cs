@@ -12,15 +12,15 @@ var app = builder.Build();
 var botToken = app.Configuration["MAX_BOT_TOKEN"];
 if (string.IsNullOrWhiteSpace(botToken))
 {
-    app.Logger.LogWarning(
-        "Переменная MAX_BOT_TOKEN не задана: служба поднята, обращения к API MAX невозможны");
+  app.Logger.LogWarning(
+      "Переменная MAX_BOT_TOKEN не задана: служба поднята, обращения к API MAX невозможны");
 }
 
 app.MapGet("/health", () => Results.Ok(new
 {
-    service = "bot",
-    status = "ok",
-    token_configured = !string.IsNullOrWhiteSpace(botToken)
+  service = "bot",
+  status = "ok",
+  token_configured = !string.IsNullOrWhiteSpace(botToken)
 }));
 
 // Точка приёма обновлений от платформы. Платформа ожидает быстрый ответ,
@@ -28,10 +28,10 @@ app.MapGet("/health", () => Results.Ok(new
 // а не выполняются в обработчике запроса.
 app.MapPost("/max/webhook", async (HttpRequest request, ILogger<Program> logger) =>
 {
-    using var reader = new StreamReader(request.Body);
-    var payload = await reader.ReadToEndAsync();
-    logger.LogInformation("Получено обновление MAX, длина тела: {Length} байт", payload.Length);
-    return Results.Ok(new { accepted = true });
+  using var reader = new StreamReader(request.Body);
+  var payload = await reader.ReadToEndAsync();
+  logger.LogInformation("Получено обновление MAX, длина тела: {Length} байт", payload.Length);
+  return Results.Ok(new { accepted = true });
 });
 
 app.Run();

@@ -1,0 +1,225 @@
+{
+  "schema": "trip.cast-agreement/v3",
+  "project": "ИМОЛТ",
+  "decisionRecord": "docs/architecture/ЗАПИСЬ_АРХИТЕКТУРНОГО_РЕШЕНИЯ_ADR-0001.md",
+  "scope": {
+    "include": [
+      "src/back/**",
+      "tests/**"
+    ],
+    "exclude": [
+      "**/bin/**",
+      "**/obj/**",
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/*.csproj",
+      "**/*.slnx",
+      "**/packages.lock.json",
+      "**/Directory.Build.props",
+      "**/.dockerignore"
+    ]
+  },
+  "languages": [
+    "csharp"
+  ],
+  "contexts": [
+    {
+      "id": "references",
+      "owner": "Разработка (владелец области «справочники»)",
+      "decisionRecord": "docs/architecture/ЗАПИСЬ_АРХИТЕКТУРНОГО_РЕШЕНИЯ_ADR-0001.md",
+      "openZones": [
+        "references-ports",
+        "references-contracts"
+      ]
+    },
+    {
+      "id": "calculations",
+      "owner": "Разработка (владелец области «расчёт»)",
+      "decisionRecord": "docs/architecture/ЗАПИСЬ_АРХИТЕКТУРНОГО_РЕШЕНИЯ_ADR-0001.md",
+      "openZones": [
+        "calculations-ports",
+        "calculations-contracts"
+      ]
+    },
+    {
+      "id": "deals",
+      "owner": "Разработка (владелец области «сделка»)",
+      "decisionRecord": "docs/architecture/ЗАПИСЬ_АРХИТЕКТУРНОГО_РЕШЕНИЯ_ADR-0001.md",
+      "openZones": [
+        "deals-ports",
+        "deals-contracts"
+      ]
+    }
+  ],
+  "zones": [
+    {
+      "id": "references-contracts",
+      "role": "контракт данных",
+      "paths": [
+        "src/back/Imolt.References/Contracts/**"
+      ],
+      "context": "references"
+    },
+    {
+      "id": "references-domain",
+      "role": "домен",
+      "paths": [
+        "src/back/Imolt.References/Domain/**"
+      ],
+      "context": "references"
+    },
+    {
+      "id": "references-application",
+      "role": "приложение",
+      "paths": [
+        "src/back/Imolt.References/Application/**"
+      ],
+      "context": "references"
+    },
+    {
+      "id": "references-ports",
+      "role": "порты",
+      "paths": [
+        "src/back/Imolt.References/Ports/**"
+      ],
+      "context": "references"
+    },
+    {
+      "id": "references-adapters",
+      "role": "адаптеры",
+      "paths": [
+        "src/back/Imolt.References/Adapters/**"
+      ],
+      "context": "references"
+    },
+    {
+      "id": "calculations-contracts",
+      "role": "контракт данных",
+      "paths": [
+        "src/back/Imolt.Calculations/Contracts/**"
+      ],
+      "context": "calculations"
+    },
+    {
+      "id": "calculations-domain",
+      "role": "домен",
+      "paths": [
+        "src/back/Imolt.Calculations/Domain/**"
+      ],
+      "context": "calculations"
+    },
+    {
+      "id": "calculations-application",
+      "role": "приложение",
+      "paths": [
+        "src/back/Imolt.Calculations/Application/**"
+      ],
+      "context": "calculations"
+    },
+    {
+      "id": "calculations-ports",
+      "role": "порты",
+      "paths": [
+        "src/back/Imolt.Calculations/Ports/**"
+      ],
+      "context": "calculations"
+    },
+    {
+      "id": "calculations-adapters",
+      "role": "адаптеры",
+      "paths": [
+        "src/back/Imolt.Calculations/Adapters/**"
+      ],
+      "context": "calculations"
+    },
+    {
+      "id": "deals-contracts",
+      "role": "контракт данных",
+      "paths": [
+        "src/back/Imolt.Deals/Contracts/**"
+      ],
+      "context": "deals"
+    },
+    {
+      "id": "deals-domain",
+      "role": "домен",
+      "paths": [
+        "src/back/Imolt.Deals/Domain/**"
+      ],
+      "context": "deals"
+    },
+    {
+      "id": "deals-application",
+      "role": "приложение",
+      "paths": [
+        "src/back/Imolt.Deals/Application/**"
+      ],
+      "context": "deals"
+    },
+    {
+      "id": "deals-ports",
+      "role": "порты",
+      "paths": [
+        "src/back/Imolt.Deals/Ports/**"
+      ],
+      "context": "deals"
+    },
+    {
+      "id": "deals-adapters",
+      "role": "адаптеры",
+      "paths": [
+        "src/back/Imolt.Deals/Adapters/**"
+      ],
+      "context": "deals"
+    },
+    {
+      "id": "shared-domain",
+      "role": "домен",
+      "paths": [
+        "src/back/Imolt.Shared/Domain/**"
+      ]
+    },
+    {
+      "id": "shared-ports",
+      "role": "порты",
+      "paths": [
+        "src/back/Imolt.Shared/Ports/**"
+      ]
+    },
+    {
+      "id": "shared-adapters",
+      "role": "адаптеры",
+      "paths": [
+        "src/back/Imolt.Shared/Adapters/**"
+      ]
+    },
+    {
+      "id": "database",
+      "role": "адаптеры",
+      "paths": [
+        "src/back/Imolt.Database/**"
+      ]
+    },
+    {
+      "id": "entry",
+      "role": "вход",
+      "paths": [
+        "src/back/Imolt.Api/**",
+        "src/back/Imolt.Bot/**"
+      ]
+    },
+    {
+      "id": "checks",
+      "role": "проверки",
+      "paths": [
+        "tests/**"
+      ]
+    }
+  ],
+  "deviations": [],
+  "contractScalars": [
+    "Money",
+    "PageRequest",
+    "Page"
+  ]
+}

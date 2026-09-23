@@ -6,17 +6,26 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "react": "19.2.0",
     "react-dom": "19.2.0"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "7.0.1",
+    "@testing-library/react": "16.3.3",
+    "@testing-library/user-event": "14.6.7",
+    "@types/node": "26.6.2",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.1",
     "@vitejs/plugin-react": "5.0.4",
+    "js-yaml": "5.4.2",
+    "jsdom": "30.1.1",
     "typescript": "5.9.3",
-    "vite": "7.1.9"
+    "vite": "7.3.6",
+    "vitest": "5.0.1"
   }
 }

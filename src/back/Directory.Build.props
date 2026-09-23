@@ -1,0 +1,37 @@
+<Project>
+
+  <!-- Общие свойства сборок серверной части. Держатся в одном месте: копия
+       расходится с оригиналом и становится ложью (правила проекта, раздел
+       «Конвенции кода»). -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Версии зависимостей фиксируются файлом packages.lock.json: сборка с
+         другим составом падает, а не тянет другие версии молча. -->
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <!-- Предупреждение — это найденный дефект. Новое нарушение останавливает
+         сборку, иначе оно теряется среди прежних (практика PRACT-003). -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!-- Анализаторы .NET включены на уровне «все правила»: тот же набор
+         правил CA, что задаёт пакет дисциплины группы, но он приходит с
+         пакетом средств разработки и не требует закрытого реестра. Сборка
+         остаётся воспроизводимой у того, кто получил только исходный код
+         (условия трека, разд. 6.1). -->
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisMode>Recommended</AnalysisMode>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <!-- Осознанно снятые правила, каждое с причиной:
+         CA1716 — «Shared» совпадает с ключевым словом Visual Basic. Термин
+           «общее ядро» закреплён решением о раскладке, и переименовывать его
+           ради языка, на котором проект не пишется, значит менять словарь под
+           инструмент;
+         CA1848, CA1873 — делегаты LoggerMessage ускоряют запись журнала в
+           горячем пути. У службы два вызова на старте: выигрыш ноль, а
+           читаемость падает. Правило вернётся, когда появится запись журнала
+           внутри обработки запроса. -->
+    <NoWarn>$(NoWarn);CA1716;CA1848;CA1873</NoWarn>
+  </PropertyGroup>
+
+</Project>

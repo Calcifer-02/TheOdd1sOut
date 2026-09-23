@@ -1,0 +1,14 @@
+<Project>
+
+  <!-- Общие свойства проверочных сборок. Те же, что у служб: проверка,
+       собранная иначе, чем код, перестаёт его описывать. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+</Project>

@@ -40,11 +40,51 @@ roles:
       запись MAX, из которой открыто мини-приложение. Проверяющий получает
       маркер, открыв мини-приложение в MAX.
 
+      Пяти операциям ведения справочников сессии мало: нужно ещё право
+      manageReferences. Отдельной роли для него в этом файле нет намеренно —
+      роль сверяется с договором машинно, а договор различает только вход по
+      маркеру. Право выдаётся развёртыванием и живёт в учётной записи
+      участника (ADR-0007).
+
 # Какие проверки можно выполнить на стенде сегодня. Остальные точки объявлены
 # договором, но обработчиков не имеют — на них служба отвечает 404.
 mandatoryChecks:
   - getHealth
   - getReadiness
+  - listWasteGroups
+  - getWasteGroup
+  - listLandfills
+  - getLandfill
+  - listLandfillReviews
+  - getDataFreshness
+  - suggestAddresses
+  - convertAmounts
+  - createCalculation
+  - getCalculation
+  - listPlacementOptions
+  - setCalculationSelection
+  - setCalculationAllocation
+  - getCalculationRoute
+  - createQuote
+  - downloadQuoteDocument
+  - createPickupRequest
+  - listDocumentServices
+  - createSession
+  - getProfile
+  - createSubscriptionRequest
+  - listCalculations
+  - createLandfillReview
+  - createDocumentServiceOrder
+  # Ведение справочников. Сессии для них мало: нужно ещё право, которое
+  # назначает переменная окружения IMOLT_DATA_MANAGERS (ADR-0007). Пока она
+  # пуста, все пять правящих операций отвечают 403 — это рабочее состояние
+  # стенда, а не отказ. Итог обновления справочников права не требует.
+  - updateWasteGroup
+  - setLandfillTariff
+  - setLandfillStatus
+  - startReferenceImport
+  - confirmReferenceImport
+  - getLatestSyncRun
 
 # Что именно не определено заказчиком и потому не проверяется по существу:
 # разграничение доступа между гостем и подпиской — открытый вопрос Q-011.
@@ -64,7 +104,7 @@ checks:
     - 200
     expectedContentType: application/json
     requirements:
-    - R-011
+    - R-067
   - id: getReadiness
     name: Готовность службы
     area: служебное
@@ -77,11 +117,11 @@ checks:
     - 200
     expectedContentType: application/json
     requirements:
-    - R-011
+    - R-068
   - id: listWasteGroups
     name: Справочник групп отходов
     area: справочники
-    state: объявлено
+    state: реализовано
     method: GET
     path: /v1/waste-groups
     role: guest
@@ -103,7 +143,7 @@ checks:
   - id: getWasteGroup
     name: Карточка группы отходов
     area: справочники
-    state: объявлено
+    state: реализовано
     method: GET
     path: /v1/waste-groups/{wasteGroupId}
     role: guest
@@ -116,7 +156,7 @@ checks:
   - id: updateWasteGroup
     name: Изменить цену перевозки и плотность группы
     area: справочники
-    state: объявлено
+    state: реализовано
     method: PATCH
     path: /v1/waste-groups/{wasteGroupId}
     role: authenticated
@@ -134,7 +174,7 @@ checks:
   - id: listLandfills
     name: Реестр полигонов
     area: справочники
-    state: объявлено
+    state: реализовано
     method: GET
     path: /v1/landfills
     role: guest
@@ -160,7 +200,7 @@ checks:
   - id: getLandfill
     name: Карточка полигона
     area: справочники
-    state: объявлено
+    state: реализовано
     method: GET
     path: /v1/landfills/{landfillId}
     role: guest
@@ -174,7 +214,7 @@ checks:
   - id: setLandfillTariff
     name: Задать тариф утилизации полигона по группе отходов
     area: справочники
-    state: объявлено
+    state: реализовано
     method: PUT
     path: /v1/landfills/{landfillId}/tariffs/{wasteGroupId}
     role: authenticated
@@ -190,7 +230,7 @@ checks:
   - id: setLandfillStatus
     name: Задать статус полигона вручную
     area: справочники
-    state: объявлено
+    state: реализовано
     method: PUT
     path: /v1/landfills/{landfillId}/status
     role: authenticated
@@ -208,7 +248,7 @@ checks:
   - id: listLandfillReviews
     name: Отзывы и оценки полигона
     area: справочники
-    state: объявлено
+    state: реализовано
     method: GET
     path: /v1/landfills/{landfillId}/reviews
     role: guest
@@ -225,7 +265,7 @@ checks:
   - id: createLandfillReview
     name: Оставить оценку и отзыв о полигоне
     area: справочники
-    state: объявлено
+    state: реализовано
     method: POST
     path: /v1/landfills/{landfillId}/reviews
     role: authenticated
@@ -241,7 +281,7 @@ checks:
   - id: suggestAddresses
     name: Подсказки адреса вывоза
     area: справочники
-    state: объявлено
+    state: реализовано
     method: GET
     path: /v1/address-suggestions
     role: guest
@@ -262,7 +302,7 @@ checks:
   - id: getDataFreshness
     name: Дата актуальности цен и статусов
     area: справочники
-    state: объявлено
+    state: реализовано
     method: GET
     path: /v1/data-freshness
     role: guest
@@ -279,7 +319,7 @@ checks:
   - id: getLatestSyncRun
     name: Итог последнего обновления справочников
     area: справочники
-    state: объявлено
+    state: реализовано
     method: GET
     path: /v1/sync-runs/latest
     role: authenticated
@@ -298,7 +338,7 @@ checks:
   - id: startReferenceImport
     name: Загрузить справочник из файла и получить предпросмотр
     area: справочники
-    state: объявлено
+    state: реализовано
     method: POST
     path: /v1/reference-imports
     role: authenticated
@@ -315,7 +355,7 @@ checks:
   - id: confirmReferenceImport
     name: Применить разобранный импорт
     area: справочники
-    state: объявлено
+    state: реализовано
     method: POST
     path: /v1/reference-imports/{importId}/confirmation
     role: authenticated
@@ -331,7 +371,7 @@ checks:
   - id: convertAmounts
     name: Пересчитать объём между тоннами и кубометрами
     area: расчёт
-    state: объявлено
+    state: реализовано
     method: POST
     path: /v1/amount-conversions
     role: guest
@@ -348,7 +388,7 @@ checks:
   - id: listCalculations
     name: Сохранённые расчёты кабинета
     area: расчёт
-    state: объявлено
+    state: реализовано
     method: GET
     path: /v1/calculations
     role: authenticated
@@ -368,7 +408,7 @@ checks:
   - id: createCalculation
     name: Рассчитать стоимость вывоза и утилизации
     area: расчёт
-    state: объявлено
+    state: реализовано
     method: POST
     path: /v1/calculations
     role: guest
@@ -393,7 +433,7 @@ checks:
   - id: getCalculation
     name: Расчёт целиком
     area: расчёт
-    state: объявлено
+    state: реализовано
     method: GET
     path: /v1/calculations/{calculationId}
     role: guest
@@ -408,7 +448,7 @@ checks:
   - id: listPlacementOptions
     name: Варианты размещения по группе отходов
     area: расчёт
-    state: объявлено
+    state: реализовано
     method: GET
     path: /v1/calculations/{calculationId}/options
     role: guest
@@ -441,7 +481,7 @@ checks:
   - id: setCalculationSelection
     name: Выбрать полигоны и получить сводку
     area: расчёт
-    state: объявлено
+    state: реализовано
     method: PUT
     path: /v1/calculations/{calculationId}/selection
     role: guest
@@ -456,7 +496,7 @@ checks:
   - id: setCalculationAllocation
     name: Распределить объём между выбранными полигонами
     area: расчёт
-    state: объявлено
+    state: реализовано
     method: PUT
     path: /v1/calculations/{calculationId}/allocation
     role: guest
@@ -470,7 +510,7 @@ checks:
   - id: getCalculationRoute
     name: Маршрут и сводка по выбранным полигонам
     area: расчёт
-    state: объявлено
+    state: реализовано
     method: GET
     path: /v1/calculations/{calculationId}/route
     role: guest
@@ -493,7 +533,7 @@ checks:
   - id: createQuote
     name: Сформировать коммерческое предложение
     area: сделка
-    state: объявлено
+    state: реализовано
     method: POST
     path: /v1/calculations/{calculationId}/quotes
     role: guest
@@ -513,7 +553,7 @@ checks:
   - id: downloadQuoteDocument
     name: Скачать коммерческое предложение
     area: сделка
-    state: объявлено
+    state: реализовано
     method: GET
     path: /v1/quotes/{quoteId}/document
     role: guest
@@ -532,7 +572,7 @@ checks:
   - id: createPickupRequest
     name: Отправить заявку на вывоз
     area: сделка
-    state: объявлено
+    state: реализовано
     method: POST
     path: /v1/pickup-requests
     role: guest
@@ -547,7 +587,7 @@ checks:
   - id: listDocumentServices
     name: Каталог услуг по документации
     area: сделка
-    state: объявлено
+    state: реализовано
     method: GET
     path: /v1/document-services
     role: guest
@@ -562,7 +602,7 @@ checks:
   - id: createDocumentServiceOrder
     name: Заказать услугу по документации
     area: сделка
-    state: объявлено
+    state: реализовано
     method: POST
     path: /v1/document-service-orders
     role: authenticated
@@ -580,7 +620,7 @@ checks:
   - id: createSubscriptionRequest
     name: Оставить заявку на подписку
     area: сделка
-    state: объявлено
+    state: реализовано
     method: POST
     path: /v1/subscription-requests
     role: authenticated
@@ -597,7 +637,7 @@ checks:
   - id: createSession
     name: Обменять параметры запуска MAX на сессию
     area: сделка
-    state: объявлено
+    state: реализовано
     method: POST
     path: /v1/auth/sessions
     role: guest
@@ -615,7 +655,7 @@ checks:
   - id: getProfile
     name: Профиль и состояние подписки
     area: сделка
-    state: объявлено
+    state: реализовано
     method: GET
     path: /v1/profile
     role: authenticated

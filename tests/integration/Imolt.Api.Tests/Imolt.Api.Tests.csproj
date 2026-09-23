@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Интеграционные проверки расчётной части: служба поднимается целиком,
+       база данных — настоящая, в одноразовом контейнере. Форма каждого ответа
+       сверяется со схемой договора, поэтому договор здесь — не документация,
+       а исполнимый оракул (ADR-0003). -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\back\Imolt.Api\Imolt.Api.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Сборка книги Excel для проверок импорта справочника (AC-045a…AC-045f).
+         Книга собирается проверкой в память, а не лежит двоичным файлом в
+         репозитории: такой файл не читается на ревью, не правится построчно, и
+         сгенерированное проект не версионирует. Лицензия MIT: условия трека,
+         разд. 4 п. 8 запрещают закрытые библиотеки и чужой код без разрешения
+         на свободное использование. Пакет создаёт книгу, но в поставку службы
+         не входит. -->
+    <PackageReference Include="DocumentFormat.OpenXml" Version="3.5.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.12" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="Npgsql" Version="10.0.3" />
+    <!-- Разбор текста коммерческого предложения (AC-037a, AC-038a, AC-061a).
+         Без извлечения текста проверка документа свелась бы к сигнатуре
+         формата, а критерии требуют именно состав и запись сумм. Лицензия
+         Apache-2.0: условия трека, разд. 4 п. 8 запрещают закрытые библиотеки
+         и чужой код без разрешения на свободное использование. Пакет читает
+         документ, но не создаёт его — в поставку службы он не входит. -->
+    <PackageReference Include="PdfPig" Version="0.1.16" />
+    <PackageReference Include="Testcontainers.PostgreSql" Version="4.15.0" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="YamlDotNet" Version="16.2.1" />
+  </ItemGroup>
+
+</Project>
