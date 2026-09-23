@@ -16,7 +16,6 @@ namespace Imolt.Domain.Tests;
 ///   dotnet test tests/unit/Imolt.Domain.Tests
 ///
 /// @ac: AC-060a, AC-060b
-/// @supports: R-060
 public sealed class PageRequestTests
 {
   [Fact(DisplayName = "без параметров страница берёт значения по умолчанию из договора")]

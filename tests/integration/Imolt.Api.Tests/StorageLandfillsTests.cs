@@ -18,8 +18,6 @@ namespace Imolt.Api.Tests;
 ///   dotnet test tests/integration/Imolt.Api.Tests
 ///
 /// @ac: AC-040d, AC-040e, AC-041b
-/// @supports: R-018, R-028, R-040, R-041, R-044, R-048
-/// @adr: ADR-0002
 [Collection(ImoltReferencesCollection.Name)]
 public sealed class StorageLandfillsTests(ImoltReferencesStand stand)
 {

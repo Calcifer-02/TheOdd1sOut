@@ -19,7 +19,6 @@ namespace Imolt.Api.Tests;
 ///   dotnet test tests/integration/Imolt.Api.Tests
 ///
 /// @ac: AC-048a
-/// @supports: R-048
 [Collection(ImoltReferencesCollection.Name)]
 public sealed class DataFreshnessEndpointTests(ImoltReferencesStand stand)
 {

@@ -16,7 +16,6 @@ namespace Imolt.Api.Tests;
 ///   dotnet test tests/integration/Imolt.Api.Tests
 ///
 /// @ac: AC-068a, AC-068b
-/// @supports: R-067
 [Collection(ImoltApiCollection.Name)]
 public sealed class ReadinessEndpointTests(ImoltApiStand stand)
 {

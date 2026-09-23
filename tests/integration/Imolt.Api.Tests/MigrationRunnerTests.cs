@@ -16,7 +16,6 @@ namespace Imolt.Api.Tests;
 ///
 ///   dotnet test tests/integration/Imolt.Api.Tests
 ///
-/// @supports: R-011
 [Collection(ImoltApiCollection.Name)]
 public sealed class MigrationRunnerTests(ImoltApiStand stand)
 {

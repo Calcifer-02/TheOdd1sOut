@@ -27,7 +27,6 @@ namespace Imolt.Api.Tests;
 ///   dotnet test tests/integration/Imolt.Api.Tests
 ///
 /// @ac: AC-023a, AC-024a, AC-024b, AC-025a, AC-025b, AC-026a, AC-029a
-/// @supports: R-023, R-024, R-025, R-026, R-029, R-060
 [Collection(ImoltCalculationsCollection.Name)]
 public sealed class PlacementOptionListingTests(ImoltCalculationsStand stand)
 {

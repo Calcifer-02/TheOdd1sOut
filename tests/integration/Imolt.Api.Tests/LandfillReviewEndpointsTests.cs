@@ -20,7 +20,6 @@ namespace Imolt.Api.Tests;
 ///   dotnet test tests/integration/Imolt.Api.Tests
 ///
 /// @ac: AC-031a, AC-031b
-/// @supports: R-031
 [Collection(ImoltReferencesCollection.Name)]
 public sealed class LandfillReviewEndpointsTests(ImoltReferencesStand stand)
 {

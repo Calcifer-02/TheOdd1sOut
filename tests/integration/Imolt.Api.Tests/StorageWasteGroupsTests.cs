@@ -20,8 +20,6 @@ namespace Imolt.Api.Tests;
 ///   dotnet test tests/integration/Imolt.Api.Tests
 ///
 /// @ac: AC-039c
-/// @supports: R-013, R-039, R-043
-/// @adr: ADR-0002
 [Collection(ImoltReferencesCollection.Name)]
 public sealed class StorageWasteGroupsTests(ImoltReferencesStand stand)
 {

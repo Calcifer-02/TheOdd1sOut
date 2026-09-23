@@ -21,7 +21,6 @@ namespace Imolt.Api.Tests;
 ///   dotnet test tests/integration/Imolt.Api.Tests
 ///
 /// @ac: AC-021a, AC-058a, AC-059a
-/// @supports: R-021, R-058, R-059
 [Collection(ImoltCalculationsCollection.Name)]
 public sealed class CalculationDisclosureTests(ImoltCalculationsStand stand)
 {

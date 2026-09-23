@@ -17,8 +17,6 @@ namespace Imolt.Domain.Tests;
 ///
 ///   dotnet test tests/unit/Imolt.Domain.Tests
 ///
-/// @supports: R-061
-/// @adr: ADR-0005
 public sealed class MoneyParsingTests
 {
     [Theory(DisplayName = "строка суммы из договора разбирается при любой текущей культуре")]

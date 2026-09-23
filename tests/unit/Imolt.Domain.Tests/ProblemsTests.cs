@@ -17,7 +17,6 @@ namespace Imolt.Domain.Tests;
 ///
 ///   dotnet test tests/unit/Imolt.Domain.Tests
 ///
-/// @supports: R-011
 public sealed class ProblemsTests
 {
   private const string ContractNamespace = "urn:imolt:problem:";

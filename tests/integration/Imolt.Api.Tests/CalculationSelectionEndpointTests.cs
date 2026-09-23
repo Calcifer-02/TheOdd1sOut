@@ -14,7 +14,6 @@ namespace Imolt.Api.Tests;
 ///   dotnet test tests/integration/Imolt.Api.Tests
 ///
 /// @ac: AC-027a, AC-028a, AC-032a
-/// @supports: R-027, R-028, R-032
 [Collection(ImoltCalculationsCollection.Name)]
 public sealed class CalculationSelectionEndpointTests(ImoltCalculationsStand stand)
 {

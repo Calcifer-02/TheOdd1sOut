@@ -23,7 +23,6 @@ namespace Imolt.Domain.Tests;
 ///   dotnet test tests/unit/Imolt.Domain.Tests
 ///
 /// @ac: AC-015a, AC-015b
-/// @supports: R-014, R-015
 public sealed class AmountConversionRulesTests
 {
   /// Коэффициент плотности группы «drevesina»: 0,5 тонны в кубометре.

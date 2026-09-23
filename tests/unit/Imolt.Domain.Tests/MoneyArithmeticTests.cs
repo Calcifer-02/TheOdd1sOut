@@ -15,8 +15,6 @@ namespace Imolt.Domain.Tests;
 ///
 ///   dotnet test tests/unit/Imolt.Domain.Tests
 ///
-/// @supports: R-018, R-019
-/// @adr: ADR-0005
 public sealed class MoneyArithmeticTests
 {
     [Theory(DisplayName = "половина копейки при создании суммы уходит вверх, а не исчезает")]

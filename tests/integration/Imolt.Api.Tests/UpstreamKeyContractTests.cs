@@ -20,7 +20,6 @@ namespace Imolt.Api.Tests;
 ///   dotnet test tests/integration/Imolt.Api.Tests
 ///
 /// @ac: AC-056b
-/// @supports: R-056
 public sealed class UpstreamKeyContractTests
 {
   // Признаки имени, по которым параметр опознаётся как секрет. Перечень

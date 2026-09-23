@@ -14,7 +14,6 @@ namespace Imolt.Api.Tests;
 /// набора условий означал бы, что одно из двух утверждений проверяется на
 /// данных другого.
 ///
-/// @supports: R-022, R-058
 public sealed class ImoltSeasonalTransportStand : IAsyncLifetime
 {
   /// Сезонный коэффициент стенда. Значение не круглое намеренно: при

@@ -18,7 +18,6 @@ namespace Imolt.Api.Tests;
 ///   dotnet test tests/integration/Imolt.Api.Tests
 ///
 /// @ac: AC-022a
-/// @supports: R-022, R-058
 [Collection(ImoltSeasonalTransportCollection.Name)]
 public sealed class SeasonalTransportCoefficientTests(ImoltSeasonalTransportStand stand)
 {

@@ -17,8 +17,6 @@ namespace Imolt.Api.Tests;
 ///   dotnet test tests/integration/Imolt.Api.Tests
 ///
 /// @ac: AC-011d
-/// @supports: R-002, R-011
-/// @adr: ADR-0003
 public sealed class ContractDeliveryTests : IAsyncLifetime
 {
   // База здесь не нужна: договор и страница просмотра от неё не зависят,

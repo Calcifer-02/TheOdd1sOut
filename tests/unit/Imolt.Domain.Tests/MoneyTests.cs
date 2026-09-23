@@ -16,7 +16,6 @@ namespace Imolt.Domain.Tests;
 ///
 ///   dotnet test tests/unit/Imolt.Domain.Tests
 ///
-/// @supports: R-061
 public sealed class MoneyTests
 {
   // Образец взят из договора: components/schemas/Money.properties.amount.pattern

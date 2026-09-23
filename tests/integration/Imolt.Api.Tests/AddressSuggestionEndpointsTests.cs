@@ -35,7 +35,6 @@ namespace Imolt.Api.Tests;
 ///   dotnet test tests/integration/Imolt.Api.Tests
 ///
 /// @ac: AC-012a, AC-012b, AC-012c, AC-055a, AC-056a
-/// @supports: R-012, R-055, R-056
 [Collection(ImoltReferencesCollection.Name)]
 public sealed class AddressSuggestionEndpointsTests(ImoltReferencesStand stand)
 {

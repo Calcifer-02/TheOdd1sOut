@@ -22,7 +22,6 @@ namespace Imolt.Api.Tests;
 ///   dotnet test tests/integration/Imolt.Api.Tests
 ///
 /// @ac: AC-039a, AC-039b, AC-013a, AC-013b, AC-060a, AC-060b
-/// @supports: R-013, R-039, R-060
 [Collection(ImoltReferencesCollection.Name)]
 public sealed class WasteGroupEndpointsTests(ImoltReferencesStand stand)
 {

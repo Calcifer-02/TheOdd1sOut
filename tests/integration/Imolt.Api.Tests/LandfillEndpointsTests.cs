@@ -23,7 +23,6 @@ namespace Imolt.Api.Tests;
 ///   dotnet test tests/integration/Imolt.Api.Tests
 ///
 /// @ac: AC-040a, AC-040b, AC-040c, AC-041a, AC-048b
-/// @supports: R-040, R-041, R-048
 [Collection(ImoltReferencesCollection.Name)]
 public sealed class LandfillEndpointsTests(ImoltReferencesStand stand)
 {

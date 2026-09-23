@@ -15,7 +15,6 @@ namespace Imolt.Api.Tests;
 /// (Program.cs, раздел о локали), и запятая вместо точки порвала бы JSON ещё
 /// до отправки.
 ///
-/// @supports: R-018, R-058
 internal static class CalculationChecks
 {
   /// Успешное создание расчёта: договор объявляет ответ 201, а не 200.

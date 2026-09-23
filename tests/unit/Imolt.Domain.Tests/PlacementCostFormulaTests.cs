@@ -31,7 +31,6 @@ namespace Imolt.Domain.Tests;
 ///   dotnet test tests/unit/Imolt.Domain.Tests
 ///
 /// @ac: AC-018a, AC-018b, AC-018c, AC-019a, AC-021a, AC-022a
-/// @supports: R-017, R-018, R-019, R-021, R-022
 public sealed class PlacementCostFormulaTests
 {
   /// Коэффициент перевозки, который ничего не меняет. Отдельное имя, потому

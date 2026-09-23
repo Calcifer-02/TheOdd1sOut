@@ -19,7 +19,6 @@ namespace Imolt.Api.Tests;
 ///
 ///   dotnet test tests/integration/Imolt.Api.Tests
 ///
-/// @supports: R-011
 public sealed class ContractOracleTests
 {
   private static readonly ContractOracle Oracle = ContractOracle.FromContract();

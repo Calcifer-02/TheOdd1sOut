@@ -27,7 +27,6 @@ namespace Imolt.Api.Tests;
 ///   dotnet test tests/integration/Imolt.Api.Tests
 ///
 /// @ac: AC-015a, AC-015b, AC-014a
-/// @supports: R-014, R-015
 [Collection(ImoltCalculationsCollection.Name)]
 public sealed class AmountConversionEndpointTests(ImoltCalculationsStand stand)
 {

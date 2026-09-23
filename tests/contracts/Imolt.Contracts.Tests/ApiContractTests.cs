@@ -18,8 +18,6 @@ namespace Imolt.Contracts.Tests;
 ///
 ///   dotnet test tests/contracts/Imolt.Contracts.Tests
 ///
-/// @supports: R-002
-/// @adr: ADR-0003
 public sealed class ApiContractTests
 {
   private static readonly string RepositoryRoot = FindRepositoryRoot();

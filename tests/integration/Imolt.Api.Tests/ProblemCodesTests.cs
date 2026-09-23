@@ -13,7 +13,6 @@ namespace Imolt.Api.Tests;
 ///
 ///   dotnet test tests/integration/Imolt.Api.Tests
 ///
-/// @supports: R-011
 public sealed class ProblemCodesTests
 {
   [Fact(DisplayName = "перечень кодов причин в коде совпадает с договором")]

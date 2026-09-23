@@ -17,7 +17,6 @@ namespace Imolt.Api.Tests;
 /// type, required, enum, pattern, nullable, items, properties,
 /// additionalProperties: false, $ref, allOf.
 ///
-/// @supports: R-011
 public sealed class ContractOracle
 {
   private readonly IDictionary<object, object> document;

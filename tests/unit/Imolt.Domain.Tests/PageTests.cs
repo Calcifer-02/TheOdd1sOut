@@ -17,8 +17,6 @@ namespace Imolt.Domain.Tests;
 ///   dotnet test tests/unit/Imolt.Domain.Tests
 ///
 /// @ac: AC-060a
-/// @supports: R-060
-/// @adr: ADR-0005
 public sealed class PageTests
 {
     [Fact(DisplayName = "страница сообщает общее число записей набора, а не число записей на странице")]

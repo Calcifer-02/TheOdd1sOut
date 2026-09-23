@@ -10,7 +10,6 @@ namespace Imolt.Api.Tests;
 /// той же версии, что в compose.yaml: готовность и миграции, проверенные на
 /// подделке, не доказывают ничего о боевом окружении.
 ///
-/// @supports: R-011
 public sealed class ImoltApiStand : IAsyncLifetime
 {
   private readonly PostgreSqlContainer database = new PostgreSqlBuilder("postgres:17-alpine")

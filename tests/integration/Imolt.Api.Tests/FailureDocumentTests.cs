@@ -18,8 +18,6 @@ namespace Imolt.Api.Tests;
 ///   dotnet test tests/integration/Imolt.Api.Tests
 ///
 /// @ac: AC-011e
-/// @supports: R-011
-/// @adr: ADR-0003
 public sealed class FailureDocumentTests : IAsyncLifetime
 {
   // Команда разбора строки подключения бросает ArgumentException — не
