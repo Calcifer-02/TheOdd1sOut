@@ -23,4 +23,7 @@ public sealed class SystemClock : IClock
   public DateTimeOffset Now => DateTimeOffset.UtcNow.ToOffset(ServiceOffset);
 
   public DateOnly Today => DateOnly.FromDateTime(Now.DateTime);
+
+  public DateTimeOffset StartOfDay(DateOnly day) =>
+      new(day.ToDateTime(TimeOnly.MinValue), ServiceOffset);
 }

@@ -76,4 +76,27 @@ public sealed class QuoteIssueEndpointTests(ImoltDealsStand stand)
             && !string.IsNullOrWhiteSpace(detail.GetString()),
         "отказ выпуска не назвал причину: показать рядом с кнопкой нечего");
   }
+
+  /// Регрессия на дефект ночного окна: номер складывался по дню службы
+  /// (Москва, UTC+3), а счётчик выпущенных за день считал по дате UTC. С
+  /// полуночи Москвы до полуночи UTC это разные дни, счётчик обнулялся раньше
+  /// номера, и второе предложение получало номер первого — выпуск отвечал
+  /// кодом 500 на нарушении единственности номера в базе.
+  ///
+  /// @ac: AC-036a
+  [Fact(DisplayName = "два предложения одних суток получают разные номера")]
+  public async Task TwoQuotesOfTheSameDayGetDifferentNumbers()
+  {
+    var first = await DealChecks.CreateSelectedCalculationAsync(
+        stand.Client, ImoltDealsStand.VostokId, ImoltDealsStand.IkshaId);
+    var second = await DealChecks.CreateSelectedCalculationAsync(
+        stand.Client, ImoltDealsStand.VostokId, ImoltDealsStand.IkshaId);
+
+    using var earlier = await DealChecks.IssuedQuoteAsync(stand.Client, first);
+    using var later = await DealChecks.IssuedQuoteAsync(stand.Client, second);
+
+    Assert.NotEqual(
+        earlier.RootElement.GetProperty("number").GetString(),
+        later.RootElement.GetProperty("number").GetString());
+  }
 }

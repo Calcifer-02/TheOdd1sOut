@@ -161,13 +161,20 @@ public sealed class QuoteStore(NpgsqlDataSource dataSource) : IQuoteStore
     await transaction.CommitAsync(cancellationToken);
   }
 
-  public async Task<int> IssuedOnAsync(DateOnly day, CancellationToken cancellationToken)
+  public async Task<int> IssuedBetweenAsync(
+      DateTimeOffset from,
+      DateTimeOffset to,
+      CancellationToken cancellationToken)
   {
     await using var connection = await dataSource.OpenConnectionAsync(cancellationToken);
 
+    // Полуоткрытый промежуток и никакого приведения к календарной дате:
+    // сравниваются моменты времени, и часовой пояс в запрос не попадает.
     return await connection.ExecuteScalarAsync<int>(new CommandDefinition(
-        "select count(*) from quote where (issued_at at time zone 'UTC')::date = @day",
-        new { day },
+        "select count(*) from quote where issued_at >= @from and issued_at < @to",
+        // Моменты приводятся к нулевому смещению: столбец объявлен как
+        // timestamptz, и средство доступа принимает только его.
+        new { from = from.ToUniversalTime(), to = to.ToUniversalTime() },
         cancellationToken: cancellationToken));
   }
 
