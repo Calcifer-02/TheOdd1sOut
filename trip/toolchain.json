@@ -1,5 +1,5 @@
 {
-  "trip": "0.9.1",
+  "trip": "0.11.0",
   "assets": {
     "msg.js": "sha256:00b5efd1c8a6bb739f3aeeac87bca3ba11db6ebfb66f87642ed8fe184cf9dd6e",
     "branch.js": "sha256:e15b8dd17a215ff8ce8d355498000b4858a5d640f7debec4fd8970a7ff958e4a",
