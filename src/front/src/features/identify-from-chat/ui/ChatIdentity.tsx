@@ -33,9 +33,11 @@ export function ChatIdentity() {
 
   if (profile !== null) {
     return (
-      <Notice kind="done">
-        Извещения о заявке придут в чат{profile.displayName ? `, ${profile.displayName}` : ''}
-      </Notice>
+      <div className="imolt-band">
+        <Notice kind="done">
+          Извещения о заявке придут в чат{profile.displayName ? `, ${profile.displayName}` : ''}
+        </Notice>
+      </div>
     );
   }
 
@@ -56,24 +58,29 @@ export function ChatIdentity() {
   };
 
   return (
-    <section className="imolt-card" aria-labelledby="imolt-chat-identity">
-      <h2 id="imolt-chat-identity">Открыто из чат-бота</h2>
-      <p>
-        Разрешите обработку персональных данных, чтобы получать извещения о заявке в чат и видеть
-        свои прежние расчёты.
-      </p>
-      <label>
-        <input
-          type="checkbox"
-          checked={consent}
-          onChange={(event) => setConsent(event.target.checked)}
-        />{' '}
-        Согласен на обработку персональных данных
-      </label>
-      <button type="button" onClick={connect} disabled={!consent || sending}>
-        Получать извещения в чате
-      </button>
-      {failure !== null && <Notice kind="error">{failure}</Notice>}
-    </section>
+    <div className="imolt-band">
+      <section className="imolt-card" aria-labelledby="imolt-chat-identity">
+        <h2 className="imolt-section" id="imolt-chat-identity">
+          Открыто из чат-бота
+        </h2>
+        <p className="imolt-lead">
+          Разрешите обработку персональных данных, чтобы получать извещения о заявке в чат и
+          видеть свои прежние расчёты.
+        </p>
+        <label className="imolt-consent">
+          <input
+            type="checkbox"
+            className="imolt-check"
+            checked={consent}
+            onChange={(event) => setConsent(event.target.checked)}
+          />
+          Согласен на обработку персональных данных
+        </label>
+        <button type="button" className="imolt-button" onClick={connect} disabled={!consent || sending}>
+          Получать извещения в чате
+        </button>
+        {failure !== null && <Notice kind="error">{failure}</Notice>}
+      </section>
+    </div>
   );
 }

@@ -321,7 +321,7 @@ describe('детали маршрута без подписки', () => {
       within(landfillCard(VOSTOK.landfillName)).getByRole('button', { name: 'Маршрут' }),
     );
 
-    expect(await screen.findByText('Детали маршрута — по подписке')).toBeInTheDocument();
+    expect(await screen.findByText('Детали маршрута – по подписке')).toBeInTheDocument();
   });
 
   it('не показывает ссылки на внешние карты вместо закрытых деталей', async () => {
@@ -333,7 +333,7 @@ describe('детали маршрута без подписки', () => {
     await user.click(
       within(landfillCard(VOSTOK.landfillName)).getByRole('button', { name: 'Маршрут' }),
     );
-    await screen.findByText('Детали маршрута — по подписке');
+    await screen.findByText('Детали маршрута – по подписке');
 
     expect(screen.queryByRole('link', { name: 'Открыть в Яндекс.Картах' })).toBeNull();
   });
