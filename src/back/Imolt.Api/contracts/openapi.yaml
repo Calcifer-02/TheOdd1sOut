@@ -16,7 +16,7 @@ openapi: 3.0.3
 
 info:
   title: ИМОЛТ — расчёт вывоза и утилизации отходов
-  version: 1.0.0
+  version: 1.1.0
   description: |
     Договор расчётной части сервиса ИМОЛТ: расчёт стоимости вывоза и
     утилизации строительных отходов по Москве и Московской области, подбор
@@ -36,7 +36,7 @@ info:
 
     **Чего в договоре нет.** Поведение, не определённое заказчиком, не
     додумано: такие места помечены `x-вопросы` со ссылкой на открытый вопрос.
-    Отложенные требования (R-047, R-062 — R-065) в версию 1 не входят.
+    Отложенные требования (R-047, R-062 — R-066) в версию 1 не входят.
 
     **Соглашения.**
 
@@ -89,8 +89,11 @@ tags:
       услуги по документации и подписка.
   - name: Доступ
     description: |
-      Вход по телефону, сессия и профиль. Что именно закрыто подпиской —
-      открытый вопрос Q-011, поэтому договор объявляет форму, а не политику.
+      Сессия и профиль. Личность даёт платформа MAX: в версию 1 своего входа
+      по паролю или коду нет (ADR-0006). Он не отменён, а отложен требованием
+      R-066 — до работы вне мессенджера или появления отправителя кода. Что
+      именно закрыто подпиской — открытый вопрос Q-011, поэтому договор
+      объявляет форму, а не политику.
 
 security:
   - {}
@@ -1169,47 +1172,20 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '422': { $ref: '#/components/responses/UnprocessableContent' }
 
-  /v1/auth/codes:
-    post:
-      operationId: requestSignInCode
-      tags: [Доступ]
-      summary: Запросить код подтверждения
-      description: |
-        Вход по телефону или почте. Ответ одинаков и для известного, и для
-        неизвестного адреса: иначе операция становится способом проверять
-        наличие учётной записи.
-      security: []
-      x-область: сделка
-      x-требования: [R-049]
-      x-вопросы: [Q-004]
-      x-экран: [Э-09]
-      x-состояние: объявлено
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: '#/components/schemas/SignInCodeRequest' }
-            example:
-              phone: '+79161234567'
-      responses:
-        '202':
-          description: код отправлен, если адрес пригоден
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/SignInCodeState' }
-              example:
-                expiresIn: 300
-                resendAfter: 60
-        '422': { $ref: '#/components/responses/UnprocessableContent' }
-        '429': { $ref: '#/components/responses/TooManyRequests' }
-
   /v1/auth/sessions:
     post:
       operationId: createSession
       tags: [Доступ]
-      summary: Подтвердить код и получить сессию
+      summary: Обменять параметры запуска MAX на сессию
       description: |
-        Возвращает маркер доступа для заголовка `Authorization: Bearer`.
+        Личность даёт платформа: мини-приложение передаёт сюда строку
+        стартовых параметров `initData`, сервер проверяет её подпись ключом
+        бота и в ответ выдаёт маркер доступа для заголовка
+        `Authorization: Bearer` (ADR-0006). Пароль, телефон и код
+        подтверждения здесь не передаются: собственный вход отложен
+        требованием R-066 и в версию 1 не входит.
+
+        Подпись проверяется на сервере: ключ бота наружу не выходит (R-056).
         Срок жизни маркера объявлен полем: клиент не угадывает его по опыту.
       security: []
       x-область: сделка
@@ -1223,8 +1199,7 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/SessionRequest' }
             example:
-              phone: '+79161234567'
-              code: '4821'
+              initData: 'auth_date=1758067200&query_id=AAH…&user=%7B%22id%22%3A812345%7D&hash=0f3c…'
               personalDataConsent: true
       responses:
         '201':
@@ -1237,15 +1212,18 @@ paths:
                 expiresIn: 86400
                 profile:
                   id: 9d3a7c10-52f4-4a1b-9ad8-0f6c2b5e41aa
+                  maxUserId: '812345'
+                  displayName: Иван
                   role: carrier
                   companyName: ООО «Перевозчик»
                   subscription: { state: pending }
         '401':
-          description: код не подошёл или устарел
+          description: подпись параметров запуска не сошлась или они устарели
           content:
             application/problem+json:
               schema: { $ref: '#/components/schemas/Problem' }
         '422': { $ref: '#/components/responses/UnprocessableContent' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
 
   /v1/profile:
     get:
@@ -2251,38 +2229,32 @@ components:
         subscription: { $ref: '#/components/schemas/SubscriptionState' }
         message: { type: string }
 
-    SignInCodeRequest:
-      type: object
-      description: адрес входа — телефон либо почта; передаётся ровно один
-      minProperties: 1
-      maxProperties: 1
-      properties:
-        phone: { type: string, pattern: '^\+7[0-9]{10}$' }
-        email: { type: string, format: email }
-      additionalProperties: false
-
-    SignInCodeState:
-      type: object
-      required: [expiresIn, resendAfter]
-      properties:
-        expiresIn: { type: integer, description: сколько секунд код действует }
-        resendAfter: { type: integer, description: через сколько секунд можно запросить повторно }
-
     SessionRequest:
       type: object
-      required: [code, personalDataConsent]
+      required: [initData, personalDataConsent]
       properties:
-        phone: { type: string, pattern: '^\+7[0-9]{10}$' }
-        email: { type: string, format: email }
-        code: { type: string, minLength: 4, maxLength: 8 }
-        personalDataConsent: { type: boolean }
+        initData:
+          type: string
+          maxLength: 4096
+          description: |
+            Строка стартовых параметров мини-приложения MAX как есть, без
+            разбора на стороне клиента: сервер сам разбирает её и проверяет
+            подпись поля `hash`. Разобранный клиентом объект не принимается —
+            проверять подпись можно только по исходной строке.
+        personalDataConsent:
+          type: boolean
+          description: явное согласие на обработку персональных данных (R-054)
       additionalProperties: false
 
     Profile:
       type: object
-      required: [id, subscription]
+      required: [id, maxUserId, subscription]
       properties:
         id: { type: string }
+        maxUserId:
+          type: string
+          description: учётная запись платформы MAX, по которой опознан пользователь
+        displayName: { type: string, nullable: true }
         role:
           allOf: [{ $ref: '#/components/schemas/SubscriberRole' }]
           nullable: true
