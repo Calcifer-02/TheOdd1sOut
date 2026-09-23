@@ -94,11 +94,15 @@ public interface IPriceValidity
 /// разобран, но нарушает правило предметной области.
 ///
 /// @supports: R-036
-public sealed class NothingToQuoteException(string message) : Exception(message);
+public sealed class NothingToQuoteException(string message) : Exception(message)
+{
+}
 
 /// Согласие на обработку персональных данных не дано. Принять данные и
 /// отказать — худший из исходов: снаружи он неотличим от честного отказа
 /// (R-054).
 ///
 /// @supports: R-054
-public sealed class ConsentMissingException(string message) : Exception(message);
+public sealed class ConsentMissingException(string message) : Exception(message)
+{
+}

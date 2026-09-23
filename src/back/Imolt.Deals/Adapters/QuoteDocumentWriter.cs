@@ -117,8 +117,6 @@ public sealed class QuoteDocumentWriter : IQuoteDocumentWriter
 /// кириллицы не несут, а системный набор различается: в образе службы
 /// установлен DejaVu, на машине разработчика — шрифты Windows. Отсутствие
 /// шрифта называется прямо: документ с квадратами вместо букв хуже отказа.
-///
-/// @supports: R-061
 internal sealed class CyrillicFontResolver : IFontResolver
 {
   public const string FamilyName = "Imolt";
