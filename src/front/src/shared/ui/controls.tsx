@@ -35,6 +35,7 @@ export function Field({
   inputMode,
   placeholder,
   id,
+  className,
 }: {
   label: string;
   value: string;
@@ -44,9 +45,11 @@ export function Field({
   inputMode?: 'text' | 'decimal' | 'tel';
   placeholder?: string;
   id: string;
+  /** Дополнительный класс обёртки: ширина поля — дело строки, а не поля. */
+  className?: string;
 }) {
   return (
-    <div className="imolt-grow">
+    <div className={className ? `imolt-grow ${className}` : 'imolt-grow'}>
       <label className="imolt-label" htmlFor={id}>
         {label}
       </label>

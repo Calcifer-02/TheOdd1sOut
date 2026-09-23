@@ -532,6 +532,7 @@ export function CalculatorMobile() {
             <div className="imolt-row">
               <Field
                 id={`amount-${index}`}
+                className="imolt-field--amount"
                 label="Объём"
                 value={line.amount}
                 inputMode="decimal"

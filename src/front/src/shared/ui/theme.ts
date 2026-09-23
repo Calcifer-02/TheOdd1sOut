@@ -131,7 +131,11 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
 
 .imolt-suggest button:hover { background: ${colors.accentRowHover}; }
 
+/* Количество и мера стоят в одной строке. Поле количества узкое намеренно:
+   в него вводят две-три цифры, и растянутое на всю колонку оно обещает
+   ввод, которого не будет. Остаток строки занимает переключатель меры. */
 .imolt-row { display: flex; gap: ${space.xs}px; align-items: flex-end; }
+.imolt-row > .imolt-field--amount { flex: 0 0 ${layout.amountWidth}px; }
 .imolt-row > * { min-width: 0; }
 .imolt-grow { flex: 1; }
 

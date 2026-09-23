@@ -20,7 +20,17 @@ export default defineConfig({
       '/api': { target: 'http://localhost:8080', changeOrigin: true, rewrite: (p) => p.replace(/^\/api/, '') },
     },
   },
-  build: { outDir: 'dist' },
+  // Две точки входа: экран сервиса и витрина компонентов. Витрина собирается
+  // из тех же модулей и потому не может разойтись с экранами (R-084).
+  build: {
+    outDir: 'dist',
+    rollupOptions: {
+      input: {
+        main: fileURLToPath(new URL('./index.html', import.meta.url)),
+        vitrina: fileURLToPath(new URL('./vitrina.html', import.meta.url)),
+      },
+    },
+  },
   test: {
     // Проверки лежат внутри пакета: разрешение зависимостей идёт вверх от
     // файла проверки, а node_modules мини-приложения живёт здесь. Корень
