@@ -25,6 +25,8 @@ import type {
   RouteSummary,
   SelectionEntry,
   SelectionState,
+  Session,
+  SessionRequest,
   SortField,
   SortOrder,
   WasteGroup,
@@ -79,6 +81,23 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
 
   return (await response.json()) as T;
+}
+
+/**
+ * Обмен стартовых параметров платформы на маркер доступа (R-049, R-071).
+ *
+ * Строка параметров уходит как есть: подпись проверяется только по исходной
+ * строке, и разобранный браузером объект личностью не считается (ADR-0006).
+ * Согласие на обработку персональных данных приходит параметром, а не
+ * подставляется здесь истиной (R-054).
+ *
+ * @supports: R-049, R-071
+ */
+export function createSession(input: SessionRequest): Promise<Session> {
+  return request<Session>('/v1/auth/sessions', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
 }
 
 /** @supports: R-013 */

@@ -10,6 +10,7 @@
  */
 import { useEffect } from 'react';
 import { CalculatorMobile } from '@/pages/calculator';
+import { ChatIdentity } from '@/features/identify-from-chat';
 import { THEME_CSS } from '@/shared/ui';
 
 export function App() {
@@ -23,5 +24,10 @@ export function App() {
     return () => style.remove();
   }, []);
 
-  return <CalculatorMobile />;
+  return (
+    <>
+      <ChatIdentity />
+      <CalculatorMobile />
+    </>
+  );
 }

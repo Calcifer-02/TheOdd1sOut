@@ -181,3 +181,20 @@ export type AmountConversionItem = {
   cubicMeters: number;
   densityTonPerCubicMeter: number;
 };
+
+export type SubscriptionState = 'none' | 'pending' | 'active';
+
+export type Profile = {
+  id: string;
+  maxUserId: string;
+  displayName?: string | null;
+  role?: 'carrier' | 'demolitionCompany' | null;
+  companyName?: string | null;
+  inn?: string | null;
+  registeredInAisOssig?: boolean | null;
+  subscription: SubscriptionState;
+};
+
+export type Session = { accessToken: string; expiresIn: number; profile: Profile };
+
+export type SessionRequest = { initData: string; personalDataConsent: boolean };
