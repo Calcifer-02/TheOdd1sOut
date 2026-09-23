@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Проверки чат-бота. Идут без платформы MAX и без базы данных: обращения
+       к платформе закрыты портом, и подменяется он двойником. Проверка,
+       которой понадобился настоящий токен, стоит не на этом уровне
+       (ADR-0009). -->
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\back\Imolt.Bot\Imolt.Bot.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+</Project>
