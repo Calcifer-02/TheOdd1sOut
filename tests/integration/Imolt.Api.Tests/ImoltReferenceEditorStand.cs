@@ -161,11 +161,14 @@ public sealed class ImoltReferenceEditorStand : IAsyncLifetime
 
   public HttpClient Client { get; private set; } = null!;
 
-  /// День, которым критерии называют «дату правки». Берётся по местным часам
-  /// машины: служба и проверка идут в одном процессе и на одном часовом
-  /// поясе. Договор часовой пояс поля `updatedAt` не называет — расхождение
-  /// названо в отчёте среза, а не обойдено выбором «удобного» пояса здесь.
-  public string EditDate => DateOnly.FromDateTime(DateTime.Now).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+  /// День, которым критерии называют «дату правки». Считается по тому же
+  /// поясу обслуживаемой области, что и у службы (SystemClock): пояс машины,
+  /// на которой идёт проверка, к обещанию о свежести данных отношения не
+  /// имеет, и на машине за пределами Москвы проверка иначе мигала бы по
+  /// причине, к поведению не относящейся.
+  public string EditDate => DateOnly
+      .FromDateTime(DateTimeOffset.UtcNow.ToOffset(TimeSpan.FromHours(3)).DateTime)
+      .ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
   public async Task InitializeAsync()
   {
