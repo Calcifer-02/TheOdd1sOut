@@ -76,3 +76,67 @@ public sealed record DocumentService(
     // от «цена не названа» не может. Служба иначе опускает пустые поля.
     [property: JsonIgnore(Condition = JsonIgnoreCondition.Never)] Money? PriceFrom,
     bool PriceOnRequest);
+
+/// Строка стартовых параметров мини-приложения как есть, без разбора на
+/// стороне клиента: проверять подпись можно только по исходной строке
+/// (ADR-0006).
+public sealed record SessionRequest(string InitData, bool PersonalDataConsent);
+
+/// Состояние подписки (R-008, R-049). «pending» — нормальный исход, а не
+/// ошибка: оплата идёт вне сервиса.
+public sealed record SubscriptionState(string State, DateOnly? ActiveUntil)
+{
+  public const string None = "none";
+
+  public const string Pending = "pending";
+
+  public const string Active = "active";
+}
+
+/// Профиль участника. Учётная запись платформы названа обязательно: по ней
+/// пользователь опознан, и без неё профиль ничей (R-049, R-051).
+public sealed record Profile(
+    string Id,
+    string MaxUserId,
+    string? DisplayName,
+    string? Role,
+    string? CompanyName,
+    string? Inn,
+    bool? RegisteredInAisOssig,
+    SubscriptionState Subscription);
+
+/// Сессия участника. Срок жизни маркера объявлен полем: клиент не угадывает
+/// его по опыту.
+public sealed record Session(string AccessToken, int ExpiresIn, Profile Profile);
+
+public sealed record SubscriptionRequestInput(
+    string Role,
+    string CompanyName,
+    string Inn,
+    bool? RegisteredInAisOssig);
+
+public sealed record SubscriptionRequest(
+    string Id,
+    DateTimeOffset CreatedAt,
+    SubscriptionState Subscription,
+    string Message);
+
+public sealed record DocumentServiceOrderInput(
+    string ServiceId,
+    string ObjectAddress,
+    string? Comment,
+    bool PersonalDataConsent);
+
+public sealed record DocumentServiceOrder(
+    string Id,
+    string ServiceId,
+    DateTimeOffset CreatedAt,
+    string State,
+    string Message)
+{
+  public const string Accepted = "accepted";
+}
+
+/// Участник, опознанный по маркеру доступа. Роли областей о нём не знают —
+/// они получают идентификатор доводом (ADR-0001).
+public sealed record Participant(string Id, string MaxUserId);

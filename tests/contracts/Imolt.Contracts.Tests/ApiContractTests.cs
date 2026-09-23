@@ -155,6 +155,10 @@ public sealed class ApiContractTests
       "/v1/quotes/{quoteId}/document",
       "/v1/pickup-requests",
       "/v1/document-services",
+      "/v1/auth/sessions",
+      "/v1/profile",
+      "/v1/subscription-requests",
+      "/v1/document-service-orders",
     ];
 
     var implemented = Operations()

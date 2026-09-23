@@ -152,6 +152,16 @@ public sealed record AmountConversionResultItem(
 
 public sealed record AmountConversionResult(IReadOnlyList<AmountConversionResultItem> Items);
 
+/// Строка кабинета: расчёт, каким его видит владелец (R-008, R-049).
+/// Итог — сумма выбранных полигонов; у расчёта без выбора он равен нулю, как
+/// и у пустой сводки выбора: ноль рублей и отсутствие итога клиент читает
+/// по-разному.
+public sealed record CalculationSummary(
+    string Id,
+    DateTimeOffset CreatedAt,
+    string PickupAddress,
+    Money Total);
+
 /// Строка выбора с закреплённой ценой: то, что коммерческое предложение
 /// переносит в свой снимок (R-036, R-037). Справочник потом изменится, а
 /// выпущенный документ обязан остаться прежним.

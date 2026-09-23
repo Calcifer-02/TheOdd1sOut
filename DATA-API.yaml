@@ -63,6 +63,12 @@ mandatoryChecks:
   - downloadQuoteDocument
   - createPickupRequest
   - listDocumentServices
+  - createSession
+  - getProfile
+  - createSubscriptionRequest
+  - listCalculations
+  - createLandfillReview
+  - createDocumentServiceOrder
 
 # Что именно не определено заказчиком и потому не проверяется по существу:
 # разграничение доступа между гостем и подпиской — открытый вопрос Q-011.
@@ -243,7 +249,7 @@ checks:
   - id: createLandfillReview
     name: Оставить оценку и отзыв о полигоне
     area: справочники
-    state: объявлено
+    state: реализовано
     method: POST
     path: /v1/landfills/{landfillId}/reviews
     role: authenticated
@@ -366,7 +372,7 @@ checks:
   - id: listCalculations
     name: Сохранённые расчёты кабинета
     area: расчёт
-    state: объявлено
+    state: реализовано
     method: GET
     path: /v1/calculations
     role: authenticated
@@ -580,7 +586,7 @@ checks:
   - id: createDocumentServiceOrder
     name: Заказать услугу по документации
     area: сделка
-    state: объявлено
+    state: реализовано
     method: POST
     path: /v1/document-service-orders
     role: authenticated
@@ -598,7 +604,7 @@ checks:
   - id: createSubscriptionRequest
     name: Оставить заявку на подписку
     area: сделка
-    state: объявлено
+    state: реализовано
     method: POST
     path: /v1/subscription-requests
     role: authenticated
@@ -615,7 +621,7 @@ checks:
   - id: createSession
     name: Обменять параметры запуска MAX на сессию
     area: сделка
-    state: объявлено
+    state: реализовано
     method: POST
     path: /v1/auth/sessions
     role: guest
@@ -633,7 +639,7 @@ checks:
   - id: getProfile
     name: Профиль и состояние подписки
     area: сделка
-    state: объявлено
+    state: реализовано
     method: GET
     path: /v1/profile
     role: authenticated

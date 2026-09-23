@@ -88,7 +88,10 @@ public sealed record StoredCalculation(
     DateOnly StatusesUpdatedAt,
     IReadOnlyList<StoredItem> Items,
     IReadOnlyList<SelectionEntry> Selection,
-    IReadOnlyList<AllocationEntry> Allocation);
+    IReadOnlyList<AllocationEntry> Allocation,
+    /// Владелец расчёта. Пусто у гостя: договор объявляет расчёт доступным
+    /// без входа, и кабинет показывает только свои расчёты (R-050, R-008).
+    string? SubscriberId = null);
 
 /// Хранение расчёта. Расчёт живёт дольше запроса: по его идентификатору потом
 /// читают варианты размещения, задают выбор, распределяют объём и выпускают
@@ -100,6 +103,10 @@ public interface ICalculationStore
   Task SaveAsync(StoredCalculation calculation, CancellationToken cancellationToken);
 
   Task<StoredCalculation?> FindAsync(string id, CancellationToken cancellationToken);
+
+  /// Идентификаторы расчётов участника, от новых к старым. Гостевые расчёты
+  /// сюда не попадают: у них нет владельца (R-008).
+  Task<Page<string>> ListAsync(string subscriberId, PageRequest page, CancellationToken cancellationToken);
 
   /// Выбор задаётся целиком: прежний набор снимается, новый записывается
   /// одной единицей работы (R-027).

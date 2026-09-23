@@ -154,6 +154,48 @@ public sealed class LandfillRegistry(NpgsqlDataSource dataSource) : ILandfillReg
         cancellationToken: cancellationToken));
   }
 
+  public async Task<LandfillReview?> AddReviewAsync(
+      string landfillId,
+      string subscriberId,
+      int rating,
+      string? text,
+      CancellationToken cancellationToken)
+  {
+    if (rating is < 1 or > 5)
+    {
+      throw new ArgumentOutOfRangeException(nameof(rating), rating, "оценка — целое от одного до пяти");
+    }
+
+    await using var connection = await dataSource.OpenConnectionAsync(cancellationToken);
+
+    if (!await connection.ExecuteScalarAsync<bool>(new CommandDefinition(
+        "select exists (select 1 from landfill where id = @landfillId)",
+        new { landfillId },
+        cancellationToken: cancellationToken)))
+    {
+      return null;
+    }
+
+    var row = await connection.QuerySingleAsync<ReviewRow>(new CommandDefinition(
+        """
+        insert into landfill_review (id, landfill_id, subscriber_id, rating, text, created_at)
+        values (@id, @landfillId, @subscriberId, @rating, @text, @createdAt)
+        returning id, landfill_id, rating, text, created_at
+        """,
+        new
+        {
+          id = Guid.NewGuid(),
+          landfillId,
+          subscriberId = Guid.Parse(subscriberId),
+          rating,
+          text,
+          createdAt = DateTimeOffset.UtcNow,
+        },
+        cancellationToken: cancellationToken));
+
+    return new LandfillReview(row.Id.ToString(), row.LandfillId, row.Rating, row.Text, row.CreatedAt.ToLocalTime());
+  }
+
   public async Task<(Page<LandfillReview> Reviews, double? AverageRating)> ReviewsAsync(
       string landfillId,
       PageRequest page,

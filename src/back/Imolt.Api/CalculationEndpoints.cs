@@ -1,5 +1,6 @@
 using Imolt.Calculations.Application;
 using Imolt.Calculations.Contracts;
+using Imolt.Deals.Ports;
 using Imolt.Shared;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,7 +11,7 @@ namespace Imolt.Api;
 /// со сценариями области — формула и правила живут в самой области
 /// (ADR-0001, ADR-0005).
 ///
-/// @req: R-014, R-018, R-023, R-024, R-025, R-027, R-030, R-032, R-050
+/// @req: R-008, R-014, R-018, R-023, R-024, R-025, R-027, R-030, R-032, R-050
 /// @adr: ADR-0003
 public static class CalculationEndpoints
 {
@@ -30,12 +31,31 @@ public static class CalculationEndpoints
         CancellationToken cancellationToken) =>
         Results.Ok(await scenarios.ConvertAsync(request, cancellationToken)));
 
-    app.MapPost("/v1/calculations", async (
-        [FromBody] CalculationRequest request,
+    app.MapGet("/v1/calculations", async (
+        HttpContext context,
+        [FromQuery] int? limit,
+        [FromQuery] int? offset,
         [FromServices] CalculationScenarios scenarios,
+        [FromServices] IAccessTokens tokens,
         CancellationToken cancellationToken) =>
     {
-      var calculation = await scenarios.CreateAsync(request, cancellationToken);
+      var participant = AccessEndpoints.Participant(context, tokens);
+
+      return Results.Ok(await scenarios.ListAsync(
+          participant.Id, PageRequest.Create(limit, offset), cancellationToken));
+    });
+
+    app.MapPost("/v1/calculations", async (
+        HttpContext context,
+        [FromBody] CalculationRequest request,
+        [FromServices] CalculationScenarios scenarios,
+        [FromServices] IAccessTokens tokens,
+        CancellationToken cancellationToken) =>
+    {
+      // Расчёт доступен гостю (R-050): маркер необязателен, но названный
+      // участник становится владельцем — иначе кабинет пуст.
+      var owner = AccessEndpoints.Guest(context, tokens)?.Id;
+      var calculation = await scenarios.CreateAsync(request, owner, cancellationToken);
 
       // Договор объявляет 201 и адрес созданного расчёта: по нему страница
       // восстанавливается после перезагрузки (R-002).

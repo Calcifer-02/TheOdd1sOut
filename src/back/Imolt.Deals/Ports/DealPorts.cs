@@ -106,3 +106,60 @@ public sealed class NothingToQuoteException(string message) : Exception(message)
 public sealed class ConsentMissingException(string message) : Exception(message)
 {
 }
+
+/// Учётные записи участников, опознанных платформой (СУЩ-13).
+///
+/// Запись заводится только при сошедшейся подписи и данном согласии: отказ,
+/// оставивший учётную запись, снаружи неотличим от честного (R-049, R-054).
+///
+/// @supports: R-008, R-049, R-051
+public interface ISubscriberStore
+{
+  /// Заводит учётную запись или возвращает прежнюю по учётной записи
+  /// платформы. Повторный вход не создаёт второго участника.
+  Task<Profile> EnrolAsync(string maxUserId, string? displayName, CancellationToken cancellationToken);
+
+  Task<Profile?> FindAsync(string subscriberId, CancellationToken cancellationToken);
+
+  /// Заявка на подписку переводит её в состояние «ожидает»: оплата идёт вне
+  /// сервиса, и подтвердить её сервер не может (R-008, R-049).
+  Task<SubscriptionRequest> RequestSubscriptionAsync(
+      string subscriberId,
+      SubscriptionRequestInput input,
+      CancellationToken cancellationToken);
+}
+
+/// Заказы услуг по документации (СУЩ-10).
+///
+/// @supports: R-009, R-052, R-054
+public interface IDocumentServiceOrderStore
+{
+  Task<bool> ServiceExistsAsync(string serviceId, CancellationToken cancellationToken);
+
+  Task SaveAsync(
+      DocumentServiceOrder order,
+      string subscriberId,
+      DocumentServiceOrderInput input,
+      CancellationToken cancellationToken);
+}
+
+/// Маркер доступа. Договор объявляет его JWT; срок жизни называется вместе с
+/// маркером, чтобы клиент не угадывал его по опыту.
+///
+/// @supports: R-049, R-050
+public interface IAccessTokens
+{
+  (string Token, int ExpiresIn) Issue(Participant participant);
+
+  /// Участник по маркеру. Пусто означает «маркера нет или он негоден» —
+  /// различать это клиенту незачем, и обе причины дают один отказ.
+  Participant? Resolve(string? token);
+}
+
+/// Подпись стартовых параметров не сошлась либо они устарели. Договор
+/// объявляет такой исход кодом 401 (ADR-0006).
+///
+/// @supports: R-049
+public sealed class IdentityRefusedException(string message) : Exception(message)
+{
+}

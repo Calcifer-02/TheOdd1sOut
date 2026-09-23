@@ -85,3 +85,7 @@ public sealed record LandfillFilter(
     string? Query,
     string? WasteGroupId,
     string? Status);
+
+/// Оценка полигона, как её присылает участник (R-031). Текст необязателен:
+/// оценка без слов — тоже сигнал о достоверности сведений.
+public sealed record LandfillReviewInput(int Rating, string? Text);

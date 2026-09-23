@@ -118,6 +118,31 @@ builder.Services.AddScoped<IPriceValidity>(services => new PriceValidity(
         .GetValue("QUOTE_VALIDITY_DAYS", PriceValidity.DemonstrationDays)));
 builder.Services.AddScoped<DealScenarios>();
 
+// Личность от платформы MAX (ADR-0006). Ключ бота и срок давности стартовых
+// параметров читаются настройками в момент разрешения зависимости: ключ —
+// секрет, которому не место в коде (R-056), а срок договором не назван.
+builder.Services.AddScoped<ISubscriberStore, SubscriberStore>();
+builder.Services.AddScoped<IDocumentServiceOrderStore, DocumentServiceOrderStore>();
+builder.Services.AddSingleton<IAccessTokens>(services =>
+{
+    var configuration = services.GetRequiredService<IConfiguration>();
+
+    return new AccessTokens(
+        configuration["IMOLT_SESSION_SECRET"],
+        configuration.GetValue("IMOLT_SESSION_TTL_SECONDS", 86400));
+});
+builder.Services.AddScoped(services =>
+{
+    var configuration = services.GetRequiredService<IConfiguration>();
+
+    return new MaxIdentitySettings(
+        configuration["MAX_BOT_TOKEN"] ?? string.Empty,
+        TimeSpan.FromSeconds(configuration.GetValue(
+            "MAX_INIT_DATA_TTL_SECONDS",
+            (int)MaxIdentitySettings.DemonstrationLifetime.TotalSeconds)));
+});
+builder.Services.AddScoped<AccessScenarios>();
+
 var app = builder.Build();
 
 // Схему применяет тот, кто разворачивает, а не служба при каждом старте:
@@ -146,6 +171,7 @@ app.MapServiceEndpoints();
 app.MapReferenceEndpoints();
 app.MapCalculationEndpoints();
 app.MapDealEndpoints();
+app.MapAccessEndpoints();
 
 // Неизвестный путь отвечает тем же документом об ошибке, что и остальные
 // отказы. Пустое тело с кодом 404 клиенту разбирать нечем, а на общем узле

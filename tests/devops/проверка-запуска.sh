@@ -241,7 +241,53 @@ proverit "сделка: маршрут по выбранным полигона�
 proverit "сделка: каталог услуг по документации" 200 "http://localhost:${API_PORT}/v1/document-services"
 
 echo
-echo "== 7. Схема базы данных"
+echo "== 7. Доступ участника"
+# Личность даёт платформа: подписать стартовые параметры можно только ключом
+# бота, и здесь он тот же, что у службы. Проверяется не «точка отвечает», а
+# что сошедшаяся подпись даёт маркер, а подделанная — не даёт.
+if [ -n "${MAX_BOT_TOKEN}" ]; then
+  AUTH_DATE=$(date +%s)
+  POLZOVATEL='{"id":880901,"first_name":"Proverka"}'
+  STROKA_PROVERKI=$(printf 'auth_date=%s
+user=%s' "$AUTH_DATE" "$POLZOVATEL")
+  KLYUCH=$(printf '%s' "$MAX_BOT_TOKEN" | openssl dgst -sha256 -hmac 'WebAppData' -binary | xxd -p -c 64)
+  PODPIS=$(printf '%s' "$STROKA_PROVERKI" | openssl dgst -sha256 -mac HMAC -macopt "hexkey:$KLYUCH" -hex | sed 's/.*= //')
+  USER_KOD=$(printf '%s' "$POLZOVATEL" | od -An -tx1 | tr -d ' 
+' | sed 's/../%&/g')
+  INIT_DATA="auth_date=${AUTH_DATE}&user=${USER_KOD}&hash=${PODPIS}"
+
+  SESSIYA=$(curl -s --max-time 20 -X POST -H 'Content-Type: application/json'     -d "{\"initData\":\"${INIT_DATA}\",\"personalDataConsent\":true}"     "http://localhost:${API_PORT}/v1/auth/sessions" 2>/dev/null)
+  MARKER=$(printf '%s' "$SESSIYA" | grep -o '"accessToken":"[^"]*"' | cut -d'"' -f4)
+
+  if [ -n "$MARKER" ]; then
+    soobshchit "доступ: подписанные параметры обменены на маркер" "ок"
+  else
+    soobshchit "доступ: подписанные параметры обменены на маркер" "ОТКАЗ (ответ: ${SESSIYA:-нет ответа})"
+    OSHIBKI=$((OSHIBKI + 1))
+  fi
+
+  PODDELKA=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 -X POST     -H 'Content-Type: application/json'     -d "{\"initData\":\"auth_date=${AUTH_DATE}&user=${USER_KOD}&hash=0000\",\"personalDataConsent\":true}"     "http://localhost:${API_PORT}/v1/auth/sessions" 2>/dev/null)
+  if [ "$PODDELKA" = "401" ]; then
+    soobshchit "доступ: подделанная подпись отвергнута" "ок (401)"
+  else
+    soobshchit "доступ: подделанная подпись отвергнута" "ОТКАЗ (получен ${PODDELKA:-нет ответа})"
+    OSHIBKI=$((OSHIBKI + 1))
+  fi
+
+  BEZ_MARKERA=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15     "http://localhost:${API_PORT}/v1/profile" 2>/dev/null)
+  S_MARKEROM=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15     -H "Authorization: Bearer ${MARKER}" "http://localhost:${API_PORT}/v1/profile" 2>/dev/null)
+  if [ "$BEZ_MARKERA" = "401" ] && [ "$S_MARKEROM" = "200" ]; then
+    soobshchit "доступ: кабинет закрыт без маркера и открыт с ним" "ок (401 и 200)"
+  else
+    soobshchit "доступ: кабинет закрыт без маркера и открыт с ним" "ОТКАЗ (${BEZ_MARKERA:-нет} и ${S_MARKEROM:-нет})"
+    OSHIBKI=$((OSHIBKI + 1))
+  fi
+else
+  soobshchit "доступ: ключ бота не задан" "пропущено (MAX_BOT_TOKEN пуст)"
+fi
+
+echo
+echo "== 8. Схема базы данных"
 # Схему накатывает расчётная часть при старте, когда включён признак
 # IMOLT_APPLY_MIGRATIONS (ADR-0002). Проверяем не «база отвечает», а
 # «схема на месте»: пустая база тоже отвечает, и отличить это иначе нельзя.
@@ -255,7 +301,7 @@ else
 fi
 
 echo
-echo "== 8. Приём обновления чат-ботом"
+echo "== 9. Приём обновления чат-ботом"
 kod=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 \
   -X POST -H 'Content-Type: application/json' -d '{"проверка":true}' \
   "http://localhost:${BOT_PORT}/max/webhook" 2>/dev/null)

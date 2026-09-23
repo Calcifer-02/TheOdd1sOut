@@ -1,6 +1,7 @@
 using Dapper;
 using Imolt.Calculations.Contracts;
 using Imolt.Calculations.Ports;
+using Imolt.Shared;
 using Npgsql;
 
 namespace Imolt.Calculations.Adapters;
@@ -26,11 +27,11 @@ public sealed class CalculationStore(NpgsqlDataSource dataSource) : ICalculation
         insert into calculation (
             id, created_at, pickup_value, pickup_latitude, pickup_longitude, pickup_area,
             pickup_suggestion_id, disposal_required, distance_mode, distance_km,
-            prices_updated_at, statuses_updated_at
+            prices_updated_at, statuses_updated_at, subscriber_id
         ) values (
             @id, @createdAt, @value, @latitude, @longitude, @area,
             @suggestionId, @disposalRequired, @distanceMode, @distanceKm,
-            @pricesUpdatedAt, @statusesUpdatedAt
+            @pricesUpdatedAt, @statusesUpdatedAt, @subscriberId
         )
         """,
         new
@@ -50,6 +51,9 @@ public sealed class CalculationStore(NpgsqlDataSource dataSource) : ICalculation
           distanceKm = calculation.DistanceFilter.Km,
           pricesUpdatedAt = calculation.PricesUpdatedAt,
           statusesUpdatedAt = calculation.StatusesUpdatedAt,
+          // Гостевой расчёт владельца не имеет: договор объявляет расчёт
+          // доступным без входа (R-050).
+          subscriberId = Guid.TryParse(calculation.SubscriberId, out var owner) ? owner : (Guid?)null,
         },
         transaction,
         cancellationToken: cancellationToken));
@@ -91,7 +95,7 @@ public sealed class CalculationStore(NpgsqlDataSource dataSource) : ICalculation
         """
         select id, created_at, pickup_value, pickup_latitude, pickup_longitude, pickup_area,
                pickup_suggestion_id, disposal_required, distance_mode, distance_km,
-               prices_updated_at, statuses_updated_at
+               prices_updated_at, statuses_updated_at, subscriber_id
           from calculation
          where id = @key
         """,
@@ -149,7 +153,41 @@ public sealed class CalculationStore(NpgsqlDataSource dataSource) : ICalculation
             item.WasteGroupId, new Quantity(item.InputValue, item.InputUnit), item.Tons))],
         [.. selection.Select(entry => new SelectionEntry(entry.WasteGroupId, entry.LandfillId))],
         [.. allocation.Select(entry => new AllocationEntry(
-            entry.WasteGroupId, entry.LandfillId, new Quantity(entry.Value, entry.Unit)))]);
+            entry.WasteGroupId, entry.LandfillId, new Quantity(entry.Value, entry.Unit)))],
+        row.SubscriberId?.ToString());
+  }
+
+  public async Task<Page<string>> ListAsync(
+      string subscriberId,
+      PageRequest page,
+      CancellationToken cancellationToken)
+  {
+    if (!Guid.TryParse(subscriberId, out var owner))
+    {
+      return Pages.Of<string>([], 0, page);
+    }
+
+    await using var connection = await dataSource.OpenConnectionAsync(cancellationToken);
+
+    var total = await connection.ExecuteScalarAsync<int>(new CommandDefinition(
+        "select count(*) from calculation where subscriber_id = @owner",
+        new { owner },
+        cancellationToken: cancellationToken));
+
+    // От новых к старым: кабинет открывают ради последнего расчёта, а не
+    // ради первого.
+    var rows = await connection.QueryAsync<Guid>(new CommandDefinition(
+        """
+        select id
+          from calculation
+         where subscriber_id = @owner
+         order by created_at desc, id
+         limit @limit offset @offset
+        """,
+        new { owner, limit = page.Limit, offset = page.Offset },
+        cancellationToken: cancellationToken));
+
+    return Pages.Of<string>([.. rows.Select(id => id.ToString())], total, page);
   }
 
   public Task SaveSelectionAsync(
@@ -247,6 +285,8 @@ public sealed class CalculationStore(NpgsqlDataSource dataSource) : ICalculation
     public DateOnly PricesUpdatedAt { get; set; }
 
     public DateOnly StatusesUpdatedAt { get; set; }
+
+    public Guid? SubscriberId { get; set; }
   }
 
   private sealed class ItemRow

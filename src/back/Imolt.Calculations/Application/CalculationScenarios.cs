@@ -61,6 +61,7 @@ public sealed class CalculationScenarios(
   /// Создание расчёта: главная операция сервиса (R-002, R-018).
   public async Task<Calculation> CreateAsync(
       CalculationRequest? request,
+      string? subscriberId,
       CancellationToken cancellationToken)
   {
     var pickup = request?.PickupAddress
@@ -96,7 +97,10 @@ public sealed class CalculationScenarios(
         freshness.StatusesUpdatedAt,
         stored,
         [],
-        []);
+        [],
+        // Владелец необязателен: расчёт доступен гостю (R-050), и кабинет
+        // показывает только расчёты участника (R-008).
+        subscriberId);
 
     // Подбор идёт до записи: если плеча перевозки нет, расчёт отказывает
     // целиком, и сохранённая наполовину заготовка осталась бы мусором.
@@ -115,6 +119,37 @@ public sealed class CalculationScenarios(
         ? null
         : await AssembleAsync(
             calculation, await ResultsAsync(calculation, cancellationToken), cancellationToken);
+  }
+
+  /// Сохранённые расчёты кабинета (R-008, R-049). Гостевые расчёты сюда не
+  /// попадают: у них нет владельца.
+  public async Task<Page<CalculationSummary>> ListAsync(
+      string subscriberId,
+      PageRequest page,
+      CancellationToken cancellationToken)
+  {
+    var ids = await store.ListAsync(subscriberId, page, cancellationToken);
+    var items = new List<CalculationSummary>();
+
+    foreach (var id in ids.Items)
+    {
+      var calculation = await store.FindAsync(id, cancellationToken);
+
+      if (calculation is null)
+      {
+        continue;
+      }
+
+      var selection = await SavedSelectionAsync(calculation, cancellationToken);
+
+      items.Add(new CalculationSummary(
+          calculation.Id,
+          calculation.CreatedAt,
+          calculation.PickupAddress.Value,
+          selection?.Total ?? Money.Rubles(0)));
+    }
+
+    return Pages.Of(items, ids.Total, page);
   }
 
   /// Страница вариантов размещения одной вкладки: своя сортировка, свой

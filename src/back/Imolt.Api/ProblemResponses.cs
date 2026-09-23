@@ -119,6 +119,29 @@ public static class ProblemResponses
                 []);
             break;
 
+          // Личности нет: подпись стартовых параметров не сошлась, они
+          // устарели либо маркер не предъявлен. Клиенту различать эти случаи
+          // незачем — во всех трёх он открывает мини-приложение заново.
+          case IdentityRefusedException identity:
+            await WriteAsync(
+                context,
+                StatusCodes.Status401Unauthorized,
+                Problems.AuthenticationRequired,
+                "Личность не подтверждена",
+                identity.Message,
+                []);
+            break;
+
+          case AuthenticationRequiredException required:
+            await WriteAsync(
+                context,
+                StatusCodes.Status401Unauthorized,
+                Problems.AuthenticationRequired,
+                "Нужна сессия участника",
+                required.Message,
+                []);
+            break;
+
           // Отказ внешнего источника не равен отказу обслуживания: заголовок
           // называет, через сколько повторять (ADR-0002, инвариант 5).
           case UpstreamUnavailableException upstream:

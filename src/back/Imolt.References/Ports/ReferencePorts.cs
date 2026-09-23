@@ -36,6 +36,16 @@ public interface ILandfillRegistry
 
   /// Средняя оценка пуста, когда отзывов нет: ноль означал бы «оценили на
   /// ноль», а такой оценки в договоре нет (R-031).
+  /// Оценка полигона от участника с сессией (R-031). Автор обязателен:
+  /// анонимная оценка достоверности сведений ничего не говорит о доверии к
+  /// ней самой.
+  Task<LandfillReview?> AddReviewAsync(
+      string landfillId,
+      string subscriberId,
+      int rating,
+      string? text,
+      CancellationToken cancellationToken);
+
   Task<(Page<LandfillReview> Reviews, double? AverageRating)> ReviewsAsync(
       string landfillId,
       PageRequest page,

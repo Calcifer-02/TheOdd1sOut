@@ -12,6 +12,10 @@
          QuestPDF удобнее, но его Community-лицензия привязана к выручке
          компании, а ИМОЛТ — действующий бизнес. -->
     <PackageReference Include="PdfSharp" Version="6.2.4" />
+    <!-- Маркер доступа объявлен договором как JWT (securitySchemes.bearerAuth).
+         Библиотека взята стандартная: собственная реализация подписи маркера
+         была бы криптографией, написанной на месте. -->
+    <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.16.0" />
   </ItemGroup>
 
 </Project>

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json.Serialization;
 using Imolt.References.Contracts;
+using Imolt.Deals.Ports;
 using Imolt.References.Ports;
 using Imolt.Shared;
 
@@ -74,6 +75,29 @@ public static class ReferenceEndpoints
       return card is null
           ? ProblemResponses.NotFound($"Полигон {landfillId} не найден")
           : Results.Ok(card);
+    });
+
+    app.MapPost("/v1/landfills/{landfillId}/reviews", async (
+        HttpContext context,
+        [FromRoute] string landfillId,
+        [FromBody] LandfillReviewInput? input,
+        [FromServices] ILandfillRegistry registry,
+        [FromServices] IAccessTokens tokens,
+        CancellationToken cancellationToken) =>
+    {
+      // Оценка достоверности сведений именная: аноним ничего не говорит о
+      // доверии к самой оценке (R-031).
+      var participant = AccessEndpoints.Participant(context, tokens);
+      var review = await registry.AddReviewAsync(
+          landfillId,
+          participant.Id,
+          input?.Rating ?? throw new ArgumentOutOfRangeException(nameof(input), "оценка обязательна"),
+          input.Text,
+          cancellationToken);
+
+      return review is null
+          ? ProblemResponses.NotFound($"Полигон {landfillId} не найден")
+          : Results.Created($"/v1/landfills/{landfillId}/reviews", review);
     });
 
     app.MapGet("/v1/landfills/{landfillId}/reviews", async (
