@@ -212,7 +212,7 @@ Merge-коммиты — служебные узлы: вкладом не счи
   `api` — расчёт и справочники, `bot` — чат-бот платформы MAX, `miniapp` —
   мини-приложение MAX, `db` — хранилище. Назначение служб, порты и порядок
   запуска — [README.md](./README.md) и [devops/ЗАПУСК.md](./devops/ЗАПУСК.md).
-- Код: `src/back/Imolt.Api` и `src/back/Imolt.Bot` (.NET 10), `src/front/miniapp`
+- Код: `src/back/Imolt.Api` и `src/back/Imolt.Bot` (.NET 10), `src/front`
   (React 19 и Vite 7). Границы предметных областей внутри монолита —
   [docs/РАСКЛАДКА_КОДА.md](./docs/РАСКЛАДКА_КОДА.md).
 - У каждого вида записи один реестр-владелец:

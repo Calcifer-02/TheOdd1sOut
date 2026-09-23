@@ -49,6 +49,14 @@
         "deals-ports",
         "deals-contracts"
       ]
+    },
+    {
+      "id": "bot",
+      "owner": "Разработка (владелец чат-бота)",
+      "decisionRecord": "docs/architecture/ЗАПИСЬ_АРХИТЕКТУРНОГО_РЕШЕНИЯ_ADR-0009.md",
+      "openZones": [
+        "bot-ports"
+      ]
     }
   ],
   "zones": [
@@ -201,11 +209,44 @@
       ]
     },
     {
+      "id": "bot-domain",
+      "role": "домен",
+      "paths": [
+        "src/back/Imolt.Bot/Domain/**"
+      ],
+      "context": "bot"
+    },
+    {
+      "id": "bot-application",
+      "role": "приложение",
+      "paths": [
+        "src/back/Imolt.Bot/Application/**"
+      ],
+      "context": "bot"
+    },
+    {
+      "id": "bot-ports",
+      "role": "порты",
+      "paths": [
+        "src/back/Imolt.Bot/Ports/**"
+      ],
+      "context": "bot"
+    },
+    {
+      "id": "bot-adapters",
+      "role": "адаптеры",
+      "paths": [
+        "src/back/Imolt.Bot/Adapters/**"
+      ],
+      "context": "bot"
+    },
+    {
       "id": "entry",
       "role": "вход",
       "paths": [
         "src/back/Imolt.Api/**",
-        "src/back/Imolt.Bot/**"
+        "src/back/Imolt.Bot/*",
+        "src/back/Imolt.Bot/Properties/**"
       ]
     },
     {

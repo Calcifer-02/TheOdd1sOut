@@ -75,9 +75,9 @@ services:
         condition: service_started
     restart: unless-stopped
 
-  miniapp:
+  web:
     build:
-      context: ./src/front/miniapp
+      context: ./src/front
     ports:
       - "127.0.0.1:${MINIAPP_PORT}:80"
     depends_on:
