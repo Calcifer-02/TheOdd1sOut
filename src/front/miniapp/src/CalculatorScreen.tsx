@@ -20,7 +20,7 @@ import type {
   SelectionEntry,
   SelectionState,
   WasteGroup,
-} from './api';
+} from './contracts';
 import {
   ApiProblem,
   convertAmounts,

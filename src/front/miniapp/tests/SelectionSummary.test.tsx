@@ -62,7 +62,7 @@ function allocationShares(): number[] {
     });
 }
 
-// @ac: AC-032c
+/** @ac: AC-032c */
 describe('панель сводки выбора', () => {
   it('не показана, пока не выбран ни один полигон', async () => {
     const user = userEvent.setup();
@@ -112,7 +112,7 @@ describe('панель сводки выбора', () => {
   });
 });
 
-// @ac: AC-061b
+/** @ac: AC-061b */
 describe('сумма на экране', () => {
   it('разделяет разряды неразрывным пробелом', async () => {
     const user = userEvent.setup();
@@ -146,7 +146,7 @@ describe('сумма на экране', () => {
   });
 });
 
-// @ac: AC-030c
+/** @ac: AC-030c */
 describe('распределение объёма между выбранными полигонами', () => {
   async function selectBothAndShare(
     user: ReturnType<typeof userEvent.setup>,
@@ -252,7 +252,7 @@ describe('распределение объёма между выбранным�
   });
 });
 
-// @ac: AC-034b
+/** @ac: AC-034b */
 describe('ссылка на внешние карты', () => {
   async function openRoute(user: ReturnType<typeof userEvent.setup>): Promise<HTMLAnchorElement> {
     await calculateConcrete(user);
@@ -298,7 +298,7 @@ describe('ссылка на внешние карты', () => {
   });
 });
 
-// @uc: UC-002
+/** @uc: UC-002 */
 describe('детали маршрута без подписки', () => {
   beforeEach(() => {
     stub.answerWith('GET /v1/calculations/:id/route', {
@@ -339,7 +339,7 @@ describe('детали маршрута без подписки', () => {
   });
 });
 
-// @ac: AC-036e
+/** @ac: AC-036e */
 describe('скачивание коммерческого предложения', () => {
   async function downloadQuote(user: ReturnType<typeof userEvent.setup>): Promise<void> {
     await calculateConcrete(user);
@@ -391,7 +391,7 @@ describe('скачивание коммерческого предложения
   });
 });
 
-// @ac: AC-053c
+/** @ac: AC-053c */
 describe('заявка на вывоз без согласия на обработку персональных данных', () => {
   async function fillRequestWithoutConsent(
     user: ReturnType<typeof userEvent.setup>,
@@ -427,7 +427,7 @@ describe('заявка на вывоз без согласия на обрабо
   });
 });
 
-// @uc: UC-001
+/** @uc: UC-001 */
 describe('заявка на вывоз с согласием на обработку персональных данных', () => {
   async function sendRequest(user: ReturnType<typeof userEvent.setup>): Promise<void> {
     await calculateConcrete(user);

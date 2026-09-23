@@ -1,172 +1,35 @@
 /**
  * Обращения к расчётной части по договору API.
  *
- * Формы взяты из `src/back/Imolt.Api/contracts/openapi.yaml`: интерфейс не
- * заводит своей модели расчёта (ADR-0008, инвариант 2). Путь относительный —
- * `/api` проксирует nginx мини-приложения, и ни адрес службы, ни ключи в
- * браузер не попадают (R-056, инвариант 3).
+ * Путь относительный — `/api` проксирует nginx мини-приложения, и ни адрес
+ * службы, ни ключи в браузер не попадают (R-056, ADR-0008, инвариант 3).
+ * Формы ответов объявлены отдельным модулем: здесь поведение, там словарь.
  *
- * @supports: R-012, R-013, R-018, R-023, R-030, R-032, R-036, R-053
  * @adr: ADR-0008
  */
-import type { Money, Unit } from './formatting';
-import type { DistanceMode, SortField, SortOrder } from './viewState';
+import type {
+  AddressSuggestion,
+  AllocationEntry,
+  AllocationState,
+  AmountConversionItem,
+  Calculation,
+  CalculationRequest,
+  DistanceMode,
+  Page,
+  PickupRequest,
+  PickupRequestInput,
+  PlacementOptionPage,
+  Quantity,
+  Quote,
+  RouteSummary,
+  SelectionEntry,
+  SelectionState,
+  SortField,
+  SortOrder,
+  WasteGroup,
+} from './contracts';
 
 const BASE = '/api';
-
-export type Coordinates = { latitude: number; longitude: number };
-
-export type ServiceArea = 'moscow' | 'moscowRegion';
-
-export type AddressSuggestion = {
-  id: string;
-  value: string;
-  coordinates: Coordinates;
-  area: ServiceArea;
-};
-
-export type WasteGroup = {
-  id: string;
-  name: string;
-  fkkoCodes: string[];
-  transportPricePerTonKm: Money;
-  densityTonPerCubicMeter: number;
-  updatedAt: string;
-};
-
-export type LandfillStatus = 'active' | 'blocked' | 'unconfirmed';
-
-export type PlacementOption = {
-  landfillId: string;
-  landfillName: string;
-  address: string;
-  distanceKm: number;
-  transportCost: Money;
-  disposalCost?: Money | null;
-  totalCost: Money;
-  status: LandfillStatus;
-  statusUpdatedAt: string;
-};
-
-export type EmptyReason = 'noLandfillsForWasteGroup' | 'filteredOutByDistance' | null;
-
-export type PlacementOptionPage = {
-  items: PlacementOption[];
-  total: number;
-  limit: number;
-  offset: number;
-  emptyReason?: EmptyReason;
-};
-
-export type Quantity = { value: number; unit: Unit };
-
-export type CalculationItem = {
-  wasteGroupId: string;
-  wasteGroupName: string;
-  input: Quantity;
-  tons: number;
-};
-
-export type DataFreshness = {
-  pricesUpdatedAt: string;
-  statusesUpdatedAt: string;
-  landfillsWithStaleData?: number;
-};
-
-export type SelectionEntry = { wasteGroupId: string; landfillId: string };
-
-export type SelectionWarning = {
-  code: 'landfillBlocked' | 'landfillDataStale';
-  landfillId: string;
-  message: string;
-};
-
-export type SelectionState = {
-  entries: SelectionEntry[];
-  selectedLandfills: number;
-  total: Money;
-  warnings: SelectionWarning[];
-};
-
-export type AllocationEntry = {
-  wasteGroupId: string;
-  landfillId: string;
-  quantity: Quantity;
-};
-
-export type AllocationPricedEntry = AllocationEntry & {
-  transportCost: Money;
-  disposalCost?: Money | null;
-  totalCost: Money;
-};
-
-export type AllocationState = {
-  entries: AllocationPricedEntry[];
-  total: Money;
-};
-
-export type PickupAddress = {
-  suggestionId?: string;
-  value: string;
-  coordinates: Coordinates;
-  area?: ServiceArea;
-};
-
-export type Calculation = {
-  id: string;
-  createdAt: string;
-  preliminary: boolean;
-  pickupAddress: PickupAddress;
-  disposalRequired: boolean;
-  distanceFilter?: { mode: DistanceMode; km: number };
-  items: CalculationItem[];
-  results: { wasteGroupId: string; options: PlacementOptionPage }[];
-  selection?: SelectionState;
-  allocation?: AllocationState;
-  dataFreshness: DataFreshness;
-};
-
-export type Access = {
-  granted: boolean;
-  reason?: 'subscriptionRequired' | 'authenticationRequired' | null;
-};
-
-export type RouteLeg = {
-  landfillId: string;
-  distanceKm: number;
-  durationMinutes?: number | null;
-  externalMapUrl?: string | null;
-  encumbrances?: { kind: string; title: string }[];
-};
-
-export type RouteSummary = { access: Access; legs: RouteLeg[]; total: Money };
-
-export type Quote = {
-  id: string;
-  number: string;
-  issuedAt: string;
-  validUntil: string;
-  total: Money;
-  preliminary: boolean;
-  documentUrl: string;
-};
-
-export type PickupRequestInput = {
-  calculationId?: string;
-  landfillId?: string;
-  contactName: string;
-  phone: string;
-  personalDataConsent: boolean;
-};
-
-export type PickupRequest = {
-  id: string;
-  createdAt: string;
-  state: 'accepted';
-  message?: string;
-};
-
-export type Page<T> = { items: T[]; total: number; limit: number; offset: number };
 
 /**
  * Отказ расчётной части в виде документа об ошибке (RFC 9457). Интерфейс
@@ -217,6 +80,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return (await response.json()) as T;
 }
 
+/** @supports: R-013 */
 export function searchWasteGroups(query: string): Promise<Page<WasteGroup>> {
   const parameters = new URLSearchParams({ limit: '10' });
   if (query) {
@@ -226,31 +90,19 @@ export function searchWasteGroups(query: string): Promise<Page<WasteGroup>> {
   return request<Page<WasteGroup>>(`/v1/waste-groups?${parameters}`);
 }
 
+/** @supports: R-012 */
 export function suggestAddresses(query: string): Promise<Page<AddressSuggestion>> {
   return request<Page<AddressSuggestion>>(
     `/v1/address-suggestions?${new URLSearchParams({ query, limit: '6' })}`,
   );
 }
 
-export type CalculationRequest = {
-  pickupAddress: PickupAddress;
-  items: { wasteGroupId: string; quantity: Quantity }[];
-  disposalRequired: boolean;
-  distanceFilter: { mode: DistanceMode; km: number };
-};
-
-export type AmountConversionItem = {
-  wasteGroupId: string;
-  input: Quantity;
-  tons: number;
-  cubicMeters: number;
-  densityTonPerCubicMeter: number;
-};
-
 /**
  * Пересчёт меры делает служба, а не браузер: коэффициент плотности — часть
  * справочника, и второго места его применения быть не должно (ADR-0008,
  * инвариант 2; описание операции в договоре).
+ *
+ * @supports: R-015
  */
 export function convertAmounts(
   items: { wasteGroupId: string; quantity: Quantity }[],
@@ -261,14 +113,17 @@ export function convertAmounts(
   });
 }
 
+/** @supports: R-002, R-018 */
 export function createCalculation(body: CalculationRequest): Promise<Calculation> {
   return request<Calculation>('/v1/calculations', { method: 'POST', body: JSON.stringify(body) });
 }
 
+/** @supports: R-058 */
 export function getCalculation(id: string): Promise<Calculation> {
   return request<Calculation>(`/v1/calculations/${id}`);
 }
 
+/** @supports: R-023, R-024, R-025, R-029 */
 export function listPlacementOptions(
   calculationId: string,
   query: {
@@ -294,6 +149,7 @@ export function listPlacementOptions(
   return request<PlacementOptionPage>(`/v1/calculations/${calculationId}/options?${parameters}`);
 }
 
+/** @supports: R-027 */
 export function setSelection(
   calculationId: string,
   entries: SelectionEntry[],
@@ -304,6 +160,7 @@ export function setSelection(
   });
 }
 
+/** @supports: R-030 */
 export function setAllocation(
   calculationId: string,
   entries: AllocationEntry[],
@@ -314,10 +171,12 @@ export function setAllocation(
   });
 }
 
+/** @supports: R-032, R-034 */
 export function getRoute(calculationId: string): Promise<RouteSummary> {
   return request<RouteSummary>(`/v1/calculations/${calculationId}/route`);
 }
 
+/** @supports: R-036 */
 export function createQuote(calculationId: string): Promise<Quote> {
   return request<Quote>(`/v1/calculations/${calculationId}/quotes`, {
     method: 'POST',
@@ -325,6 +184,7 @@ export function createQuote(calculationId: string): Promise<Quote> {
   });
 }
 
+/** @supports: R-053 */
 export function createPickupRequest(body: PickupRequestInput): Promise<PickupRequest> {
   return request<PickupRequest>('/v1/pickup-requests', {
     method: 'POST',

@@ -8,7 +8,7 @@
  * @adr: ADR-0008
  */
 import type { ReactNode } from 'react';
-import type { LandfillStatus, PlacementOption } from './api';
+import type { LandfillStatus, PlacementOption } from './contracts';
 import { formatDistance, formatMoney, formatShortDate } from './formatting';
 
 /** Значок статуса. Сам по себе смысла не несёт — рядом всегда слово. */

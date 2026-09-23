@@ -14,7 +14,7 @@ import { formatDate, formatMoney, formatNumber, formatQuantity } from '../src/fo
 /** Неразрывный пробел U+00A0 — единственный разделитель разрядов в ru-RU. */
 const NBSP = ' ';
 
-// @ac: AC-061b
+/** @ac: AC-061b */
 describe('формат денежной суммы', () => {
   it('разделяет разряды и знак рубля неразрывным пробелом', () => {
     const shown = formatMoney({ amount: '19800.00', currency: 'RUB' });
@@ -51,7 +51,7 @@ describe('формат денежной суммы', () => {
   });
 });
 
-// @ac: AC-061b
+/** @ac: AC-061b */
 describe('формат числа', () => {
   it('отделяет дробную часть запятой', () => {
     expect(formatNumber(7.5)).toBe('7,5');
@@ -70,7 +70,7 @@ describe('формат числа', () => {
   });
 });
 
-// @ac: AC-048d, AC-061b
+/** @ac: AC-048d, AC-061b */
 describe('формат даты', () => {
   it('показывает дату днём, месяцем и годом через точку', () => {
     expect(formatDate('2026-09-17')).toBe('17.09.2026');
@@ -87,7 +87,7 @@ describe('формат даты', () => {
   });
 });
 
-// @ac: AC-014b, AC-015c, AC-061b
+/** @ac: AC-014b, AC-015c, AC-061b */
 describe('формат объёма отходов', () => {
   it('ставит меру «т» после числа тонн', () => {
     expect(formatQuantity(20, 't')).toMatch(/^20[\s ]т$/u);
