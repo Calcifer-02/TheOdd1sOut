@@ -29,6 +29,16 @@ RUN dotnet publish Imolt.Api/Imolt.Api.csproj -c Release -o /app --no-restore
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
+
+# Шрифт с кириллицей для печати коммерческого предложения (R-061). Встроенные
+# шрифты формата PDF кириллицы не несут, а в базовом образе шрифтов нет вовсе:
+# без этого слоя документ вышел бы квадратами вместо букв. Слой ставится до
+# смены пользователя — установка пакетов требует прав суперпользователя.
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends fonts-dejavu-core \
+    && apt-get clean \
+    && find /var/lib/apt/lists -mindepth 1 -delete
+
 COPY --from=build /app .
 
 ENV ASPNETCORE_URLS=http://+:8080

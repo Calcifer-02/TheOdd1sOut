@@ -58,6 +58,11 @@ mandatoryChecks:
   - listPlacementOptions
   - setCalculationSelection
   - setCalculationAllocation
+  - getCalculationRoute
+  - createQuote
+  - downloadQuoteDocument
+  - createPickupRequest
+  - listDocumentServices
 
 # Что именно не определено заказчиком и потому не проверяется по существу:
 # разграничение доступа между гостем и подпиской — открытый вопрос Q-011.
@@ -483,7 +488,7 @@ checks:
   - id: getCalculationRoute
     name: Маршрут и сводка по выбранным полигонам
     area: расчёт
-    state: объявлено
+    state: реализовано
     method: GET
     path: /v1/calculations/{calculationId}/route
     role: guest
@@ -506,7 +511,7 @@ checks:
   - id: createQuote
     name: Сформировать коммерческое предложение
     area: сделка
-    state: объявлено
+    state: реализовано
     method: POST
     path: /v1/calculations/{calculationId}/quotes
     role: guest
@@ -526,7 +531,7 @@ checks:
   - id: downloadQuoteDocument
     name: Скачать коммерческое предложение
     area: сделка
-    state: объявлено
+    state: реализовано
     method: GET
     path: /v1/quotes/{quoteId}/document
     role: guest
@@ -545,7 +550,7 @@ checks:
   - id: createPickupRequest
     name: Отправить заявку на вывоз
     area: сделка
-    state: объявлено
+    state: реализовано
     method: POST
     path: /v1/pickup-requests
     role: guest
@@ -560,7 +565,7 @@ checks:
   - id: listDocumentServices
     name: Каталог услуг по документации
     area: сделка
-    state: объявлено
+    state: реализовано
     method: GET
     path: /v1/document-services
     role: guest

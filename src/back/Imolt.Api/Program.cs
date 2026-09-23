@@ -4,6 +4,9 @@ using Imolt.Calculations.Adapters;
 using Imolt.Calculations.Application;
 using Imolt.Calculations.Ports;
 using Imolt.Database;
+using Imolt.Deals.Adapters;
+using Imolt.Deals.Application;
+using Imolt.Deals.Ports;
 using Imolt.References.Adapters;
 using Imolt.References.Ports;
 using Imolt.Shared;
@@ -102,6 +105,19 @@ builder.Services.AddScoped<ITransportCoefficients, TransportCoefficients>();
 builder.Services.AddScoped<ICalculationStore, CalculationStore>();
 builder.Services.AddScoped<CalculationScenarios>();
 
+// Область «сделка». Срок действия цены читается настройкой в момент
+// разрешения зависимости: длительность заказчиком не названа (Q-010), и
+// значение по умолчанию помечено демонстрационным.
+builder.Services.AddScoped<ICalculationSnapshot, CalculationSnapshot>();
+builder.Services.AddScoped<IQuoteStore, QuoteStore>();
+builder.Services.AddScoped<IPickupRequestStore, PickupRequestStore>();
+builder.Services.AddScoped<IDocumentServiceCatalog, DocumentServiceCatalog>();
+builder.Services.AddSingleton<IQuoteDocumentWriter, QuoteDocumentWriter>();
+builder.Services.AddScoped<IPriceValidity>(services => new PriceValidity(
+    services.GetRequiredService<IConfiguration>()
+        .GetValue("QUOTE_VALIDITY_DAYS", PriceValidity.DemonstrationDays)));
+builder.Services.AddScoped<DealScenarios>();
+
 var app = builder.Build();
 
 // Схему применяет тот, кто разворачивает, а не служба при каждом старте:
@@ -129,6 +145,7 @@ app.MapContractEndpoints();
 app.MapServiceEndpoints();
 app.MapReferenceEndpoints();
 app.MapCalculationEndpoints();
+app.MapDealEndpoints();
 
 // Неизвестный путь отвечает тем же документом об ошибке, что и остальные
 // отказы. Пустое тело с кодом 404 клиенту разбирать нечем, а на общем узле

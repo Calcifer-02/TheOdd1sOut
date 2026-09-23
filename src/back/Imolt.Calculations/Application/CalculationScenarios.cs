@@ -197,6 +197,68 @@ public sealed class CalculationScenarios(
     return state;
   }
 
+  /// Сводка маршрута по выбранным полигонам (R-032, R-050).
+  ///
+  /// Детали закрыты: личности пользователя у службы пока нет, а что именно
+  /// открывает подписка, заказчиком не установлено (Q-011). Отказать кодом
+  /// было бы неверно — итог гостю виден и сейчас, закрыты только участки
+  /// маршрута. Поэтому ответ несёт признак доступа, а не код отказа.
+  public async Task<RouteSummary?> RouteAsync(string calculationId, CancellationToken cancellationToken)
+  {
+    var calculation = await store.FindAsync(calculationId, cancellationToken);
+
+    if (calculation is null)
+    {
+      return null;
+    }
+
+    var selection = await SavedSelectionAsync(calculation, cancellationToken);
+    var access = new RouteAccess(false, RouteAccess.SubscriptionRequired);
+
+    // Участки собираются только при выданном доступе: подменять закрытое
+    // содержимое нечем, а заполнить его «на всякий случай» значит выдать то,
+    // что объявлено закрытым.
+    return new RouteSummary(access, [], selection?.Total ?? Money.Rubles(0));
+  }
+
+  /// Строки выбранных полигонов с закреплёнными ценами — то, что коммерческое
+  /// предложение переносит в снимок (R-036). Область «сделка» получает их
+  /// портом: две области напрямую друг на друга не ссылаются (ADR-0001).
+  public async Task<IReadOnlyList<PricedSelection>> PricedSelectionAsync(
+      string calculationId,
+      CancellationToken cancellationToken)
+  {
+    var calculation = await store.FindAsync(calculationId, cancellationToken);
+
+    if (calculation is null)
+    {
+      return [];
+    }
+
+    var lines = new List<PricedSelection>();
+
+    foreach (var entry in calculation.Selection)
+    {
+      var group = await GroupAsync(entry.WasteGroupId, cancellationToken);
+      var item = calculation.Items.First(stored => stored.WasteGroupId == entry.WasteGroupId);
+      var (offer, cost) = await PricedAsync(
+          calculation, entry.WasteGroupId, entry.LandfillId, null, cancellationToken);
+
+      lines.Add(new PricedSelection(
+          entry.LandfillId,
+          offer.Name,
+          entry.WasteGroupId,
+          group.Name,
+          item.Tons,
+          item.Input,
+          cost.TransportCost,
+          cost.DisposalCost,
+          cost.TotalCost));
+    }
+
+    return lines;
+  }
+
   // Сходимость частей с объёмом группы. Сверяются тонны, а не введённые
   // величины: часть можно задать в кубометрах, а группу — в тоннах.
   private async Task EnsureAddsUpAsync(

@@ -150,6 +150,11 @@ public sealed class ApiContractTests
       "/v1/calculations/{calculationId}/options",
       "/v1/calculations/{calculationId}/selection",
       "/v1/calculations/{calculationId}/allocation",
+      "/v1/calculations/{calculationId}/route",
+      "/v1/calculations/{calculationId}/quotes",
+      "/v1/quotes/{quoteId}/document",
+      "/v1/pickup-requests",
+      "/v1/document-services",
     ];
 
     var implemented = Operations()

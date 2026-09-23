@@ -152,6 +152,20 @@ public sealed record AmountConversionResultItem(
 
 public sealed record AmountConversionResult(IReadOnlyList<AmountConversionResultItem> Items);
 
+/// Строка выбора с закреплённой ценой: то, что коммерческое предложение
+/// переносит в свой снимок (R-036, R-037). Справочник потом изменится, а
+/// выпущенный документ обязан остаться прежним.
+public sealed record PricedSelection(
+    string LandfillId,
+    string LandfillName,
+    string WasteGroupId,
+    string WasteGroupName,
+    decimal Tons,
+    Quantity Input,
+    Money TransportCost,
+    Money? DisposalCost,
+    Money TotalCost);
+
 /// Отбор вариантов размещения при чтении страницы (R-024, R-025).
 public sealed record PlacementQuery(
     string WasteGroupId,

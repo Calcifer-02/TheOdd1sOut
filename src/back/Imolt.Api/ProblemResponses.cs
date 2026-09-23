@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text.Json;
 using Imolt.Calculations.Ports;
+using Imolt.Deals.Ports;
 using Imolt.References.Ports;
 using Imolt.Shared;
 using Microsoft.AspNetCore.Diagnostics;
@@ -90,6 +91,31 @@ public static class ProblemResponses
                 Problems.DistanceServiceUnavailable,
                 "Не удалось рассчитать расстояния",
                 distance.Message,
+                []);
+            break;
+
+          // Закреплять в предложении нечего: полигон не выбран. Код 422 —
+          // запрос разобран, нарушено правило предметной области.
+          case NothingToQuoteException nothing:
+            await WriteAsync(
+                context,
+                StatusCodes.Status422UnprocessableEntity,
+                Problems.Validation,
+                "Предложение не выпущено",
+                nothing.Message,
+                []);
+            break;
+
+          // Согласия на обработку персональных данных нет. Принять данные и
+          // отказать — худший из исходов, и снаружи он неотличим от честного
+          // отказа (R-054).
+          case ConsentMissingException consent:
+            await WriteAsync(
+                context,
+                StatusCodes.Status422UnprocessableEntity,
+                Problems.Validation,
+                "Нет согласия на обработку персональных данных",
+                consent.Message,
                 []);
             break;
 

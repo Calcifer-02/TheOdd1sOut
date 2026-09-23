@@ -79,6 +79,20 @@
           "Microsoft.Extensions.Logging.Abstractions": "10.0.0"
         }
       },
+      "PDFsharp": {
+        "type": "Transitive",
+        "resolved": "6.2.4",
+        "contentHash": "GhTr9F1uOYXHCIEOB5PXIgqn5a8WLsJL2m0eewTA0IvY1j6N4HGXHKKmEyB90/N6vrjmYamf41V9zbmdW2HY3g==",
+        "dependencies": {
+          "Microsoft.Extensions.Logging.Abstractions": "8.0.3",
+          "System.Security.Cryptography.Pkcs": "8.0.1"
+        }
+      },
+      "System.Security.Cryptography.Pkcs": {
+        "type": "Transitive",
+        "resolved": "8.0.1",
+        "contentHash": "CoCRHFym33aUSf/NtWSVSZa99dkd0Hm7OCZUxORBjRB16LNhIEOf8THPqzIYlvKM0nNDAPTRBa1FxEECrgaxxA=="
+      },
       "xunit.abstractions": {
         "type": "Transitive",
         "resolved": "2.0.3",
@@ -130,7 +144,10 @@
       "imolt.deals": {
         "type": "Project",
         "dependencies": {
-          "Imolt.Shared": "[1.0.0, )"
+          "Dapper": "[2.1.86, )",
+          "Imolt.Shared": "[1.0.0, )",
+          "Npgsql": "[10.0.3, )",
+          "PdfSharp": "[6.2.4, )"
         }
       },
       "imolt.references": {

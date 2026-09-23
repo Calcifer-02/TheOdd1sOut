@@ -126,7 +126,7 @@ rm -f "$ZAPROS"
 # Идентификатор — первое значение тела ответа: схема Calculation ставит
 # `id` первым полем. Разбирать JSON в оболочке нечем, а тянуть сюда jq
 # значило бы добавить проверке зависимость ради одной строки.
-ID_RASCHETA=$(printf '%s' "$RASCHET" | cut -d'"' -f4)
+ID_RASCHETA=$(printf '%s' "$RASCHET" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
 
 if [ -n "$ID_RASCHETA" ]; then
   soobshchit "расчёт: создан ($ID_RASCHETA)" "ок"
@@ -177,7 +177,71 @@ else
 fi
 
 echo
-echo "== 6. Схема базы данных"
+echo "== 6. Сделка от края до края"
+# Не «точка отвечает», а «предложение выпускается и скачивается». Сверяются
+# номер, единственность предложения по расчёту и сигнатура файла: код 201 сам
+# по себе прошёл бы и на пустом ответе.
+if [ -n "$ID_RASCHETA" ]; then
+  VYBOR_KP=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 -X PUT     -H 'Content-Type: application/json'     -d '{"entries":[{"wasteGroupId":"beton-lom","landfillId":"vostok-timohovo"}]}'     "http://localhost:${API_PORT}/v1/calculations/${ID_RASCHETA}/selection" 2>/dev/null)
+
+  PREDLOZHENIE=$(curl -s --max-time 20 -X POST -H 'Content-Type: application/json'     -d '{"customerName":"OOO Podryadchik"}'     "http://localhost:${API_PORT}/v1/calculations/${ID_RASCHETA}/quotes" 2>/dev/null)
+  NOMER_KP=$(printf '%s' "$PREDLOZHENIE" | grep -o '"number":"[^"]*"' | cut -d'"' -f4)
+  PUT_KP=$(printf '%s' "$PREDLOZHENIE" | grep -o '"documentUrl":"[^"]*"' | cut -d'"' -f4)
+
+  if [ "$VYBOR_KP" = "200" ] && [ -n "$NOMER_KP" ] && [ -n "$PUT_KP" ]; then
+    soobshchit "сделка: предложение выпущено ($NOMER_KP)" "ок"
+  else
+    soobshchit "сделка: предложение выпущено" "ОТКАЗ (ответ: ${PREDLOZHENIE:-нет ответа})"
+    OSHIBKI=$((OSHIBKI + 1))
+  fi
+
+  if [ -n "$PUT_KP" ]; then
+    FAYL=$(mktemp)
+    TIP=$(curl -s -o "$FAYL" -w '%{content_type}' --max-time 20       "http://localhost:${API_PORT}${PUT_KP}" 2>/dev/null)
+    SIGNATURA=$(head -c 5 "$FAYL")
+    RAZMER=$(wc -c < "$FAYL" | tr -d '[:space:]')
+    rm -f "$FAYL"
+
+    # Медиатип объявить можно любым, а содержимое от этого форматом PDF не
+    # станет: проверяется и заголовок, и сигнатура самого файла.
+    case "$TIP" in
+      application/pdf*) TIP_OK=1 ;;
+      *) TIP_OK=0 ;;
+    esac
+    if [ "$TIP_OK" = "1" ] && [ "$SIGNATURA" = "%PDF-" ] && [ "${RAZMER:-0}" -gt 1000 ]; then
+      soobshchit "сделка: документ предложения скачан (${RAZMER} байт)" "ок"
+    else
+      soobshchit "сделка: документ предложения скачан" "ОТКАЗ (тип ${TIP:-нет}, сигнатура «${SIGNATURA}»)"
+      OSHIBKI=$((OSHIBKI + 1))
+    fi
+  fi
+fi
+
+ZAYAVKA=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 -X POST   -H 'Content-Type: application/json'   -d '{"contactName":"Ivan","phone":"+79161234567","personalDataConsent":true}'   "http://localhost:${API_PORT}/v1/pickup-requests" 2>/dev/null)
+if [ "$ZAYAVKA" = "201" ]; then
+  soobshchit "сделка: заявка на вывоз принята" "ок (201)"
+else
+  soobshchit "сделка: заявка на вывоз принята" "ОТКАЗ (получен ${ZAYAVKA:-нет ответа})"
+  OSHIBKI=$((OSHIBKI + 1))
+fi
+
+# Без согласия на обработку персональных данных заявки быть не должно (R-054).
+BEZ_SOGLASIYA=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 -X POST   -H 'Content-Type: application/json'   -d '{"contactName":"Ivan","phone":"+79161234567","personalDataConsent":false}'   "http://localhost:${API_PORT}/v1/pickup-requests" 2>/dev/null)
+if [ "$BEZ_SOGLASIYA" = "422" ]; then
+  soobshchit "сделка: заявка без согласия отвергнута" "ок (422)"
+else
+  soobshchit "сделка: заявка без согласия отвергнута" "ОТКАЗ (получен ${BEZ_SOGLASIYA:-нет ответа})"
+  OSHIBKI=$((OSHIBKI + 1))
+fi
+
+proverit "сделка: маршрут по выбранным полигонам" 200   "http://localhost:${API_PORT}/v1/calculations/${ID_RASCHETA}/route"
+# Каталог услуг в начальном наборе пуст намеренно: состав пакета заказчиком не
+# подтверждён (Q-005). Проверяется, что точка отвечает страницей, а не то, что
+# в ней есть записи.
+proverit "сделка: каталог услуг по документации" 200 "http://localhost:${API_PORT}/v1/document-services"
+
+echo
+echo "== 7. Схема базы данных"
 # Схему накатывает расчётная часть при старте, когда включён признак
 # IMOLT_APPLY_MIGRATIONS (ADR-0002). Проверяем не «база отвечает», а
 # «схема на месте»: пустая база тоже отвечает, и отличить это иначе нельзя.
@@ -191,7 +255,7 @@ else
 fi
 
 echo
-echo "== 7. Приём обновления чат-ботом"
+echo "== 8. Приём обновления чат-ботом"
 kod=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 \
   -X POST -H 'Content-Type: application/json' -d '{"проверка":true}' \
   "http://localhost:${BOT_PORT}/max/webhook" 2>/dev/null)

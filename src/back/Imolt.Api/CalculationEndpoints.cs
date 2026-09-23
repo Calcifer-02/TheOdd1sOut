@@ -10,7 +10,7 @@ namespace Imolt.Api;
 /// со сценариями области — формула и правила живут в самой области
 /// (ADR-0001, ADR-0005).
 ///
-/// @req: R-014, R-018, R-023, R-024, R-025, R-027, R-030
+/// @req: R-014, R-018, R-023, R-024, R-025, R-027, R-030, R-032, R-050
 /// @adr: ADR-0003
 public static class CalculationEndpoints
 {
@@ -88,6 +88,18 @@ public static class CalculationEndpoints
           ? ProblemResponses.NotFound(
               $"В расчёте {calculationId} нет вкладки группы отходов {wasteGroupId}")
           : Results.Ok(page);
+    });
+
+    app.MapGet("/v1/calculations/{calculationId}/route", async (
+        [FromRoute] string calculationId,
+        [FromServices] CalculationScenarios scenarios,
+        CancellationToken cancellationToken) =>
+    {
+      var route = await scenarios.RouteAsync(calculationId, cancellationToken);
+
+      return route is null
+          ? ProblemResponses.NotFound($"Расчёт {calculationId} не найден")
+          : Results.Ok(route);
     });
 
     app.MapPut("/v1/calculations/{calculationId}/selection", async (
