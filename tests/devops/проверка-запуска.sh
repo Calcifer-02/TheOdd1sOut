@@ -87,6 +87,28 @@ KONETS=$(date +%s)
 soobshchit "docker compose up (сборка и запуск)" "ок, $((KONETS - NACHALO)) с"
 
 echo
+# Признака готовности у расчётной части в compose нет, поэтому «--wait»
+# дожидается только запуска контейнера, а не открытого порта: первые запросы
+# получали пустой ответ, и проверка называла отказом собственную спешку.
+podozhdat() {
+  # $1 — что ждём, $2 — адрес, $3 — предел ожидания в секундах
+  OZHIDANIE=0
+  while [ "$OZHIDANIE" -lt "$3" ]; do
+    if [ "$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 "$2" 2>/dev/null)" = "200" ]; then
+      [ "$OZHIDANIE" -gt 0 ] && soobshchit "$1" "готово через $OZHIDANIE с"
+      return 0
+    fi
+    OZHIDANIE=$((OZHIDANIE + 1))
+    sleep 1
+  done
+
+  soobshchit "$1" "ОТКАЗ (не дождались за $3 с)"
+  OSHIBKI=$((OSHIBKI + 1))
+  return 1
+}
+
+podozhdat "расчётная часть: открыт порт" "http://localhost:${API_PORT}/health" 60
+
 echo "== 4. Ответы служб"
 proverit "расчётная часть: живость /health" 200 "http://localhost:${API_PORT}/health"
 proverit "расчётная часть: готовность /ready (видит базу)" 200 "http://localhost:${API_PORT}/ready"
