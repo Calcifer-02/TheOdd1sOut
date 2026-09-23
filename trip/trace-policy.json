@@ -13,7 +13,8 @@
       "src"
     ],
     "testRoots": [
-      "tests"
+      "tests",
+      "src/front/miniapp/tests"
     ],
     "generatedRoots": []
   },
