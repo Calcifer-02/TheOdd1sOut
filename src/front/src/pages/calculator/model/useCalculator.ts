@@ -35,12 +35,12 @@ import {
   getCalculation,
   getRoute,
   listPlacementOptions,
-  searchWasteGroups,
   setAllocation,
   setSelection,
   suggestAddresses,
 } from '@/shared/api/imolt';
 import { createPickupRequest } from '@/shared/api/deals';
+import { listWasteGroups } from '@/shared/api/references';
 import type { RouteScope } from '@/entities/landfill';
 import type { Unit } from '@/shared/lib/formatting';
 import { formatMoney, formatQuantity } from '@/shared/lib/formatting';
@@ -52,6 +52,13 @@ import { emptyLine, filledItems, parseAmount } from './wasteLine';
 
 /** Первая страница — десять полигонов, остальные по «Показать ещё» (R-029). */
 export const PAGE_SIZE = 10;
+
+/**
+ * Сколько записей справочника показывает список выбора типа отходов. Читается
+ * той же функцией, что и справочник на других экранах: вторая функция к той же
+ * точке службы расходилась бы с первой молча (R-013).
+ */
+const GROUP_SUGGESTIONS = 10;
 
 /** Поля сортировки договора и их названия словами (R-024). */
 export const SORTS: { field: SortField; label: string }[] = [
@@ -213,7 +220,7 @@ export function useCalculator() {
   /** Записи справочника по строке поиска; пустая строка — весь справочник. */
   async function loadGroups(key: string, query: string) {
     try {
-      const page = await searchWasteGroups(query);
+      const page = await listWasteGroups({ query, limit: GROUP_SUGGESTIONS });
       updateLine(key, { suggestions: page.items });
     } catch {
       updateLine(key, { suggestions: [] });

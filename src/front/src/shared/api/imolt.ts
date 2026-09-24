@@ -27,7 +27,6 @@ import type {
   SessionRequest,
   SortField,
   SortOrder,
-  WasteGroup,
 } from './contracts';
 
 export { ApiProblem };
@@ -47,16 +46,6 @@ export function createSession(input: SessionRequest): Promise<Session> {
     method: 'POST',
     body: JSON.stringify(input),
   });
-}
-
-/** @supports: R-013 */
-export function searchWasteGroups(query: string): Promise<Page<WasteGroup>> {
-  const parameters = new URLSearchParams({ limit: '10' });
-  if (query) {
-    parameters.set('query', query);
-  }
-
-  return request<Page<WasteGroup>>(`/v1/waste-groups?${parameters}`);
 }
 
 /** @supports: R-012 */
