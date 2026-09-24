@@ -36,6 +36,24 @@ public static class MiniAppButton
   /// Вид кнопки, отведённый платформой мини-приложениям.
   public const string Kind = "open_app";
 
-  public static Keyboard Of(BotIdentity bot, string text) =>
-      throw new NotImplementedException("состав кнопки собирается в срезе реализации");
+  /// Кнопка собирается одна: вторая в том же ответе означала бы второй вход,
+  /// которого решение не предусматривает (AC-069a).
+  ///
+  /// Состав берётся из переданной учётной записи, а не из записанного в коде
+  /// значения: смена бота обязана менять состав кнопки, иначе она продолжит
+  /// указывать на прежнего (ADR-0009, «что нельзя дёшево откатить»).
+  public static Keyboard Of(BotIdentity bot, string text)
+  {
+    ArgumentNullException.ThrowIfNull(bot);
+    ArgumentException.ThrowIfNullOrWhiteSpace(text);
+    ArgumentException.ThrowIfNullOrWhiteSpace(bot.Username);
+
+    var button = new KeyboardButton(
+        Kind,
+        text,
+        WebApp: bot.Username,
+        ContactId: bot.ContactId);
+
+    return new Keyboard([[button]]);
+  }
 }

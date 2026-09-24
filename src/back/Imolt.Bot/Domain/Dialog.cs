@@ -48,8 +48,31 @@ public static class DialogPolicy
   /// приходит настройкой, а здесь названо, чтобы не расходиться с ней молча.
   public const int DefaultDepth = 10;
 
-  public static DialogPlan Plan(DialogState state, OutgoingMessage message, int depth) =>
-      throw new NotImplementedException("политика переписки собирается в срезе реализации");
+  /// Что сделать с перепиской перед показом очередного сообщения.
+  ///
+  /// Предел приходит доводом, а не читается здесь из настройки: политика —
+  /// чистое правило, а источник предела называет состав изделия (R-078).
+  public static DialogPlan Plan(DialogState state, OutgoingMessage message, int depth)
+  {
+    ArgumentNullException.ThrowIfNull(state);
+    ArgumentNullException.ThrowIfNull(message);
+    ArgumentOutOfRangeException.ThrowIfLessThan(depth, 1);
+
+    // Карточка переписывается, а не отправляется заново (R-079). Правится
+    // только та, что числится за ботом: чужого сообщения у бота нет.
+    var edited = message.IsCard
+        && state.CardMessageId is { } card
+        && state.OwnMessageIds.Contains(card, StringComparer.Ordinal)
+            ? card
+            : null;
+
+    // Правка сообщений в переписке не прибавляет, поэтому место освобождается
+    // только под новую отправку.
+    var arriving = edited is null ? 1 : 0;
+    var excess = state.OwnMessageIds.Count + arriving - depth;
+
+    return new DialogPlan(edited, excess <= 0 ? [] : Earliest(state, excess));
+  }
 
   /// Состояние после того, как план выполнен: какие идентификаторы остались
   /// за ботом и какая карточка теперь ведётся.
@@ -57,6 +80,54 @@ public static class DialogPolicy
       DialogState state,
       OutgoingMessage message,
       DialogPlan plan,
-      string messageId) =>
-      throw new NotImplementedException("переход состояния собирается в срезе реализации");
+      string messageId)
+  {
+    ArgumentNullException.ThrowIfNull(state);
+    ArgumentNullException.ThrowIfNull(message);
+    ArgumentNullException.ThrowIfNull(plan);
+    ArgumentException.ThrowIfNullOrWhiteSpace(messageId);
+
+    var own = state.OwnMessageIds
+        .Where(id => !plan.Delete.Contains(id, StringComparer.Ordinal))
+        .ToList();
+
+    // Правка оставляет прежний идентификатор: он уже числится за ботом, и
+    // второй записи о том же сообщении не появляется.
+    if (plan.EditMessageId is not null)
+    {
+      return state with { OwnMessageIds = own };
+    }
+
+    own.Add(messageId);
+
+    return state with
+    {
+      OwnMessageIds = own,
+      CardMessageId = message.IsCard ? messageId : state.CardMessageId,
+    };
+  }
+
+  /// Самые ранние сообщения бота, кроме ведущейся карточки: карточка
+  /// переписывается и потому переживает наведение порядка (R-079).
+  private static List<string> Earliest(DialogState state, int count)
+  {
+    var chosen = new List<string>(count);
+
+    foreach (var id in state.OwnMessageIds)
+    {
+      if (chosen.Count == count)
+      {
+        break;
+      }
+
+      if (string.Equals(id, state.CardMessageId, StringComparison.Ordinal))
+      {
+        continue;
+      }
+
+      chosen.Add(id);
+    }
+
+    return chosen;
+  }
 }
