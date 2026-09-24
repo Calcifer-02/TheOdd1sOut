@@ -90,8 +90,15 @@ export function LandfillsTable({
             return <LandfillTariffs rows={tariffRows(landfill, groups, wasteGroupId)} />;
           }
 
+          // Статус стоит по центру своего столбца, как и в редакторе цен:
+          // прижатый влево, он читался хвостом соседнего столбца.
           return (
-            <StatusBadge status={landfillBadgeStatus(landfill, freshness)} statusUpdatedAt={landfill.statusUpdatedAt} />
+            <div className="imolt-landfill-status-cell">
+              <StatusBadge
+                status={landfillBadgeStatus(landfill, freshness)}
+                statusUpdatedAt={landfill.statusUpdatedAt}
+              />
+            </div>
           );
         }}
       />

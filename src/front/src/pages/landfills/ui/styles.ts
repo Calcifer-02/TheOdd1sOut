@@ -242,6 +242,15 @@ export const LANDFILLS_CSS = `
   border-color: ${colors.statusBlockedText};
 }
 
+/* Статус в своём столбце стоит по центру — так же, как в редакторе цен
+   (замечание заказчика от 24.09.2026). */
+.imolt-landfill-status-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
 .imolt-landfill-card-status {
   display: flex;
   flex-wrap: wrap;

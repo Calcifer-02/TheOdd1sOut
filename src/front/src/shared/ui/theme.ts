@@ -309,6 +309,10 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
   background: none;
   color: ${colors.link};
   font-weight: 500;
+  /* Скругление таблетки принадлежит залитой кнопке. У текстовой фона нет, и
+     кольцо фокуса радиусом 999 обводило подпись овалом, чужим среди полей
+     (замечание заказчика от 24.09.2026). */
+  border-radius: ${radius.field}px;
 }
 
 .imolt-button--tertiary:disabled { background: none; color: ${colors.disabledText}; text-decoration-line: none; }

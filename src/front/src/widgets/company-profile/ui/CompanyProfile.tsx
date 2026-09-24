@@ -18,10 +18,12 @@
  * @req: R-087
  * @adr: ADR-0008
  */
-import { EmptyState, useStyles } from '@/shared/ui';
+import { useStyles } from '@/shared/ui';
 import { Illustration } from '@/shared/ui/illustrations';
 import { formatDate } from '@/shared/lib/formatting';
 import {
+  COMPANY_CLIENTS_NOTE,
+  COMPANY_CLIENT_LOGOS,
   COMPANY_CONTACTS,
   COMPANY_PROJECTS,
   COMPANY_SERVICES,
@@ -79,14 +81,19 @@ export function CompanyProfile() {
         <h2 className="imolt-section" id="company-clients">
           Наши клиенты
         </h2>
-        {/* Названий клиентов на сайте компании нет — только логотипы без
-            подписей, и взять их неоткуда. Выдуманное название организации не
-            заглушка, а ложное утверждение о реальном юридическом лице
-            (AC-087c, Q-026). */}
-        <EmptyState
-          title="Перечень клиентов ожидается от компании"
-          hint="На сайте компании клиенты показаны логотипами без названий. Названия и файлы логотипов передаёт заказчик — до этого раздел пуст, а не заполнен выдуманными именами."
-        />
+        <p className="imolt-lead">{COMPANY_CLIENTS_NOTE}</p>
+        {/* Логотипы — украшение: названий рядом нет, потому что на сайте
+            компании они стоят без подписей и без alt-текста, а выдуманное название —
+            ложное утверждение о реальном юридическом лице (AC-087c, Q-026).
+            Пустой alt убирает картинку из дерева доступности, и читатель экранного диктора
+            слышит заголовок и подпись, а не пятнадцать безымянных картинок. */}
+        <ul className="imolt-company-clients">
+          {COMPANY_CLIENT_LOGOS.map(logo => (
+            <li className="imolt-company-client" key={logo}>
+              <img className="imolt-company-logo" src={logo} alt="" loading="lazy" />
+            </li>
+          ))}
+        </ul>
       </section>
 
       <section className="imolt-company-block" aria-labelledby="company-contacts">

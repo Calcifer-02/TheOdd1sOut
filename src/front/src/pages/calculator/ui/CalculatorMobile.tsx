@@ -75,6 +75,7 @@ export function CalculatorMobile({ model }: { model: CalculatorModel }) {
                 value={line.amount}
                 inputMode="decimal"
                 hint={line.tons !== undefined ? `≈ ${formatNumber(line.tons)} т` : undefined}
+                reserveHint
                 onChange={value => model.changeAmount(line, value)}
               />
               <RadioPills
@@ -89,12 +90,26 @@ export function CalculatorMobile({ model }: { model: CalculatorModel }) {
                 onPick={unit => model.changeUnit(line, unit)}
               />
             </div>
+
+            {/* Случайно добавленную строку надо чем-то убрать: на телефоне
+                кнопки не было вовсе, и лишний тип отходов оставался в расчёте до
+                перезагрузки страницы (замечание заказчика от 24.09.2026). */}
+            {model.lines.length > 1 && (
+              <Button
+                kind="tertiary"
+                size="s"
+                ariaLabel={`Убрать тип отходов: ${line.query || 'строка не заполнена'}`}
+                onClick={() => model.removeLine(line.key)}
+              >
+                Убрать
+              </Button>
+            )}
           </div>
         ))}
 
-        <button type="button" className="imolt-button imolt-button--tertiary" onClick={model.addLine}>
+        <Button kind="tertiary" onClick={model.addLine}>
           Добавить тип отходов
-        </button>
+        </Button>
 
         <label className="imolt-consent">
           <input

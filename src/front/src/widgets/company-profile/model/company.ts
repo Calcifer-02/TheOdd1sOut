@@ -162,3 +162,35 @@ export const COMPANY_CONTACTS: CompanyContact[] = [
   { label: 'Телефон', value: '+7 495 532 02 73', href: 'tel:+74955320273' },
   { label: 'Почта', value: 'hello@imolt.com', href: 'mailto:hello@imolt.com' },
 ];
+
+/**
+ * Подпись раздела клиентов — дословно с сайта компании.
+ */
+export const COMPANY_CLIENTS_NOTE = 'Качество нашей работы может подтвердить ряд крупных компаний';
+
+/**
+ * Логотипы клиентов, переданные заказчиком 24.09.2026 вместе с разрешением
+ * взять их с сайта компании.
+ *
+ * Названий рядом нет, и это не упущение: на сайте логотипы стоят без подписей
+ * и без alt-текста, взять названия неоткуда, а выдуманное название — ложное
+ * утверждение о реальном юридическом лице (Q-026). Поэтому логотипы
+ * объявлены украшением: смысл несёт заголовок раздела и подпись под ним.
+ */
+export const COMPANY_CLIENT_LOGOS: string[] = [
+  '/clients/client-01.jpg',
+  '/clients/client-02.png',
+  '/clients/client-03.gif',
+  '/clients/client-04.jpg',
+  '/clients/client-05.jpg',
+  '/clients/client-06.gif',
+  '/clients/client-07.jpg',
+  '/clients/client-08.png',
+  '/clients/client-09.jpg',
+  '/clients/client-10.jpg',
+  '/clients/client-11.jpg',
+  '/clients/client-12.jpg',
+  '/clients/client-13.jpg',
+  '/clients/client-14.jpg',
+  '/clients/client-15.gif',
+];
