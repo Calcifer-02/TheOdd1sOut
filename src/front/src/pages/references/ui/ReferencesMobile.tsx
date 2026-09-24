@@ -21,7 +21,7 @@ import { ImportSteps } from '@/features/reference-import';
 import type { Landfill } from '@/shared/api/references';
 import type { WasteGroup } from '@/shared/api/contracts';
 import { formatDate, formatMoney, formatNumber } from '@/shared/lib/formatting';
-import { latestTariffDate, tariffCellKey, tariffOf, transportCellKey } from '../model/editor';
+import { latestTariffDate, selectionCaption, tariffCellKey, tariffOf, transportCellKey } from '../model/editor';
 import { AccessNotice } from './AccessNotice';
 import { EditableCell } from './EditableCell';
 import { ManualStatusForm } from './ManualStatusForm';
@@ -124,7 +124,7 @@ export function ReferencesMobile({ editor, route, importing }: ReferencesViewPro
 
         <Card className="imolt-references-form">
           <div className="imolt-references-form-row">
-            <span className="imolt-references-card-entity">Цена перевозки за тонна-километр</span>
+            <span className="imolt-references-card-entity">Цена перевозки, ₽/т-км</span>
             <EditableCell
               name={`Цена перевозки, ${openGroup.name}`}
               value={formatMoney(openGroup.transportPricePerTonKm)}
@@ -146,7 +146,7 @@ export function ReferencesMobile({ editor, route, importing }: ReferencesViewPro
               <dd>{openGroup.fkkoCodes.length === 0 ? 'коды не заведены' : openGroup.fkkoCodes.join(', ')}</dd>
             </div>
             <div>
-              <dt>Актуально</dt>
+              <dt>Дата актуальности цены</dt>
               <dd>{formatDate(openGroup.updatedAt)}</dd>
             </div>
           </dl>
@@ -232,12 +232,24 @@ export function ReferencesMobile({ editor, route, importing }: ReferencesViewPro
         onPick={route.pickTab}
       />
 
-      <Field
-        id="references-query-mobile"
-        label={route.tab === 'landfills' ? 'Поиск по полигону или юрлицу' : 'Поиск по группе или коду каталога'}
-        value={query}
-        onChange={setQuery}
-      />
+      {/* Счётчик выборки стоит над полем и на телефоне: он относится к тому,
+          что показано, а не к строке поиска, и текст у обоих представлений
+          один (второй пакет замечаний заказчика, 24.09.2026). */}
+      <div className="imolt-references-selection">
+        <p className="imolt-references-count" role="status">
+          {selectionCaption(
+            route.tab,
+            route.tab === 'landfills' ? landfills.length : wasteGroups.length,
+            route.tab === 'landfills' ? editor.landfillTotal : editor.wasteGroupTotal,
+          )}
+        </p>
+        <Field
+          id="references-query-mobile"
+          label={route.tab === 'landfills' ? 'Поиск по полигону или юрлицу' : 'Поиск по группе или коду каталога'}
+          value={query}
+          onChange={setQuery}
+        />
+      </div>
 
       {editor.loading && <Skeleton rows={4} label="Справочник загружается" />}
 
@@ -315,7 +327,7 @@ function WasteGroupCard({ group, onOpen }: { group: WasteGroup; onOpen: () => vo
       <span className="imolt-references-card-name">{group.name}</span>
       <dl>
         <div>
-          <dt>Цена перевозки за тонна-километр</dt>
+          <dt>Цена перевозки, ₽/т-км</dt>
           <dd>{formatMoney(group.transportPricePerTonKm)}</dd>
         </div>
         <div>

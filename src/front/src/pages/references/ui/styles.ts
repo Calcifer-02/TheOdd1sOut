@@ -36,6 +36,7 @@ export const REFERENCES_CSS = `
 .imolt-references > .imolt-references-status,
 .imolt-references > .imolt-references-card-entity,
 .imolt-references > .imolt-references-actions,
+.imolt-references > .imolt-references-selection,
 .imolt-references > .imolt-toolbar,
 .imolt-references > .imolt-tabs,
 .imolt-references > .imolt-grow,
@@ -76,6 +77,25 @@ export const REFERENCES_CSS = `
   gap: ${space.s}px;
   align-items: flex-end;
   flex-wrap: wrap;
+}
+
+/* Полоса отбора идёт строками, а не одной линией: вкладки, счётчик выборки и
+   поле с подписью — управления разной природы, и в одной строке они читались
+   как три решения подряд (второй пакет замечаний заказчика, 24.09.2026).
+   Правило перекрывает раскладку полосы управлений общего слоя, поэтому
+   названо через предка. */
+.imolt-references > .imolt-references-filters {
+  display: grid;
+  gap: ${space.s}px;
+  align-items: start;
+}
+
+/* Счётчик и поиск — один блок выборки: счётчик стоит над полем и называет
+   показанное из найденного, а не длину строки ввода. */
+.imolt-references-selection {
+  display: grid;
+  gap: ${space.xxs}px;
+  min-width: 0;
 }
 
 .imolt-references-sync {
@@ -207,5 +227,5 @@ export const REFERENCES_CSS = `
 
 .imolt-references-status { display: flex; gap: ${space.xs}px; align-items: center; flex-wrap: wrap; }
 
-.imolt-references-count { font-size: 13px; line-height: 18px; color: ${colors.textSecondary}; }
+.imolt-references-count { margin: 0; font-size: 13px; line-height: 18px; color: ${colors.textSecondary}; }
 `;

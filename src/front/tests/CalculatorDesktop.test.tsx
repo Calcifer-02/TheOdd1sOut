@@ -13,18 +13,28 @@
  * Проверки фальсифицируемы: покажите на широком экране карточки вместо
  * таблицы, привяжите выбор к позиции строки, потеряйте признак `aria-sort`,
  * оставьте предел расстояния вне адреса, покажите код отказа вместо
- * заголовка, снимите отметку с заблокированного полигона — они упадут.
+ * заголовка, снимите отметку с заблокированного полигона, выпустите
+ * предложение прямо с экрана расчёта, верните маршрут в разметку таблицы —
+ * они упадут.
  *
  *   npx vitest run tests/CalculatorDesktop.test.tsx
  *
- * @ac: AC-024c, AC-025c, AC-027b, AC-028c, AC-060c
+ * @ac: AC-024c, AC-025c, AC-027b, AC-028c, AC-036f, AC-060c
  */
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { App } from '@/app/App';
+import { SELECTION_EMPTY_HINT } from '@/widgets/selection-summary';
 import type { ApiStub } from './apiStub';
-import { ALEKSIN_BLOCKED, DISTANCE_SERVICE_UNAVAILABLE, IKSHA, VOSTOK, installApiStub } from './apiStub';
+import {
+  ALEKSIN_BLOCKED,
+  CALCULATION_ID,
+  DISTANCE_SERVICE_UNAVAILABLE,
+  IKSHA,
+  VOSTOK,
+  installApiStub,
+} from './apiStub';
 import {
   calculateConcrete,
   chooseAddress,
@@ -333,12 +343,33 @@ describe('пустой результат на широком экране', () 
 
 /** @ac: AC-032c */
 describe('сводка выбора боковой колонкой', () => {
-  it('до выбора зовёт отметить полигоны, а не показывает нулевой итог', async () => {
+  // Пустая боковая колонка отнимала у таблицы 360 точек ширины и ничем их не
+  // занимала, поэтому до выбора её нет вовсе. Назначение флажков при этом
+  // объясняется строкой над таблицей — теми же словами, что и в панели.
+  it('до выбора зовёт отметить полигоны строкой, а не пустой колонкой', async () => {
     const user = userEvent.setup();
     render(<App />);
     await calculateConcrete(user);
 
-    expect(screen.getByRole('heading', { name: 'Выберите полигоны' })).toBeInTheDocument();
+    expect(screen.getByText(SELECTION_EMPTY_HINT)).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'Выберите полигоны' }),
+      'пустая сводка занимает боковую колонку',
+    ).toBeNull();
+  });
+
+  it('после выбора отдаёт боковую колонку сводке, а строку над таблицей убирает', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await calculateConcrete(user);
+
+    await user.click(screen.getByRole('checkbox', { name: /Комплекс переработки/u }));
+
+    expect(await screen.findByRole('heading', { name: /Выбрано/u })).toBeInTheDocument();
+    expect(
+      screen.queryByText(SELECTION_EMPTY_HINT),
+      'объяснение выбора осталось на экране вместе со сводкой',
+    ).toBeNull();
   });
 
   it('после выбора показывает итог, пришедший от расчётной части', async () => {
@@ -354,41 +385,63 @@ describe('сводка выбора боковой колонкой', () => {
       expect(document.body.textContent).toContain('39 880 ₽');
     });
   });
+});
 
-  it('даёт скачать коммерческое предложение и выпускает его один раз', async () => {
-    const user = userEvent.setup();
-    render(<App />);
+/**
+ * Решением заказчика от 24.09.2026 выпуск предложения ушёл с экрана расчёта на
+ * экран предпросмотра: у коммерческого предложения есть номер и срок действия,
+ * и закреплять их одним нажатием, не показав документ, нельзя.
+ *
+ * @ac: AC-036f
+ */
+describe('переход к предложению с боковой сводки', () => {
+  /** Доводит экран до выбора полигона и нажимает действие сводки. */
+  async function formQuote(user: ReturnType<typeof userEvent.setup>): Promise<void> {
     await calculateConcrete(user);
-
     await user.click(landfillCheckbox(VOSTOK.landfillName));
     await screen.findByText(/Выбрано\s1/u);
-    await user.click(screen.getByRole('button', { name: 'Скачать КП' }));
-    await screen.findByText('КП сохранено');
-    await user.click(screen.getByRole('button', { name: 'Скачать КП' }));
+    await user.click(screen.getByRole('button', { name: 'Сформировать предложение' }));
+  }
 
-    expect(stub.sentTo('POST /v1/calculations/:id/quotes')).toHaveLength(1);
+  it('ведёт на экран предложения с этим расчётом в адресе', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await formQuote(user);
+
+    expect(window.location.hash).toBe(`#/quote?calc=${CALCULATION_ID}`);
   });
 
-  it('ведёт на экран предложения по этому расчёту', async () => {
+  it('предложения не выпускает: номер закрепляет экран предложения', async () => {
     const user = userEvent.setup();
     render(<App />);
-    await calculateConcrete(user);
 
-    await user.click(landfillCheckbox(VOSTOK.landfillName));
-    await screen.findByText(/Выбрано\s1/u);
-    await user.click(screen.getByRole('button', { name: 'Скачать КП' }));
+    await formQuote(user);
 
-    const link = await screen.findByRole('link', { name: 'Открыть экран предложения' });
+    expect(
+      stub.sentTo('POST /v1/calculations/:id/quotes'),
+      'экран расчёта выпустил предложение вслепую (R-036)',
+    ).toHaveLength(0);
+  });
 
-    expect(link.getAttribute('href')).toContain('#/quote?calc=');
+  it('уводит с экрана расчёта, а не показывает извещение рядом с таблицей', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await formQuote(user);
+
+    await waitFor(() => {
+      expect(screen.queryByRole('table', { name: 'Сравнение полигонов' })).toBeNull();
+    });
   });
 });
 
 /** @uc: UC-002 */
 describe('маршрут на широком экране', () => {
-  it('показан всплывающим окном, а не модальным', async () => {
-    // Модальное окно для маршрута запрещено дизайн-договором, разд. 4.6:
-    // страница за окном обязана остаться доступной.
+  it('показан модальным окном поверх страницы, а не внутри таблицы', async () => {
+    // Решение заказчика от 24.09.2026: окно маршрута отрисовывалось внутри
+    // таблицы сравнения и резалось её областью прокрутки (R-033). Устройство
+    // окна и его карта проверяются отдельно — `tests/RouteModal.test.tsx`.
     const user = userEvent.setup();
     render(<App />);
     await calculateConcrete(user);
@@ -399,11 +452,12 @@ describe('маршрут на широком экране', () => {
       }),
     );
 
-    const popover = await screen.findByRole('dialog', {
+    const modal = await screen.findByRole('dialog', {
       name: `Маршрут до полигона ${VOSTOK.landfillName}`,
     });
 
-    expect(popover).not.toHaveAttribute('aria-modal');
+    expect(modal).toHaveAttribute('aria-modal', 'true');
+    expect(modal.closest('table'), 'окно шире своей ячейки в четыре с половиной раза').toBeNull();
   });
 
   it('оставляет список полигонов на экране', async () => {

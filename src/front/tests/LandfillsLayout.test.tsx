@@ -1,27 +1,33 @@
 /**
- * Раскладка экрана справочника полигонов: одна левая вертикаль и одна полоса
- * отбора в обоих представлениях (BUG-003, BUG-011).
+ * Раскладка экрана справочника полигонов: одна левая вертикаль, полоса отбора
+ * и шапка таблицы (BUG-003, BUG-011).
  *
- * Заказчик прочитал экран так: заголовок таблицы отбит внутрь белой плашки, а
- * заголовок страницы, пояснение, полоса актуальности и отбор начинаются от
- * края — вертикали не совпадают, а поиск, группы отходов и сброс читаются как
- * три отдельных решения. Проверка измеряет ровно это: отступ содержимого от
- * края экрана и принадлежность управлений одной полосе.
+ * Заказчик прочитал экран так: вертикали блоков не совпадают, поиск, группы
+ * отходов и сброс читаются тремя решениями, управления полосы отбора разной
+ * высоты стоят в одной строке, а шапка таблицы «крива по вёрстке и
+ * отступам». Проверки измеряют ровно это: отступ содержимого от края экрана,
+ * состав строк полосы отбора, общую высоту её управлений, видимую подпись
+ * отбора, выравнивание заголовка тарифа, доли ширины столбцов, границы
+ * таблицы и разделители перечня тарифов внутри ячейки.
  *
- * Проверки фальсифицируемы: снимите поле у заголовочного блока, верните
- * обёртку вокруг кнопки сброса или отбейте плашку на другое расстояние —
- * падает именно та проверка, которая об этом говорит.
+ * Проверки фальсифицируемы: снимите поле у заголовочного блока, поставьте
+ * поиск и отбор одной строкой, задайте чипу собственную высоту, подмените
+ * видимую подпись отбора на `aria-label`, прижмите заголовок тарифа вправо,
+ * отдайте ширину столбцов содержимому, схлопните границы таблицы или снимите
+ * линию между парами перечня — падает именно та проверка, которая об этом
+ * говорит.
  *
  *   npx vitest run tests/LandfillsLayout.test.tsx
  *
  * Критерия приёмки на раскладку справочника в реестре нет: AC-085a требует
  * двух деревьев разметки, а не одной вертикали. Поэтому ссылка на требования.
  *
- * @supports: R-039, R-040, R-085
+ * @supports: R-039, R-040, R-058, R-085
  */
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { LandfillsPage } from '@/pages/landfills';
+import { layout, stroke } from '@/shared/ui/tokens';
 import { DESKTOP_WIDTH, setViewportWidth } from './viewport';
 import { installThemeStyles, leftInset } from './layout';
 import { installReferencesStub, type ReferencesStub } from './stubs/references';
@@ -55,6 +61,22 @@ function экран(): Element {
     throw new Error('Экран справочника не отрисован');
   }
   return узел;
+}
+
+/**
+ * Высота управления по действующим правилам: заданная, а если её нет — та,
+ * ниже которой управление не опускается. Настоящей раскладки в jsdom нет, но
+ * объявленную меру он считает, и разнобой высот в строке виден именно так.
+ */
+function высотаУправления(узел: Element): number {
+  const стиль = getComputedStyle(узел);
+  const заданная = Number.parseFloat(стиль.height);
+
+  return Number.isNaN(заданная) ? Number.parseFloat(стиль.minHeight) : заданная;
+}
+
+function узлы(селектор: string): Element[] {
+  return [...document.querySelectorAll(селектор)];
 }
 
 describe('левая вертикаль справочника полигонов', () => {
@@ -135,7 +157,7 @@ describe('длинные значения справочника', () => {
 });
 
 describe('полоса отбора справочника', () => {
-  it('держит поиск, группы отходов и сброс отбора одной полосой управления', async () => {
+  it('разводит поиск и отбор по группе на две строки одной плашки', async () => {
     window.history.replaceState(null, '', `#/landfills?q=${encodeURIComponent('Восток')}`);
     render(<LandfillsPage />);
 
@@ -143,10 +165,114 @@ describe('полоса отбора справочника', () => {
     const группы = screen.getByRole('group', { name: 'Группа отходов' });
     const сброс = screen.getByRole('button', { name: 'Сбросить отбор' });
 
-    // Полоса одна: три управления — соседи в общей строке, а не три блока,
-    // каждый со своим отступом.
-    expect(группы.parentElement).toBe(поиск.parentElement);
-    expect(сброс.parentElement).toBe(поиск.parentElement);
-    expect(getComputedStyle(поиск.parentElement as Element).display).toBe('flex');
+    const плашка = поиск.parentElement as Element;
+    expect(плашка.classList.contains('imolt-landfills-filters')).toBe(true);
+
+    // Плашка осталась одна, но строк в ней две: поиск и отбор по группе —
+    // два названных блока, и в одной строке их подписи встают на разных
+    // уровнях (второй пакет замечаний заказчика).
+    expect(getComputedStyle(плашка).display).toBe('grid');
+    expect(плашка.contains(группы)).toBe(true);
+    expect(поиск.contains(группы)).toBe(false);
+
+    // Сброс снимает и поиск, и группу, и стоит в строке отбора — не третьим
+    // блоком со своим отступом (BUG-003).
+    const строкаОтбора = сброс.parentElement as Element;
+    expect(строкаОтбора.contains(группы)).toBe(true);
+    expect(строкаОтбора.parentElement).toBe(плашка);
+  });
+
+  it('держит управления полосы отбора одной высоты', async () => {
+    window.history.replaceState(null, '', `#/landfills?q=${encodeURIComponent('Восток')}`);
+    render(<LandfillsPage />);
+
+    const поиск = await screen.findByRole('search', { name: 'Поиск полигона' });
+    const плашка = поиск.parentElement as Element;
+
+    // Общую высоту управлений задаёт общий слой; экран обязан её не
+    // перебивать. В плашке стоят поле, «Найти», чипы групп и сброс — мера у
+    // них одна, иначе полоса снова читается набором разнородных управлений.
+    const меры = [...плашка.querySelectorAll('input, button')].map(высотаУправления);
+    expect(меры.length).toBeGreaterThan(4);
+    expect([...new Set(меры)]).toEqual([layout.controlHeight]);
+
+    expect(getComputedStyle(поиск).alignItems).toBe('flex-end');
+  });
+
+  it('называет отбор по группе видимой подписью, а не одним доступным именем', async () => {
+    render(<LandfillsPage />);
+
+    await screen.findByRole('search', { name: 'Поиск полигона' });
+
+    const группы = screen.getByRole('group', { name: 'Группа отходов' });
+    const подпись = document.getElementById(группы.getAttribute('aria-labelledby') ?? '');
+
+    // Доступное имя и видимая подпись — один текст: `aria-label` называл
+    // отбор только вспомогательной технологии, и зрячий пользователь не
+    // знал, по чему идёт отбор.
+    expect(подпись).not.toBeNull();
+    expect(подпись?.textContent).toBe('Группа отходов');
+    expect(подпись?.className).toContain('imolt-label');
+  });
+});
+
+describe('таблица справочника полигонов', () => {
+  beforeEach(() => {
+    setViewportWidth(DESKTOP_WIDTH);
+  });
+
+  it('ставит заголовок тарифа над началом ячейки, а не над её правым краем', async () => {
+    render(<LandfillsPage />);
+
+    await screen.findByRole('table', { name: ВСЕ_ГРУППЫ });
+
+    const тариф = screen.getByRole('columnheader', { name: 'Тариф утилизации, ₽/т' });
+    const полигон = screen.getByRole('columnheader', { name: 'Полигон' });
+
+    // В ячейке — перечень «группа отходов — цена», и он начинается слева.
+    // Прижатый вправо заголовок стоял над ценами соседнего столбца.
+    expect(тариф.getAttribute('data-align')).toBe('start');
+    // Вертикаль заголовка сравнивается с соседним столбцом, а не с числом:
+    // выравнивание шапки задаёт общий слой, и его мера — не дело экрана.
+    expect(getComputedStyle(тариф).textAlign).toBe(getComputedStyle(полигон).textAlign);
+  });
+
+  it('задаёт ширины столбцов долями, а не длиной названия юридического лица', async () => {
+    render(<LandfillsPage />);
+
+    await screen.findByRole('table', { name: ВСЕ_ГРУППЫ });
+
+    const доли = screen.getAllByRole('columnheader').map(столбец => (столбец as HTMLElement).style.width);
+
+    expect(доли).toEqual(['30%', '22%', '32%', '16%']);
+    // Доли считаются от ширины таблицы только при заданной раскладке: без неё
+    // ширину столбца снова назначает самая длинная строка в нём.
+    expect(getComputedStyle(узлы('.imolt-landfills-table table')[0]).tableLayout).toBe('fixed');
+  });
+
+  it('не схлопывает границы таблицы поверх правила общего слоя', async () => {
+    render(<LandfillsPage />);
+
+    await screen.findByRole('table', { name: ВСЕ_ГРУППЫ });
+
+    // Схлопнутые границы отдают линию под липкой шапкой самой таблице, и при
+    // прокрутке первая строка уезжает под шапку без разделителя (BUG-001).
+    // Общий слой держит раздельные границы, экран их не перебивает.
+    expect(getComputedStyle(узлы('.imolt-landfills-table table')[0]).borderCollapse).toBe('separate');
+  });
+
+  it('отделяет пары «группа отходов — цена» линией, а не сливает их в текст', async () => {
+    render(<LandfillsPage />);
+
+    await screen.findByRole('table', { name: ВСЕ_ГРУППЫ });
+
+    const строки = узлы('.imolt-landfills-table .imolt-tariffs-row');
+    expect(строки.length).toBeGreaterThan(1);
+
+    const последняя = строки[строки.length - 1];
+
+    expect(Number.parseFloat(getComputedStyle(строки[0]).borderBottomWidth)).toBe(stroke.hairline);
+    // Линия под последней парой читалась бы разделителем строки таблицы.
+    expect(Number.parseFloat(getComputedStyle(последняя).borderBottomWidth)).toBe(0);
   });
 });

@@ -142,3 +142,45 @@ describe('карточки-объяснения до первого расчёт
     expect(рисунки.filter(рисунок => рисунок.getAttribute('fill') !== 'none')).toEqual([]);
   });
 });
+
+describe('строка типа отходов и меры объёма', () => {
+  /** Строка формы: найдена от поля объёма вверх по разметке. */
+  function строка(): HTMLElement {
+    const поле = screen.getByRole('textbox', { name: 'Объём' });
+    const узел = поле.closest('.imolt-desk-line');
+
+    expect(узел, 'строка типа отходов не найдена').not.toBeNull();
+
+    return узел as HTMLElement;
+  }
+
+  // У кубометров под полем объёма появляется пересчёт в тонны. При
+  // выравнивании строки по нижнему краю он растил её на высоту подсказки и
+  // уводил «Тип отходов» вниз — поля переставали стоять на одной линии.
+  it('выравнивает поля строки по верху, а не по нижнему краю', () => {
+    render(<App />);
+
+    expect(getComputedStyle(строка()).alignItems).toBe('start');
+  });
+
+  it('сдвигает меру объёма на высоту подписи, чтобы она встала в строку поля', () => {
+    render(<App />);
+
+    const мера = строка().querySelector('.imolt-units');
+
+    expect(мера, 'переключатель меры не найден').not.toBeNull();
+    expect(getComputedStyle(мера as HTMLElement).marginTop).not.toBe('0px');
+  });
+
+  it('держит подсказку пересчёта под полем объёма, а не между полями', () => {
+    render(<App />);
+
+    const блок = screen.getByRole('textbox', { name: 'Объём' }).closest('.imolt-grow');
+    const поля = [...строка().querySelectorAll('.imolt-grow')];
+
+    // Подсказка принадлежит полю объёма: соседнее поле о ней не знает и
+    // потому от неё не двигается.
+    expect(поля[0]).not.toBe(блок);
+    expect(блок?.classList.contains('imolt-field--amount')).toBe(true);
+  });
+});

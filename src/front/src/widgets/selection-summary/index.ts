@@ -6,4 +6,4 @@
  */
 export { AllocationPanel, type AllocationRow } from './ui/AllocationPanel';
 export { SummaryBar } from './ui/SummaryBar';
-export { SummaryPanel, type SummaryLine } from './ui/SummaryPanel';
+export { SummaryPanel, SELECTION_EMPTY_TITLE, SELECTION_EMPTY_HINT, type SummaryLine } from './ui/SummaryPanel';

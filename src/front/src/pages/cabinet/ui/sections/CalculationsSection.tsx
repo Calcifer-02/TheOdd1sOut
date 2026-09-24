@@ -11,6 +11,7 @@
 import { EmptyState, Notice, Pager, Skeleton } from '@/shared/ui';
 import { CALCULATOR_PATH, hashOf } from '@/shared/lib/routing';
 import type { CalculationsState } from '../../model/cabinet';
+import { benefitDetail } from '../../model/entry';
 import { CalculationsCards } from './CalculationsCards';
 import { CalculationsTable } from './CalculationsTable';
 
@@ -24,7 +25,9 @@ export function CalculationsSection({ state, wide }: { state: CalculationsState;
           <h1 className="imolt-title" id="imolt-cabinet-calculations">
             Расчёты
           </h1>
-          <p className="imolt-lead">Сохранённые расчёты и выпущенные коммерческие предложения</p>
+          {/* Подпись раздела и обещание на входе — один текст: вход не должен
+              называть возможность иначе, чем сам раздел. */}
+          <p className="imolt-lead">{benefitDetail('calculations')}</p>
         </div>
         <a className="imolt-link imolt-cabinet-link" href={hashOf(CALCULATOR_PATH)}>
           Новый расчёт

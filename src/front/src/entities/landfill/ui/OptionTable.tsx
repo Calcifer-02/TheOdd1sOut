@@ -16,7 +16,7 @@
 import type { ReactNode } from 'react';
 import type { PlacementOption, SortField, SortOrder } from '@/shared/api/contracts';
 import { formatDistance, formatMoney } from '@/shared/lib/formatting';
-import { Button, DataTable, Popover, useStyles, type TableColumn } from '@/shared/ui';
+import { Button, DataTable, useStyles, type TableColumn } from '@/shared/ui';
 import { colors, space } from '@/shared/ui/tokens';
 import { StatusBadge, badgeStatus } from './StatusBadge';
 
@@ -41,7 +41,10 @@ const NO_VALUE = '–';
 const OPTION_TABLE_CSS = `
 .imolt-cell-landfill { display: flex; flex-direction: column; gap: ${space.xxs}px; min-width: 0; }
 .imolt-cell-status { display: flex; flex-direction: column; align-items: flex-start; gap: ${space.xxs}px; }
-.imolt-cell-route { position: relative; display: inline-flex; }
+/* Оправа кнопки маршрута. Позиционирования здесь нет намеренно: маршрут
+   открывается модальным окном поверх страницы, и таблице привязывать к себе
+   больше нечего (решение заказчика от 24.09.2026, R-033). */
+.imolt-cell-route { display: inline-flex; }
 .imolt-table tr[data-selected='true'] { background: ${colors.accentRowHover}; }
 `;
 
@@ -55,9 +58,6 @@ export function OptionTable({
   onSort,
   onToggle,
   onRoute,
-  openRouteFor,
-  routeDetails,
-  onCloseRoute,
   loading,
   empty,
 }: {
@@ -71,11 +71,8 @@ export function OptionTable({
   order: SortOrder;
   onSort: (field: SortField) => void;
   onToggle: (option: PlacementOption) => void;
+  /** Открыть маршрут до полигона. Само окно маршрута таблице не принадлежит. */
   onRoute: (option: PlacementOption) => void;
-  /** Полигон, у которого открыто всплывающее окно маршрута. */
-  openRouteFor?: string;
-  routeDetails?: ReactNode;
-  onCloseRoute: () => void;
   loading?: boolean;
   empty?: ReactNode;
 }) {
@@ -115,18 +112,16 @@ export function OptionTable({
       );
     }
 
-    // Маршрут открывается и нажатием, и наведением: на рабочем месте курсор
-    // быстрее, но полагаться только на наведение нельзя — с клавиатуры его не
-    // воспроизвести, а на касании его не бывает вовсе (разд. 4.5).
+    // Маршрут открывается нажатием, и только им. Прежде окно открывалось ещё
+    // и наведением на ячейку: у всплывающего окна рядом с кнопкой это было
+    // подсказкой, а модальное окно так открывать нельзя — человек проводит
+    // указателем по таблице и получает окно поверх всей страницы (решение
+    // заказчика от 24.09.2026, R-033).
+    //
+    // Самого окна здесь нет: оно не привязано к ячейке и живёт на экране
+    // расчёта, над таблицей.
     return (
-      <span
-        className="imolt-cell-route"
-        onMouseEnter={() => {
-          if (openRouteFor !== option.landfillId) {
-            onRoute(option);
-          }
-        }}
-      >
+      <span className="imolt-cell-route">
         <Button
           kind="tertiary"
           size="s"
@@ -135,13 +130,6 @@ export function OptionTable({
         >
           Маршрут
         </Button>
-        <Popover
-          title={`Маршрут до полигона ${option.landfillName}`}
-          open={openRouteFor === option.landfillId}
-          onClose={onCloseRoute}
-        >
-          {routeDetails}
-        </Popover>
       </span>
     );
   }

@@ -15,7 +15,7 @@
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { DataFreshness, LandfillStatus, WasteGroup } from '@/shared/api/contracts';
-import type { Money } from '@/shared/lib/formatting';
+import { formatNumber, type Money } from '@/shared/lib/formatting';
 import { type Landfill, getDataFreshness, listLandfills, listWasteGroups } from '@/shared/api/references';
 import {
   type LandfillTariff,
@@ -79,6 +79,23 @@ export function latestTariffDate(landfill: Landfill): string | null {
     (latest, tariff) => (latest === null || tariff.updatedAt > latest ? tariff.updatedAt : latest),
     null,
   );
+}
+
+/**
+ * Подпись выборки: сколько записей показано из найденных службой.
+ *
+ * Счётчик описывает выборку, а не поле ввода: показанное меняют и вкладка, и
+ * строка поиска, и порция, прочитанная у службы, — поэтому число показанных и
+ * число найденных названы раздельно (карточка практики PRACT-024, второй
+ * пакет замечаний заказчика, 24.09.2026).
+ *
+ * Текст живёт в предметной части, а не в разметке: представлений у экрана два,
+ * и вторая копия подписи разошлась бы с первой молча (R-085).
+ */
+export function selectionCaption(tab: EditorTab, shown: number, found: number): string {
+  const subject = tab === 'landfills' ? 'полигонов' : 'групп отходов';
+
+  return `Показано ${subject}: ${formatNumber(shown)} из ${formatNumber(found)}`;
 }
 
 /** Отбор по названию: полигон — по имени и юрлицу, группа — по имени и коду. */

@@ -12,7 +12,7 @@
  * @req: R-013, R-019, R-023, R-048, R-058, R-061
  * @adr: ADR-0008
  */
-import { Field, Notice, RadioPills, Sheet, Skeleton } from '@/shared/ui';
+import { Button, Field, Notice, RadioPills, Sheet, Skeleton } from '@/shared/ui';
 import { Combobox } from '@/shared/ui/combobox';
 import { OptionCard, RouteDetails, badgeStatus } from '@/entities/landfill';
 import { AllocationPanel, SummaryBar } from '@/widgets/selection-summary';
@@ -154,9 +154,16 @@ export function CalculatorMobile({ model }: { model: CalculatorModel }) {
               options={SORTS.map(sort => ({ value: sort.field, label: sort.label }))}
               onPick={field => model.applyView({ sort: field })}
             />
-            <button type="button" className="imolt-button imolt-button--tertiary" onClick={model.toggleOrder}>
+            {/* Общая кнопка, а не своя разметка: вторая реализация того же
+                управления расходится с первой молча, а резерв под вторую
+                подпись держит ширину при смене порядка (R-024). */}
+            <Button
+              kind="tertiary"
+              reserve={view.order === 'asc' ? 'По убыванию' : 'По возрастанию'}
+              onClick={model.toggleOrder}
+            >
               {view.order === 'asc' ? 'По возрастанию' : 'По убыванию'}
-            </button>
+            </Button>
           </div>
 
           <div className="imolt-chips" aria-label="Фильтр расстояния">

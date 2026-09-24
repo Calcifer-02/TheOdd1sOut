@@ -7,6 +7,7 @@
  * идентификатор полигона, а не его позиция в выборке.
  *
  * @req: R-040
+ * @supports: R-058
  * @adr: ADR-0008
  */
 import { Button, DataTable } from '@/shared/ui';
@@ -15,6 +16,21 @@ import type { DataFreshness, Landfill, WasteGroup } from '@/shared/api/reference
 import { landfillBadgeStatus } from '../model/freshness';
 import { tariffRows } from '../model/tariffs';
 import { LandfillTariffs } from './LandfillTariffs';
+
+/**
+ * Доли ширины столбцов. Объявлены здесь, а не отданы содержимому: при
+ * автоматической раскладке ширину столбца задавала самая длинная строка, и
+ * название юридического лица отбирало место у перечня тарифов — границы
+ * столбцов расходились от выборки к выборке (второй пакет замечаний
+ * заказчика, 24.09.2026). Доли в сумме дают сто процентов, и раскладка
+ * `fixed` из файла стилей считает их от ширины таблицы, а не от текста.
+ */
+const COLUMN_WIDTHS = {
+  name: '30%',
+  legalEntity: '22%',
+  tariffs: '32%',
+  status: '16%',
+} as const;
 
 export function LandfillsTable({
   landfills,
@@ -36,10 +52,14 @@ export function LandfillsTable({
       <DataTable
         caption={caption}
         columns={[
-          { key: 'name', title: 'Полигон' },
-          { key: 'legalEntity', title: 'Юридическое лицо' },
-          { key: 'tariffs', title: 'Тариф утилизации, ₽/т', align: 'end' },
-          { key: 'status', title: 'Статус' },
+          { key: 'name', title: 'Полигон', width: COLUMN_WIDTHS.name },
+          { key: 'legalEntity', title: 'Юридическое лицо', width: COLUMN_WIDTHS.legalEntity },
+          // Заголовок стоит над началом ячейки, а не у её правого края:
+          // внутри — перечень «группа отходов — цена», и он начинается
+          // слева. Прижатый вправо заголовок висел над ценами и читался как
+          // заголовок чужого столбца (второй пакет замечаний заказчика).
+          { key: 'tariffs', title: 'Тариф утилизации, ₽/т', width: COLUMN_WIDTHS.tariffs },
+          { key: 'status', title: 'Статус', width: COLUMN_WIDTHS.status },
         ]}
         rows={landfills}
         rowKey={(landfill: Landfill) => landfill.id}

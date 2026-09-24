@@ -8,9 +8,9 @@
  * @supports: R-084
  */
 import { useState } from 'react';
-import { OptionCard, OptionTable, RouteDetails, StatusBadge, type BadgeStatus } from '@/entities/landfill';
+import { OptionCard, OptionTable, RouteDetails, RouteModal, StatusBadge, type BadgeStatus } from '@/entities/landfill';
 import { AllocationPanel, SummaryBar, SummaryPanel } from '@/widgets/selection-summary';
-import { EmptyState } from '@/shared/ui';
+import { Button, EmptyState } from '@/shared/ui';
 import { formatMoney } from '@/shared/lib/formatting';
 import { ApiProblem } from '@/shared/api/http';
 import type { PlacementOption, RouteSummary } from '@/shared/api/contracts';
@@ -62,6 +62,12 @@ const ROUTE_GRANTED: RouteSummary = {
 };
 
 /** Тот же маршрут для гостя: детали закрыты подпиской. */
+/** Адрес вывоза примера договора: вторая метка на карте окна маршрута. */
+const SHOWCASE_PICKUP = {
+  value: 'г Москва, ул Годовикова, д 9',
+  coordinates: { latitude: 55.8055, longitude: 37.6206 },
+};
+
 const ROUTE_LOCKED: RouteSummary = {
   access: { granted: false, reason: 'subscriptionRequired' },
   legs: [],
@@ -79,6 +85,7 @@ export function CalculatorSection() {
   // Витрина показывает живые компоненты, а не снимки: отметка строки должна
   // работать здесь так же, как на экране расчёта.
   const [selected, setSelected] = useState<string[]>([SAMPLE_OPTION.landfillId]);
+  const [routeOpen, setRouteOpen] = useState(false);
 
   return (
     <>
@@ -133,7 +140,6 @@ export function CalculatorSection() {
             )
           }
           onRoute={() => undefined}
-          onCloseRoute={() => undefined}
         />
       </Section>
 
@@ -148,7 +154,6 @@ export function CalculatorSection() {
           onSort={() => undefined}
           onToggle={() => undefined}
           onRoute={() => undefined}
-          onCloseRoute={() => undefined}
           loading
         />
       </Section>
@@ -164,7 +169,6 @@ export function CalculatorSection() {
           onSort={() => undefined}
           onToggle={() => undefined}
           onRoute={() => undefined}
-          onCloseRoute={() => undefined}
           empty={
             <EmptyState
               title="Нет полигонов, принимающих этот тип отходов ближе 50 км"
@@ -181,6 +185,27 @@ export function CalculatorSection() {
         <div className="imolt-card">
           <RouteDetails option={SAMPLE_OPTION} summary={ROUTE_LOCKED} />
         </div>
+      </Section>
+
+      <Section title="Окно маршрута">
+        {/* Окно уходит порталом в корень страницы: внутри обрезающей области
+            оно резалось бы её краями. В витрине это значит, что образец не
+            рисуется на месте, а открывается поверх неё. */}
+        <p className="imolt-lead">
+          Модальное окно поверх страницы: карта с метками адреса вывоза и полигона, расстояние и переход во внешние
+          карты. Прокрутка страницы под ним заблокирована, закрывается крестиком, нажатием вне окна и клавишей Escape.
+        </p>
+        <Button size="s" kind="secondary" onClick={() => setRouteOpen(true)}>
+          Показать окно маршрута
+        </Button>
+        {routeOpen && (
+          <RouteModal
+            option={SAMPLE_OPTION}
+            summary={ROUTE_GRANTED}
+            pickup={SHOWCASE_PICKUP}
+            onClose={() => setRouteOpen(false)}
+          />
+        )}
       </Section>
 
       <Section title="Распределение объёма">
@@ -227,7 +252,7 @@ export function CalculatorSection() {
           total=""
           totalLabel="Итого"
           onRoute={() => undefined}
-          onDownload={() => undefined}
+          onOpenQuote={() => undefined}
           onPickup={() => undefined}
         />
         <SummaryPanel
@@ -247,7 +272,7 @@ export function CalculatorSection() {
           total={formatMoney({ amount: '52920.00', currency: 'RUB' })}
           totalLabel="Итого"
           onRoute={() => undefined}
-          onDownload={() => undefined}
+          onOpenQuote={() => undefined}
           onPickup={() => undefined}
         />
       </Section>
@@ -256,8 +281,8 @@ export function CalculatorSection() {
         <SummaryBar
           selectedCount={2}
           total={formatMoney({ amount: '52920.00', currency: 'RUB' })}
-          downloadLabel="Скачать КП"
-          onDownload={() => undefined}
+          quoteLabel="Сформировать предложение"
+          onOpenQuote={() => undefined}
           onPickup={() => undefined}
         />
       </Section>

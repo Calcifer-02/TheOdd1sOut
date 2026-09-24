@@ -136,6 +136,20 @@ public sealed class ImoltCalculationsStand : IAsyncLifetime
             )
             on conflict (from_latitude, from_longitude, landfill_id) do nothing;
 
+            -- Плечи до полигонов, о которых критерии подбора не говорят.
+            -- Демонстрационный набор (0009_moscow_region_landfills.sql) принёс
+            -- ещё восемь полигонов и плечи до них от всех адресов справочника,
+            -- и от адреса примера договора они встали бы в тот же список.
+            -- Лишнее снимается здесь, а не подгоняется числами критериев:
+            -- AC-024a и AC-024b говорят о порядке списка, а не о размере
+            -- демонстрационного набора, и подгонка ожиданий под набор сделала
+            -- бы исход критерия зависимым от наполнения справочника.
+            delete from road_distance
+             where from_latitude = 55.80550
+               and from_longitude = 37.62060
+               and landfill_id not in (
+                   'vostok-timohovo', 'iksha', '{BlockedLandfillInPlacementId}');
+
             -- Адрес вывоза без единого сохранённого плеча (AC-020b). Ни одной
             -- строки в road_distance для этих координат не заводится: расчёт
             -- обязан отказать, а не подставить расстояние по прямой.

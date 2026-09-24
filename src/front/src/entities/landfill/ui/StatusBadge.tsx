@@ -77,7 +77,11 @@ export const STATUS_WORD: Record<BadgeStatus, string> = {
  */
 export function StatusBadge({ status, statusUpdatedAt }: { status: BadgeStatus; statusUpdatedAt: string }) {
   return (
-    <>
+    // Значок и дата собраны в одну запись о полигоне: рядом друг с другом без
+    // общей обёртки они сходились в «Активенданные от 17.09», потому что
+    // зазор между ними не задавало ни одно правило (второй пакет замечаний
+    // заказчика по живому стенду, R-028, R-048).
+    <span className="imolt-status">
       <span className="imolt-badge" data-status={status}>
         <StatusIcon status={status} />
         {STATUS_WORD[status]}
@@ -88,7 +92,7 @@ export function StatusBadge({ status, statusUpdatedAt }: { status: BadgeStatus; 
       <time className="imolt-freshness" dateTime={statusUpdatedAt}>
         данные от {formatShortDate(statusUpdatedAt)}
       </time>
-    </>
+    </span>
   );
 }
 
