@@ -624,6 +624,37 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
    месте карты стоит приглушённая поверхность, а не пустота (R-034).
    «overflow: hidden» обязателен: библиотека карты двигает слои полотна
    произвольно далеко за края видимой части. */
+/* Окно маршрута на рабочем месте: карта занимает главное место, перечень
+   полигонов стоит рядом в боковой колонке. Под картой он отжимал сводку за
+   нижний край окна (замечание заказчика от 24.09.2026). На узком экране
+   колонки складываются в одну — дерево разметки при этом одно (R-085). */
+.imolt-route-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) ${layout.sideColumnWidth}px;
+  gap: ${space.l}px;
+  align-items: start;
+}
+
+.imolt-route-map-side,
+.imolt-route-list-side {
+  display: flex;
+  flex-direction: column;
+  gap: ${space.s}px;
+  min-width: 0;
+}
+
+/* Боковая колонка не растёт вместе с картой: перечень из пяти полигонов с
+   раскрытыми сведениями прокручивается внутри себя. */
+.imolt-route-list-side {
+  max-height: ${layout.routeMapHeight}px;
+  overflow-y: auto;
+}
+
+@media (max-width: ${BREAKPOINTS.sideSummary - 1}px) {
+  .imolt-route-layout { grid-template-columns: minmax(0, 1fr); }
+  .imolt-route-list-side { max-height: none; overflow-y: visible; }
+}
+
 .imolt-map {
   height: ${layout.routeMapHeight}px;
   border-radius: ${radius.field}px;
@@ -634,18 +665,24 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
 
 /* Метка на карте. Рисуется правилом, а не картинкой: изображения библиотеки
    карты лежат в её пакете и при сборке теряют адрес. */
+/* Метка адреса вывоза: чёрная и крупнее полигонов. Точка вывоза на
+   карте одна, а полигонов бывает пять, и в общей мере она среди них терялась
+   (AC-033g). Цвета те же, что и были: оранжевый — марка сервиса, и на карте
+   он читался действием (замечание заказчика от 25.09.2026). */
 .imolt-map-pin {
-  width: ${space.m}px;
-  height: ${space.m}px;
+  width: ${space.l}px;
+  height: ${space.l}px;
   border-radius: ${radius.pill}px;
   border: ${stroke.emphasis}px solid ${colors.bgSurface};
   box-shadow: ${layout.shadow};
   background: ${colors.accentDark};
 }
 
-/* Полигон отличается от адреса вывоза не только цветом: у него своя рамка и
-   подпись в перечне меток под картой (разд. 4.6). */
+/* Полигон отличается от адреса вывоза не только цветом: он мельче, у него
+   своя рамка и своя подпись в перечне меток под картой (разд. 4.6). */
 .imolt-map-pin[data-point='landfill'] {
+  width: ${space.m + stroke.emphasis}px;
+  height: ${space.m + stroke.emphasis}px;
   background: ${colors.accentPrimary};
   border-color: ${colors.accentDark};
   cursor: pointer;
@@ -660,6 +697,29 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
   gap: ${space.xs}px;
   font-size: 14px;
   line-height: 20px;
+}
+
+/* Строка полигона в перечне — она же выбор: нажатие раскрывает сведения под
+   ней. Второй перечень рядом говорил бы об одном и том же дважды (замечание
+   заказчика от 24.09.2026). */
+.imolt-map-legend-pick {
+  width: 100%;
+  min-height: ${layout.touchTarget}px;
+  padding: ${space.xs}px ${space.s}px;
+  border: ${stroke.hairline}px solid transparent;
+  border-radius: ${radius.field}px;
+  background: none;
+  color: ${colors.textPrimary};
+  font-family: ${fonts.ui};
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Выбранный полигон виден не одним цветом: у него рамка и объявленное
+   состояние кнопки (разд. 4.5). */
+.imolt-map-legend-pick[aria-pressed='true'] {
+  border-color: ${colors.accentDark};
+  background: ${colors.accentRowHover};
 }
 
 /* Указание источника карты. Лицензия ODbL требует называть авторов данных,
@@ -1037,6 +1097,7 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
 
   .imolt-suggest button:hover { background: ${colors.accentRowHover}; }
   .imolt-option:hover { background: ${colors.accentRowHover}; }
+  .imolt-map-legend-pick:hover { background: ${colors.accentRowHover}; }
   .imolt-check:hover:not(:disabled) { border-color: ${colors.accentDark}; }
   .imolt-select:hover:not(:disabled) { border-color: ${colors.accentDark}; }
   .imolt-table-sort:hover { color: ${colors.textPrimary}; }

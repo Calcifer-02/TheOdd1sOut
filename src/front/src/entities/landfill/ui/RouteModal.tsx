@@ -29,9 +29,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Coordinates, PlacementOption, RouteSummary } from '@/shared/api/contracts';
 import type { LandfillCard, WasteGroup } from '@/shared/api/references';
 import { formatMoney } from '@/shared/lib/formatting';
+import { routeTone } from '@/shared/ui/tokens';
 import { Modal, Notice, Skeleton } from '@/shared/ui';
 import { useRouteLandfills } from '../model/routeLandfills';
-import { drawRouteMap, type MapFailure, type RoutePoint } from '../model/routeMap';
+import { drawRouteMap, type MapFailure, type RouteMapHandle, type RoutePoint } from '../model/routeMap';
+import { roadShape, type RouteShape } from '../model/routeGeometry';
 import { routeRows, type RouteScope } from '../model/routeSummary';
 import { RouteDetails } from './RouteDetails';
 import { StatusBadge } from './StatusBadge';
@@ -53,8 +55,17 @@ const MAP_FAILURE_WORD: Record<MapFailure, string> = {
 const MAP_FAILURE_HINT = 'Расстояние, время в пути и переход во внешние карты остались в окне.';
 
 /** Полотно карты. Библиотека правит этот узел сама, React в него не пишет. */
-function RouteMap({ points, onFailure }: { points: RoutePoint[]; onFailure: (failure: MapFailure) => void }) {
+function RouteMap({
+  points,
+  shapes,
+  onFailure,
+}: {
+  points: RoutePoint[];
+  shapes: RouteShape[];
+  onFailure: (failure: MapFailure) => void;
+}) {
   const host = useRef<HTMLDivElement>(null);
+  const handle = useRef<RouteMapHandle | null>(null);
 
   useEffect(() => {
     const node = host.current;
@@ -64,25 +75,34 @@ function RouteMap({ points, onFailure }: { points: RoutePoint[]; onFailure: (fai
     }
 
     let cancelled = false;
-    let drop: (() => void) | null = null;
 
-    void drawRouteMap(node, points, onFailure).then(cleanup => {
+    void drawRouteMap(node, points, onFailure).then(drawn => {
       // Окно закрылось, пока шла загрузка библиотеки: карту, которой уже никто
       // не видит, надо снять сразу — иначе останутся её подписки на окно
       // браузера.
       if (cancelled) {
-        cleanup();
+        drawn.remove();
         return;
       }
 
-      drop = cleanup;
+      handle.current = drawn;
+      drawn.setShapes(shapes);
     });
 
     return () => {
       cancelled = true;
-      drop?.();
+      handle.current?.remove();
+      handle.current = null;
     };
+    // Пути в зависимостях не названы намеренно: их приход не должен рисовать
+    // карту заново — линия досылается на готовое полотно соседним отрезком.
   }, [points, onFailure]);
+
+  // Пути ложатся на уже нарисованную карту: перерисовка ради линии сбросила бы
+  // кадр и приближение, которые читатель уже подвинул.
+  useEffect(() => {
+    handle.current?.setShapes(shapes);
+  }, [shapes]);
 
   return <div className="imolt-map" ref={host} />;
 }
@@ -100,7 +120,9 @@ function groupName(groups: WasteGroup[], wasteGroupId: string): string {
 function LandfillFacts({ card, groups }: { card: LandfillCard; groups: WasteGroup[] }) {
   return (
     <div className="imolt-map-facts">
-      <strong>{card.name}</strong>
+      {/* Названия полигона здесь нет намеренно: сведения раскрываются под его
+          же строкой перечня, и повторённое название читалось бы вторым
+          заголовком об одном и том же (замечание заказчика от 24.09.2026). */}
       <span>{card.address}</span>
       {/* Статус приёма называется словом и датой, на которую он известен:
           одним цветом состояние не выражается (R-048, разд. 4.6). */}
@@ -149,7 +171,13 @@ export function RouteModal({
   const [factsFor, setFactsFor] = useState<string | null>(null);
   const [failure, setFailure] = useState<MapFailure | null>(null);
 
-  const showFacts = useCallback((landfillId: string) => setFactsFor(landfillId), []);
+  // Нажатие переключает: второй раз по тому же полигону сворачивает сведения.
+  // Иначе раскрытую карточку нечем закрыть, а закрывать её хочется — она
+  // отодвигает соседние строки перечня.
+  const showFacts = useCallback(
+    (landfillId: string) => setFactsFor(current => (current === landfillId ? null : landfillId)),
+    [],
+  );
 
   // Перечень меток пересобирается только при смене самих точек: библиотека
   // карты рисует полотно заново на каждый новый перечень, и новая стрелка на
@@ -161,7 +189,7 @@ export function RouteModal({
       return [];
     }
 
-    const marks: RoutePoint[] = options.flatMap(one => {
+    const marks: RoutePoint[] = options.flatMap((one, index) => {
       const place = cards[one.landfillId]?.coordinates;
 
       return place === undefined
@@ -172,6 +200,7 @@ export function RouteModal({
               title: `Полигон: ${one.landfillName}`,
               coordinates: place,
               onSelect: () => showFacts(one.landfillId),
+              tone: routeTone(index),
             },
           ];
     });
@@ -183,13 +212,41 @@ export function RouteModal({
       : [{ kind: 'pickup', title: `Адрес вывоза: ${pickup.value}`, coordinates: pickup.coordinates }, ...marks];
   }, [cards, options, pending, pickup.coordinates, pickup.value, showFacts]);
 
+  // Пути по дорогам приходят позже меток: карта рисуется сразу, а линия
+  // ложится на неё, когда ответит служба маршрутизации. Пути читаются одной
+  // пачкой — частичные обновления перерисовывали бы карту по разу на полигон
+  // (AC-033f).
+  const [shapes, setShapes] = useState<RouteShape[]>([]);
+
+  useEffect(() => {
+    const places = points.filter(point => point.kind === 'landfill').map(point => point.coordinates);
+
+    if (places.length === 0) {
+      setShapes([]);
+      return;
+    }
+
+    let cancelled = false;
+
+    void Promise.all(places.map(place => roadShape(pickup.coordinates, place))).then(lines => {
+      if (!cancelled) {
+        // Пустые пути отсеиваются здесь: рисующему коду нечего знать про
+        // молчащую службу маршрутизации.
+        setShapes(lines.filter(line => line.length > 1));
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [points, pickup.coordinates]);
+
   // Перечень меток под картой идёт в порядке самой сводки: перечень и карта
   // говорят об одном выборе, и разный порядок пришлось бы сверять глазами.
   const shownLandfills = routeRows(options, summary)
     .map(row => row.option)
     .filter(one => cards[one.landfillId] !== undefined);
 
-  const facts = factsFor === null ? undefined : cards[factsFor];
   const lost = missing.map(
     landfillId => options.find(one => one.landfillId === landfillId)?.landfillName ?? landfillId,
   );
@@ -230,29 +287,66 @@ export function RouteModal({
         (points.length === 0 ? (
           <Skeleton rows={1} label="Идёт загрузка карты" />
         ) : (
-          <>
-            <RouteMap points={points} onFailure={setFailure} />
-            {/* Метки названы словами рядом с картой: на самой карте подпись
-                видна не всем, а при отказе тайлов её не видно вовсе. */}
-            <ul className="imolt-map-legend" aria-label="Метки на карте">
-              <li className="imolt-map-legend-item">
-                <span className="imolt-map-pin" data-point="pickup" aria-hidden="true" />
-                Адрес вывоза: {pickup.value}
-              </li>
-              {shownLandfills.map(one => (
-                <li className="imolt-map-legend-item" key={one.landfillId}>
-                  <span className="imolt-map-pin" data-point="landfill" aria-hidden="true" />
-                  Полигон: {one.landfillName}
+          // На рабочем месте карта занимает главное место, а перечень
+          // полигонов уходит в боковую колонку рядом с ней: под картой он
+          // отжимал сводку за нижний край окна (замечание заказчика от
+          // 24.09.2026). На узком экране колонки складываются в одну — это
+          // правило стиля, дерево разметки одно (R-085).
+          <div className="imolt-route-layout">
+            <div className="imolt-route-map-side">
+              <RouteMap points={points} shapes={shapes} onFailure={setFailure} />
+              <p className="imolt-map-credit">{MAP_CREDIT}</p>
+            </div>
+
+            <div className="imolt-route-list-side">
+              {/* Метки названы словами рядом с картой: на самой карте подпись
+                  видна не всем, а при отказе тайлов её не видно вовсе. Тот же
+                  перечень и выбирает полигон: второй перечень рядом говорил бы
+                  об одном и том же дважды. */}
+              <ul className="imolt-map-legend" aria-label="Метки на карте">
+                <li className="imolt-map-legend-item">
+                  <span className="imolt-map-pin" data-point="pickup" aria-hidden="true" />
+                  Адрес вывоза: {pickup.value}
                 </li>
-              ))}
-            </ul>
-            <p className="imolt-map-credit">{MAP_CREDIT}</p>
-          </>
+                {shownLandfills.map((one, index) => {
+                  const openCard = cards[one.landfillId];
+
+                  return (
+                    <li key={one.landfillId}>
+                      <button
+                        type="button"
+                        className="imolt-map-legend-item imolt-map-legend-pick"
+                        aria-pressed={factsFor === one.landfillId}
+                        onClick={() => showFacts(one.landfillId)}
+                      >
+                        {/* Точка строки повторяет цвет линии этого полигона на
+                            карте: так видно, какой путь куда ведёт (AC-033g). */}
+                        <span
+                          className="imolt-map-pin"
+                          data-point="landfill"
+                          style={{ borderColor: routeTone(index) }}
+                          aria-hidden="true"
+                        />
+                        Полигон: {one.landfillName}
+                      </button>
+                      {factsFor === one.landfillId && openCard !== undefined && (
+                        <LandfillFacts card={openCard} groups={groups} />
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+
+              <RouteDetails option={options} summary={summary} scope={scope} unavailable={unavailable} />
+            </div>
+          </div>
         ))}
 
-      {facts !== undefined && <LandfillFacts card={facts} groups={groups} />}
-
-      <RouteDetails option={options} summary={summary} scope={scope} unavailable={unavailable} />
+      {/* Без карты сводка остаётся: расстояние и переход во внешние карты от
+          карты не зависят (R-034). */}
+      {(nothingRead || points.length === 0) && (
+        <RouteDetails option={options} summary={summary} scope={scope} unavailable={unavailable} />
+      )}
     </Modal>
   );
 }
