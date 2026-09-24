@@ -23,6 +23,7 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { App } from '@/app/App';
+import { SELECTION_EMPTY_HINT } from '@/widgets/selection-summary';
 import type { ApiStub } from './apiStub';
 import { ALEKSIN_BLOCKED, DISTANCE_SERVICE_UNAVAILABLE, IKSHA, VOSTOK, installApiStub } from './apiStub';
 import {
@@ -333,12 +334,33 @@ describe('пустой результат на широком экране', () 
 
 /** @ac: AC-032c */
 describe('сводка выбора боковой колонкой', () => {
-  it('до выбора зовёт отметить полигоны, а не показывает нулевой итог', async () => {
+  // Пустая боковая колонка отнимала у таблицы 360 точек ширины и ничем их не
+  // занимала, поэтому до выбора её нет вовсе. Назначение флажков при этом
+  // объясняется строкой над таблицей — теми же словами, что и в панели.
+  it('до выбора зовёт отметить полигоны строкой, а не пустой колонкой', async () => {
     const user = userEvent.setup();
     render(<App />);
     await calculateConcrete(user);
 
-    expect(screen.getByRole('heading', { name: 'Выберите полигоны' })).toBeInTheDocument();
+    expect(screen.getByText(SELECTION_EMPTY_HINT)).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'Выберите полигоны' }),
+      'пустая сводка занимает боковую колонку',
+    ).toBeNull();
+  });
+
+  it('после выбора отдаёт боковую колонку сводке, а строку над таблицей убирает', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await calculateConcrete(user);
+
+    await user.click(screen.getByRole('checkbox', { name: /Комплекс переработки/u }));
+
+    expect(await screen.findByRole('heading', { name: /Выбрано/u })).toBeInTheDocument();
+    expect(
+      screen.queryByText(SELECTION_EMPTY_HINT),
+      'объяснение выбора осталось на экране вместе со сводкой',
+    ).toBeNull();
   });
 
   it('после выбора показывает итог, пришедший от расчётной части', async () => {

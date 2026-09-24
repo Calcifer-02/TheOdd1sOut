@@ -83,6 +83,17 @@ export const SUMMARY_PANEL_CSS = `
 /** Строка сводки: выбранный полигон и его сумма, как её назвала служба. */
 export type SummaryLine = { landfillId: string; landfillName: string; sum: string };
 
+/**
+ * Слова пустого состояния выбора. Названы здесь, потому что нужны двоим: самой
+ * панели в витрине и экрану расчёта, который до выбора панель не показывает и
+ * объясняет выбор строкой над таблицей. Вторая редакция этих слов разошлась бы
+ * с первой молча.
+ */
+export const SELECTION_EMPTY_TITLE = 'Выберите полигоны';
+
+export const SELECTION_EMPTY_HINT =
+  'Отметьте один или несколько – здесь появится итог, маршрут и коммерческое предложение.';
+
 export function SummaryPanel({
   selectedCount,
   lines,
@@ -105,10 +116,8 @@ export function SummaryPanel({
 
   if (selectedCount === 0) {
     return (
-      <Card title="Выберите полигоны" className="imolt-summary-panel imolt-summary-panel--empty">
-        <p className="imolt-lead">
-          Отметьте один или несколько – здесь появится итог, маршрут и коммерческое предложение.
-        </p>
+      <Card title={SELECTION_EMPTY_TITLE} className="imolt-summary-panel imolt-summary-panel--empty">
+        <p className="imolt-lead">{SELECTION_EMPTY_HINT}</p>
       </Card>
     );
   }

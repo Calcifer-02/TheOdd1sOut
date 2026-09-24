@@ -32,7 +32,7 @@ import {
 import { Combobox } from '@/shared/ui/combobox';
 import { Illustration } from '@/shared/ui/illustrations';
 import { OptionTable, RouteDetails } from '@/entities/landfill';
-import { AllocationPanel, SummaryPanel } from '@/widgets/selection-summary';
+import { AllocationPanel, SummaryPanel, SELECTION_EMPTY_HINT } from '@/widgets/selection-summary';
 import type { Unit } from '@/shared/lib/formatting';
 import { formatMoney, formatNumber, unitName } from '@/shared/lib/formatting';
 import { BREAKPOINTS } from '@/shared/lib/viewport';
@@ -41,6 +41,13 @@ import { SORTS, type CalculatorModel } from '../model/useCalculator';
 import { emptyResultTitle } from '../model/emptyResult';
 
 /** Колонка «Объём и мера»: узкое поле количества плюс переключатель меры. */
+/**
+ * Высота подписи поля вместе с её отбивкой. Типографика в токены не вынесена,
+ * поэтому строка подписи названа здесь: правило `.imolt-label` объявляет
+ * `line-height: 16px` и отбивку `space.xxs`.
+ */
+const LABEL_BLOCK = 16 + space.xxs;
+
 const AMOUNT_COLUMN = 280;
 
 const DESKTOP_CSS = `
@@ -68,10 +75,17 @@ const DESKTOP_CSS = `
   display: grid;
   grid-template-columns: minmax(0, 1fr) ${AMOUNT_COLUMN}px auto;
   gap: ${space.s}px;
-  align-items: flex-end;
+  align-items: start;
   width: 100%;
 }
-.imolt-desk-line-amount { display: flex; gap: ${space.xs}px; align-items: flex-end; }
+.imolt-desk-line-amount { display: flex; gap: ${space.xs}px; align-items: start; }
+
+/* Мера объёма подписи не имеет, а стоит рядом с подписанным полем: без сдвига
+   на высоту подписи переключатель встал бы на её строку, а не на строку поля.
+   Строка при этом выровнена по верху: у кубометров под полем появляется
+   пересчёт в тонны, и выравнивание по низу уводило бы «Тип отходов» вниз на
+   высоту этой подсказки (R-014, R-015). */
+.imolt-desk-line .imolt-units { margin-top: ${LABEL_BLOCK}px; }
 .imolt-desk-divider { height: 1px; background: ${colors.borderDivider}; }
 .imolt-desk-form-foot {
   display: flex;
@@ -110,7 +124,23 @@ const DESKTOP_CSS = `
 .imolt-desk-benefit .imolt-illustration { color: ${colors.textSecondary}; flex: none; }
 .imolt-desk-results { display: flex; gap: ${space.l}px; align-items: flex-start; flex-wrap: wrap; }
 .imolt-desk-main { flex: 1 1 620px; min-width: 0; display: flex; flex-direction: column; gap: ${space.m}px; }
-.imolt-desk-side { flex: 1 1 360px; max-width: 360px; min-width: 0; position: sticky; top: ${space.l}px; }
+/* Колонка сводки появляется только вместе с выбором: пустая она отнимала у
+   таблицы 360 точек ширины и ничем их не занимала. Пока не выбран ни один
+   полигон, таблица идёт во всю ширину, а о выборе говорит строка над ней.
+   Отбивка сверху равна отбивке заголовка «Результаты» — иначе карточка
+   начинается выше него (R-027). */
+.imolt-desk-side {
+  flex: 0 0 360px;
+  max-width: 360px;
+  min-width: 0;
+  align-self: stretch;
+  padding-top: ${space.xs}px;
+}
+.imolt-desk-side > * { position: sticky; top: ${space.l}px; }
+
+/* Объяснение выбора до того, как он сделан: одна строка над таблицей вместо
+   пустой карточки в боковой колонке. */
+.imolt-desk-pick-hint { margin: 0; }
 .imolt-desk-tools { display: flex; align-items: center; gap: ${space.s}px; flex-wrap: wrap; }
 .imolt-desk-filter { position: relative; display: flex; gap: ${space.xs}px; align-items: center; }
 .imolt-desk-table {
@@ -140,7 +170,8 @@ const DESKTOP_CSS = `
   flex-wrap: wrap;
 }
 @media (max-width: ${BREAKPOINTS.sideSummary - 1}px) {
-  .imolt-desk-side { position: static; max-width: none; flex-basis: 100%; }
+  .imolt-desk-side { max-width: none; flex: 1 1 100%; align-self: auto; padding-top: 0; }
+  .imolt-desk-side > * { position: static; }
   .imolt-desk-benefits { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .imolt-desk-pickup-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .imolt-desk-address,
@@ -407,6 +438,13 @@ export function CalculatorDesktop({ model }: { model: CalculatorModel }) {
               </Notice>
             ))}
 
+            {/* До выбора боковой колонки нет, и объяснить назначение флажков
+                больше негде. Слова те же, что у пустого состояния сводки:
+                второй их редакции в проекте нет (R-027). */}
+            {(selection?.selectedLandfills ?? 0) === 0 && (
+              <p className="imolt-lead imolt-desk-pick-hint">{SELECTION_EMPTY_HINT}</p>
+            )}
+
             <div className="imolt-desk-table">
               <OptionTable
                 caption="Сравнение полигонов"
@@ -523,22 +561,24 @@ export function CalculatorDesktop({ model }: { model: CalculatorModel }) {
             )}
           </div>
 
-          <div className="imolt-desk-side">
-            <SummaryPanel
-              selectedCount={selection?.selectedLandfills ?? 0}
-              lines={summaryLines}
-              total={model.allocationTotal ?? (selection ? formatMoney(selection.total) : '')}
-              totalLabel={model.allocationTotal ? 'Итого по распределению' : 'Итого'}
-              onRoute={() => {
-                const first = (shown?.items ?? []).find(option => selectedIds.includes(option.landfillId));
-                if (first) {
-                  void model.openRoute(first);
-                }
-              }}
-              onDownload={() => void model.download()}
-              onPickup={model.openPickup}
-            />
-          </div>
+          {(selection?.selectedLandfills ?? 0) > 0 && (
+            <div className="imolt-desk-side">
+              <SummaryPanel
+                selectedCount={selection?.selectedLandfills ?? 0}
+                lines={summaryLines}
+                total={model.allocationTotal ?? (selection ? formatMoney(selection.total) : '')}
+                totalLabel={model.allocationTotal ? 'Итого по распределению' : 'Итого'}
+                onRoute={() => {
+                  const first = (shown?.items ?? []).find(option => selectedIds.includes(option.landfillId));
+                  if (first) {
+                    void model.openRoute(first);
+                  }
+                }}
+                onDownload={() => void model.download()}
+                onPickup={model.openPickup}
+              />
+            </div>
+          )}
         </section>
       )}
     </div>

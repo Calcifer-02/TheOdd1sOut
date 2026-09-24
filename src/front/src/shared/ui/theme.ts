@@ -164,8 +164,17 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
 }
 .imolt-input[aria-invalid='true'] { border-color: ${colors.statusBlockedText}; }
 
-.imolt-hint { font-size: 12px; line-height: 16px; color: ${colors.textSecondary}; }
-.imolt-error { font-size: 12px; line-height: 16px; color: ${colors.statusBlockedText}; }
+/* Подсказка и ошибка поля — абзацы, и браузерные поля абзаца им не подходят:
+   при мере в кубометрах подсказка пересчёта растила строку формы на 40 точек
+   ради шестнадцати. Отбивка берётся из шкалы отступов. */
+.imolt-hint,
+.imolt-error {
+  margin: ${space.xxs}px 0 0;
+  font-size: 12px;
+  line-height: 16px;
+}
+.imolt-hint { color: ${colors.textSecondary}; }
+.imolt-error { color: ${colors.statusBlockedText}; }
 
 .imolt-suggest {
   list-style: none;
