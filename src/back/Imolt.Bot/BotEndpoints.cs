@@ -57,12 +57,34 @@ public static class BotEndpoints
         ILogger<Program> logger,
         CancellationToken cancellationToken) =>
     {
-      var scenarios = context.RequestServices.GetService<DialogScenarios>();
-
-      if (!options.Value.WebhookEnabled || scenarios is null)
+      if (!options.Value.WebhookEnabled)
       {
-        logger.LogWarning(
-            "Получено обновление вебхуком, но приём вебхуком не включён либо токен MAX не задан");
+        logger.LogWarning("Получено обновление вебхуком, но приём вебхуком не включён настройкой");
+
+        return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+      }
+
+      // Нехватка настройки — токена платформы или строки подключения — видна
+      // только при разборе состава: его поставщики объявлены, но бросают на
+      // отсутствующем значении. Необработанное исключение здесь означало бы
+      // ответ 500 вместо внятного отказа, а платформа решала бы, что виновата
+      // она.
+      DialogScenarios? scenarios;
+
+      try
+      {
+        scenarios = context.RequestServices.GetService<DialogScenarios>();
+      }
+      catch (InvalidOperationException failure)
+      {
+        logger.LogWarning(failure, "Приём обновления невозможен: службе не хватает настройки");
+
+        return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+      }
+
+      if (scenarios is null)
+      {
+        logger.LogWarning("Получено обновление вебхуком, но токен платформы MAX не задан");
 
         return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
       }
