@@ -59,6 +59,8 @@ const ROAD = [
 
 let stub: ApiStub;
 let routerAnswers = true;
+/** Прежний обработчик запросов: подмена снимается после каждой проверки. */
+let previous: typeof window.fetch;
 
 beforeEach(() => {
   stub = installApiStub();
@@ -70,7 +72,7 @@ beforeEach(() => {
 
   // Обращение к службе маршрутизации подменяется поверх подмены расчётной
   // части: остальные запросы уходят прежнему обработчику.
-  const previous = window.fetch;
+  previous = window.fetch;
 
   window.fetch = ((input: RequestInfo | URL, init?: RequestInit) => {
     const address = typeof input === 'string' ? input : input.toString();
@@ -91,6 +93,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  window.fetch = previous;
   stub.restore();
 });
 

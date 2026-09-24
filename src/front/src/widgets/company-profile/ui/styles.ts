@@ -53,6 +53,16 @@ export const COMPANY_CSS = `
 
 .imolt-company-logo { max-width: 100%; max-height: ${space.xxxl}px; object-fit: contain; }
 
+/* Снимок проекта занимает всю ширину карточки и постоянную высоту: у чужих
+   фотографий разные пропорции, и без общей меры ряд карточек разъезжается. */
+.imolt-company-photo {
+  width: 100%;
+  height: ${space.xxxl * 2}px;
+  object-fit: cover;
+  border-radius: ${radius.field}px;
+  margin-bottom: ${space.xs}px;
+}
+
 .imolt-company-service,
 .imolt-company-project,
 .imolt-company-contact {

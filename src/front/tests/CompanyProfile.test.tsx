@@ -95,17 +95,33 @@ describe('выполненные проекты на базовой страни
     expect(within(проекты).getByText('70 000 т грунта')).toBeInTheDocument();
   });
 
-  it('даёт каждому проекту рисунок, не несущий смысла в одиночку', () => {
-    // Рисунок сопровождает подпись: он скрыт от вспомогательной технологии,
-    // а смысл несут название и объём рядом (AC-087b, разд. 4.5).
+  it('даёт каждому проекту изображение, не несущее смысла в одиночку', () => {
+    // Изображение сопровождает подпись и скрыто от вспомогательной технологии:
+    // смысл несут название и объём рядом. Снимок тем более — он сделан на
+    // другом объекте (AC-087b, разд. 4.5).
     render(<App />);
 
-    const рисунки = раздел('Выполненные проекты').querySelectorAll('.imolt-illustration');
+    const проекты = раздел('Выполненные проекты');
+    const изображения = проекты.querySelectorAll('.imolt-illustration, .imolt-company-photo');
 
-    expect(рисунки).toHaveLength(COMPANY_PROJECTS.length);
-    for (const рисунок of рисунки) {
-      expect(рисунок).toHaveAttribute('aria-hidden', 'true');
+    expect(изображения).toHaveLength(COMPANY_PROJECTS.length);
+    for (const изображение of изображения) {
+      const скрыто = изображение.getAttribute('aria-hidden') === 'true' || изображение.getAttribute('alt') === '';
+
+      expect(скрыто, 'изображение объявлено несущим смысл').toBe(true);
     }
+  });
+
+  it('называет снимки иллюстративными и называет их авторов', () => {
+    // Выдать чужой снимок за фотографию выполненного проекта — ложное
+    // утверждение о работе, а лицензии CC BY-SA требуют назвать автора.
+    render(<App />);
+
+    const проекты = раздел('Выполненные проекты');
+
+    expect(within(проекты).getByText(/иллюстративные/u)).toBeInTheDocument();
+    expect(within(проекты).getByText(/Викисклад/u)).toBeInTheDocument();
+    expect(within(проекты).getAllByRole('link').length, 'авторы снимков не названы').toBeGreaterThan(0);
   });
 });
 
