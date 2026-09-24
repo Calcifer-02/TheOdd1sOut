@@ -23,7 +23,7 @@
  *
  * @ac: AC-033f, AC-033g
  */
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '@/app/App';
@@ -146,7 +146,7 @@ describe('линия маршрута на карте', () => {
     const user = userEvent.setup();
     const dialog = await openSelectionRoute(user);
 
-    await waitFor(() => expect(within(dialog).getByLabelText('Метки на карте')).toBeInTheDocument());
+    await waitFor(() => expect(within(dialog).getByLabelText('Полигоны маршрута')).toBeInTheDocument());
 
     expect(drawnLines(), 'линия проведена по молчащей службе').toHaveLength(0);
   });
@@ -157,7 +157,7 @@ describe('различение полигонов в окне маршрута',
     const user = userEvent.setup();
     const dialog = await openSelectionRoute(user);
 
-    const list = within(dialog).getByLabelText('Метки на карте');
+    const list = within(dialog).getByLabelText('Полигоны маршрута');
     const pins = [...list.querySelectorAll('.imolt-map-pin[data-point="landfill"]')];
 
     expect(pins).toHaveLength(2);
@@ -171,7 +171,7 @@ describe('различение полигонов в окне маршрута',
     const user = userEvent.setup();
     const dialog = await openSelectionRoute(user);
 
-    const row = within(dialog).getByRole('button', { name: `Полигон: ${VOSTOK.landfillName}` });
+    const row = within(dialog).getByRole('button', { name: VOSTOK.landfillName });
 
     await user.click(row);
 
@@ -188,7 +188,7 @@ describe('различение полигонов в окне маршрута',
     const user = userEvent.setup();
     const dialog = await openSelectionRoute(user);
 
-    const row = within(dialog).getByRole('button', { name: `Полигон: ${IKSHA.landfillName}` });
+    const row = within(dialog).getByRole('button', { name: IKSHA.landfillName });
 
     await user.click(row);
     await within(dialog).findByText(IKSHA_CARD.address);
@@ -197,5 +197,44 @@ describe('различение полигонов в окне маршрута',
 
     await waitFor(() => expect(within(dialog).queryByText(IKSHA_CARD.address)).not.toBeInTheDocument());
     expect(row).toHaveAttribute('aria-pressed', 'false');
+  });
+});
+
+describe('открытое окно маршрута в адресе', () => {
+  // Окно — предмет разговора, а не поза экрана: ссылка обязана открыть тот
+  // же маршрут, а перезагрузка — не закрывать его (замечание заказчика от
+  // 25.09.2026; ADR-0008, инвариант 5).
+  it('открытие попадает в адрес, а закрытие его убирает', async () => {
+    const user = userEvent.setup();
+    const dialog = await openSelectionRoute(user);
+
+    expect(window.location.hash).toContain('route=selection');
+
+    await user.click(within(dialog).getByRole('button', { name: /^Закрыть/u }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(window.location.hash, 'закрытое окно осталось в адресе').not.toContain('route=');
+  });
+
+  it('адрес с открытым маршрутом открывает его сам после перезагрузки', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await calculateConcrete(user);
+
+    // Маршрут из строки таблицы: он не зависит от выбора, а значит,
+    // восстанавливается одним только адресом.
+    await user.click(screen.getByRole('button', { name: `Маршрут до полигона ${VOSTOK.landfillName}` }));
+    await screen.findByRole('dialog');
+
+    const адрес = window.location.hash;
+
+    expect(адрес, 'открытое окно не попало в адрес').toContain(`route=${VOSTOK.landfillId}`);
+
+    // Перезагрузка: страница собирается заново по тому же адресу.
+    cleanup();
+    window.location.hash = адрес;
+    render(<App />);
+
+    expect(await screen.findByRole('dialog'), 'перезагрузка закрыла окно маршрута').toBeInTheDocument();
   });
 });

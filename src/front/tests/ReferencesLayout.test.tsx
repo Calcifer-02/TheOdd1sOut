@@ -86,7 +86,9 @@ describe('левая вертикаль редактора цен', () => {
       заголовок: leftInset(screen.getByRole('heading', { level: 1 }), корень),
       пояснение: leftInset(screen.getByText(/из официального перечня/), корень),
       обновление: leftInset(узел('.imolt-references-sync-text'), корень),
-      отбор: leftInset(screen.getByRole('toolbar', { name: 'Отбор записей справочника' }), корень),
+      // Сама полоса отбора идёт от края, как таблица: вертикаль держит текст
+      // внутри неё — счётчик выборки и поле поиска.
+      отбор: leftInset(узел('.imolt-references-selection'), корень),
     }).toEqual({
       заголовок: вертикаль,
       пояснение: вертикаль,

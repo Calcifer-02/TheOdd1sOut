@@ -25,10 +25,11 @@
  * @shared: imolt-miniapp
  * @adr: ADR-0008
  */
+import type { ReactNode } from 'react';
 import type { PlacementOption, RouteSummary } from '@/shared/api/contracts';
 import { formatDistance, formatMoney } from '@/shared/lib/formatting';
 import { useStyles } from '@/shared/ui';
-import { colors, fonts, radius, space, stroke } from '@/shared/ui/tokens';
+import { colors, fonts, radius, routeTone, space, stroke } from '@/shared/ui/tokens';
 import { routeRows, type RouteRow, type RouteScope } from '../model/routeSummary';
 
 /** Прочерк вместо суммы: утилизация не заказана, и нуля здесь нет. */
@@ -67,6 +68,26 @@ const ROUTE_CSS = `
 /* У самого дешёвого рамка заметнее, но она здесь второй признак: первый —
    слово «Дешевле остальных» рядом с названием (разд. 4.6). */
 .imolt-route-leg[data-cheapest='true'] { border-color: ${colors.accentDark}; }
+
+/* Строка-выбор: точка цвета маршрута и название полигона. Фона у неё нет:
+   подложка внутри уже обведённой строки читалась бы второй рамкой. */
+.imolt-route-leg-pick {
+  display: flex;
+  align-items: center;
+  gap: ${space.xs}px;
+  min-height: ${space.xl}px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: ${colors.textPrimary};
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* Раскрытая строка названа не одним цветом: у неё объявлено состояние
+   кнопки и подчёркнуто название (разд. 4.5). */
+.imolt-route-leg-pick[aria-pressed='true'] .imolt-option-name { text-decoration: underline; }
 
 .imolt-route-leg-head {
   display: flex;
@@ -114,6 +135,11 @@ const ROUTE_CSS = `
 `;
 
 /** Время в пути словами: «~1 ч 10 мин». */
+/** Цвет маршрута точкой строки: тот же, что у линии этого полигона на карте. */
+function toneOf(index: number): { borderColor: string } {
+  return { borderColor: routeTone(index) };
+}
+
 function formatDuration(minutes: number): string {
   const hours = Math.floor(minutes / 60);
   const rest = minutes % 60;
@@ -139,6 +165,9 @@ export function RouteDetails({
   summary,
   scope = 'landfill',
   unavailable = false,
+  activeId = null,
+  onPick,
+  facts,
 }: {
   /**
    * Полигоны маршрута: один — вопрос из строки таблицы, несколько — вопрос
@@ -152,6 +181,15 @@ export function RouteDetails({
   scope?: RouteScope;
   /** Служба маршрутов не ответила — это не закрытый подпиской доступ. */
   unavailable?: boolean;
+  /** Полигон, сведения которого раскрыты; `null` — ни один. */
+  activeId?: string | null;
+  /**
+   * Выбор полигона строкой перечня. Не передан — строки обычные:
+   * на телефоне карты в панели нет и выбирать нечего.
+   */
+  onPick?: (landfillId: string) => void;
+  /** Сведения раскрытого полигона: рисует вызывающий, здесь только место. */
+  facts?: (landfillId: string) => ReactNode;
 }) {
   useStyles('landfill-route-details', ROUTE_CSS);
 
@@ -186,10 +224,26 @@ export function RouteDetails({
       {/* Перечень назван, потому что он не один на экране: рядом стоят метки
           карты, и без имени вспомогательная технология их не различает. */}
       <ul className="imolt-route-legs" aria-label="Полигоны маршрута">
-        {rows.map(row => (
+        {rows.map((row, index) => (
           <li className="imolt-route-leg" key={row.option.landfillId} data-cheapest={row.cheapest}>
+            {/* Строка полигона — она же выбор: нажатие раскрывает сведения
+                под ней. Второй перечень рядом говорил бы об одном и том же дважды
+                (замечание заказчика от 25.09.2026). Без обработчика строка остаётся
+                обычной: на телефоне выбирать нечего. */}
             <span className="imolt-route-leg-head">
-              <strong className="imolt-option-name">{row.option.landfillName}</strong>
+              {onPick === undefined ? (
+                <strong className="imolt-option-name">{row.option.landfillName}</strong>
+              ) : (
+                <button
+                  type="button"
+                  className="imolt-route-leg-pick"
+                  aria-pressed={activeId === row.option.landfillId}
+                  onClick={() => onPick(row.option.landfillId)}
+                >
+                  <span className="imolt-map-pin" data-point="landfill" style={toneOf(index)} aria-hidden="true" />
+                  <strong className="imolt-option-name">{row.option.landfillName}</strong>
+                </button>
+              )}
               {row.cheapest && <span className="imolt-route-cheapest">{CHEAPEST_WORD}</span>}
             </span>
             <span className="imolt-route-way">{wayOf(row)}</span>
@@ -203,6 +257,7 @@ export function RouteDetails({
                 Открыть в Яндекс.Картах
               </a>
             )}
+            {activeId === row.option.landfillId && facts?.(row.option.landfillId)}
           </li>
         ))}
       </ul>

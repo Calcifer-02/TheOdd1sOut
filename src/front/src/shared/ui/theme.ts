@@ -670,8 +670,8 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
    (AC-033g). Цвета те же, что и были: оранжевый — марка сервиса, и на карте
    он читался действием (замечание заказчика от 25.09.2026). */
 .imolt-map-pin {
-  width: ${space.l}px;
-  height: ${space.l}px;
+  width: ${space.xl}px;
+  height: ${space.xl}px;
   border-radius: ${radius.pill}px;
   border: ${stroke.emphasis}px solid ${colors.bgSurface};
   box-shadow: ${layout.shadow};
@@ -681,8 +681,8 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
 /* Полигон отличается от адреса вывоза не только цветом: он мельче, у него
    своя рамка и своя подпись в перечне меток под картой (разд. 4.6). */
 .imolt-map-pin[data-point='landfill'] {
-  width: ${space.m + stroke.emphasis}px;
-  height: ${space.m + stroke.emphasis}px;
+  width: ${space.l}px;
+  height: ${space.l}px;
   background: ${colors.accentPrimary};
   border-color: ${colors.accentDark};
   cursor: pointer;

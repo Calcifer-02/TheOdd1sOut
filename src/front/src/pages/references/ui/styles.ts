@@ -37,12 +37,19 @@ export const REFERENCES_CSS = `
 .imolt-references > .imolt-references-card-entity,
 .imolt-references > .imolt-references-actions,
 .imolt-references > .imolt-references-selection,
-.imolt-references > .imolt-toolbar,
 .imolt-references > .imolt-grow,
 .imolt-references > .imolt-notice,
 .imolt-references > .imolt-button {
   padding-left: ${INSET}px;
   padding-right: ${INSET}px;
+}
+
+/* Полоса отбора идёт от края, как и таблица под ней: внутри неё стоят вкладки
+   со своим полем и поле поиска, и внешнее поле складывалось с ними дважды
+   (замечание заказчика от 25.09.2026). */
+.imolt-references > .imolt-references-filters {
+  padding-left: 0;
+  padding-right: 0;
 }
 
 /* Вкладка — таблетка со своим боковым полем: отбивка экрана сложилась бы с ним
@@ -97,11 +104,15 @@ export const REFERENCES_CSS = `
 }
 
 /* Счётчик и поиск — один блок выборки: счётчик стоит над полем и называет
-   показанное из найденного, а не длину строки ввода. */
+   показанное из найденного, а не длину строки ввода. Поле берёт на себя сам блок:
+   у полосы отбора его больше нет, а текст счётчика обязан остаться на общей
+   вертикали экрана. */
 .imolt-references-selection {
   display: grid;
   gap: ${space.xxs}px;
   min-width: 0;
+  padding-left: ${INSET}px;
+  padding-right: ${INSET}px;
 }
 
 .imolt-references-sync {
@@ -243,7 +254,26 @@ export const REFERENCES_CSS = `
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: ${space.xs}px;
+  gap: ${space.xxs}px;
+}
+
+/* Значок состояния и дата стоят столбиком, а не строкой: в столбце шириной
+   260 точек «Не подтверждён» и «данные от 17.09» в одну строку не помещаются и
+   переносятся неровно (замечание заказчика от 25.09.2026). */
+.imolt-references-status-cell .imolt-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+/* Кнопка в ячейке — не главное действие экрана, а правка одной записи: высота
+   управления полосы в строке таблицы читалась огромной и распирала строку. */
+.imolt-references-status-cell .imolt-button {
+  min-height: ${layout.compactRowHeight}px;
+  padding: 0 ${space.s}px;
+  font-size: 13px;
+  white-space: nowrap;
 }
 
 .imolt-references-count { margin: 0; font-size: 13px; line-height: 18px; color: ${colors.textSecondary}; }

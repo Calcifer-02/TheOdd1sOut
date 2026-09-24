@@ -73,6 +73,7 @@ export type RouteKey =
   | 'GET /v1/address-suggestions'
   | 'POST /v1/amount-conversions'
   | 'POST /v1/calculations'
+  | 'GET /v1/calculations/:id'
   | 'GET /v1/calculations/:id/options'
   | 'PUT /v1/calculations/:id/selection'
   | 'PUT /v1/calculations/:id/allocation'
@@ -289,6 +290,11 @@ function routeKeyOf(method: string, path: string): RouteKey | undefined {
 
   if (calculation) {
     return `${method} /v1/calculations/:id/${calculation[1]}` as RouteKey;
+  }
+
+  // Расчёт по идентификатору: им экран восстанавливается по ссылке.
+  if (/^\/v1\/calculations\/[^/]+$/.test(path)) {
+    return `${method} /v1/calculations/:id` as RouteKey;
   }
 
   return `${method} ${path}` as RouteKey;
@@ -522,6 +528,11 @@ export function installApiStub(): ApiStub {
 
       case 'POST /v1/calculations':
         return { status: 201, headers: { 'content-type': JSON_TYPE }, body: calculationBody(request) };
+
+      // Расчёт по ссылке отдаётся тем же телом, что и созданный: для
+      // восстановления экрана важен состав, а не история его появления.
+      case 'GET /v1/calculations/:id':
+        return { status: 200, headers: { 'content-type': JSON_TYPE }, body: calculationBody(request) };
 
       case 'GET /v1/calculations/:id/options': {
         const list = internals.options(request);
