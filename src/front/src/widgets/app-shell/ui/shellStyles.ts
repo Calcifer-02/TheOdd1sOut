@@ -75,13 +75,10 @@ export const SHELL_CSS = `
   color: ${colors.brand};
   letter-spacing: -0.01em;
   flex: none;
-  /* Ссылка, но не синяя и не подчёркнутая: это название сервиса, а подчёркнутым
-     оно читалось бы пунктом перечня (AC-087e). */
+  /* Ссылка, но никогда не подчёркнутая, в том числе под указателем: это
+     марка сервиса, а подчёркнутой она читается пунктом перечня
+     (AC-087e, замечание заказчика от 24.09.2026). */
   text-decoration: none;
-}
-
-@media (hover: hover) {
-  .imolt-shell-brand:hover { text-decoration: underline; }
 }
 
 .imolt-shell-nav { display: flex; align-items: center; gap: ${space.l}px; flex-wrap: wrap; }

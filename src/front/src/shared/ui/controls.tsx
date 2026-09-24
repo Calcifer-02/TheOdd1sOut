@@ -25,6 +25,7 @@ export function Field({
   value,
   onChange,
   hint,
+  reserveHint = false,
   error,
   inputMode,
   placeholder,
@@ -35,6 +36,15 @@ export function Field({
   value: string;
   onChange: (value: string) => void;
   hint?: string;
+  /**
+   * Держать место под строку подсказки, даже когда подсказки нет.
+   *
+   * Подсказка, появляющаяся по ходу набора, растит поле на свою строку и
+   * сдвигает всё, что ниже: при смене меры на кубометры верстка «съезжала»
+   * целиком (замечание заказчика от 24.09.2026). Место занято заранее там,
+   * где подсказка ожидаема, а не у каждого поля подряд.
+   */
+  reserveHint?: boolean;
   error?: string;
   inputMode?: 'text' | 'decimal' | 'tel';
   placeholder?: string;
@@ -62,9 +72,15 @@ export function Field({
           {error}
         </p>
       )}
-      {!error && hint && (
-        <p className="imolt-hint" id={`${id}-hint`}>
-          {hint}
+      {!error && (hint !== undefined || reserveHint) && (
+        // Без текста строка только держит место и в дерево доступности не попадает:
+        // диктор иначе объявил бы пустое пояснение к полю.
+        <p
+          className="imolt-hint"
+          id={hint === undefined ? undefined : `${id}-hint`}
+          aria-hidden={hint === undefined ? true : undefined}
+        >
+          {hint ?? ' '}
         </p>
       )}
     </div>

@@ -87,6 +87,11 @@ const DESKTOP_CSS = `
    пересчёт в тонны, и выравнивание по низу уводило бы «Тип отходов» вниз на
    высоту этой подсказки (R-014, R-015). */
 .imolt-desk-line .imolt-units { margin-top: ${LABEL_BLOCK}px; }
+
+/* Кнопка «Убрать» — третья колонка строки и подписи не имеет: без того же
+   сдвига она вставала на строку подписей, а не на строку полей (замечание
+   заказчика от 24.09.2026). */
+.imolt-desk-line > .imolt-button--tertiary { margin-top: ${LABEL_BLOCK}px; }
 .imolt-desk-divider { height: 1px; background: ${colors.borderDivider}; }
 .imolt-desk-form-foot {
   display: flex;
@@ -301,6 +306,7 @@ export function CalculatorDesktop({ model }: { model: CalculatorModel }) {
                   value={line.amount}
                   inputMode="decimal"
                   hint={line.tons !== undefined ? `≈ ${formatNumber(line.tons)} т` : undefined}
+                  reserveHint
                   onChange={value => model.changeAmount(line, value)}
                 />
                 <RadioPills

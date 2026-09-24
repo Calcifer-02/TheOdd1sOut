@@ -172,6 +172,22 @@ describe('строка типа отходов и меры объёма', () => 
     expect(getComputedStyle(мера as HTMLElement).marginTop).not.toBe('0px');
   });
 
+  // Подсказка пересчёта появляется при смене меры на кубометры. Если место под
+  // неё не занято заранее, появление строки сдвигает всё, что ниже
+  // (замечание заказчика от 24.09.2026).
+  it('держит место под подсказкой до её появления', () => {
+    render(<App />);
+
+    const блок = screen.getByRole('textbox', { name: 'Объём' }).closest('.imolt-grow') as HTMLElement;
+    const место = блок.querySelector('.imolt-hint');
+
+    expect(место, 'строка подсказки не заняла место до смены меры').not.toBeNull();
+
+    // Пустая строка только держит место: диктор объявил бы пустое пояснение.
+    expect(место).toHaveAttribute('aria-hidden', 'true');
+    expect(screen.getByRole('textbox', { name: 'Объём' })).not.toHaveAttribute('aria-describedby');
+  });
+
   it('держит подсказку пересчёта под полем объёма, а не между полями', () => {
     render(<App />);
 

@@ -30,7 +30,6 @@ const palette = {
   limeMuted: '#F0F3C8',
   limeSoft: '#F8FDB5',
   orange: '#FF4719',
-  blue: '#1F5BFF',
   green: '#1F8A4C',
   greenSoft: '#E6F4EC',
   red: '#D3321B',
@@ -61,7 +60,13 @@ export const colors = {
   accentRowHover: palette.limeSoft,
   accentDark: palette.black,
   brand: palette.orange,
-  link: palette.blue,
+  /**
+   * Ссылки и кольцо фокуса — чёрные, а не синие. На сайте компании
+   * действующие элементы чёрные, и синий читался чужим рядом с лаймовой
+   * кнопкой и оранжевой маркой (решение заказчика от 24.09.2026,
+   * дизайн-договор разд. 4.1).
+   */
+  link: palette.black,
   statusActiveText: palette.green,
   statusActiveBg: palette.greenSoft,
   statusBlockedText: palette.red,
