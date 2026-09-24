@@ -22,9 +22,9 @@ import {
   Field,
   Notice,
   Pager,
+  PhoneField,
   Popover,
   RadioPills,
-  Select,
   Tabs,
   Toolbar,
   useStyles,
@@ -580,23 +580,24 @@ export function CalculatorDesktop({ model }: { model: CalculatorModel }) {
                   placeholder="Как к вам обращаться"
                   onChange={value => model.changePickup({ name: value })}
                 />
-                <Field
+                <PhoneField
                   id="pickup-phone"
                   label="Телефон"
                   value={model.pickup.phone}
-                  inputMode="tel"
-                  placeholder="+7"
-                  onChange={value => model.changePickup({ phone: value })}
+                  error={model.pickupPhoneError}
+                  onChange={phone => model.changePickup({ phone })}
                 />
-                <Select
+                <Combobox
                   id="pickup-landfill"
                   label="Полигон"
-                  value={model.pickup.landfillName}
-                  options={(selection?.entries ?? []).map(entry => ({
-                    value: model.landfillNameById(entry.landfillId) ?? '',
-                    label: model.landfillNameById(entry.landfillId) ?? '',
-                  }))}
-                  onPick={landfillName => model.changePickup({ landfillName })}
+                  listLabel="Выбранные полигоны"
+                  query={model.pickupLandfillQuery}
+                  selected={model.pickup.landfillName || null}
+                  items={model.pickupLandfills}
+                  render={name => name}
+                  onQuery={model.setPickupLandfillQuery}
+                  onDismiss={model.dismissPickupLandfill}
+                  onPick={model.pickPickupLandfill}
                 />
               </div>
               <div className="imolt-desk-pickup-foot">

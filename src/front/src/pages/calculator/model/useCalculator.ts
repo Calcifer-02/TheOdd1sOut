@@ -40,6 +40,7 @@ import {
   suggestAddresses,
 } from '@/shared/api/imolt';
 import { createPickupRequest } from '@/shared/api/deals';
+import { isPhoneComplete } from '@/shared/ui';
 import { listWasteGroups } from '@/shared/api/references';
 import type { RouteScope } from '@/entities/landfill';
 import type { Unit } from '@/shared/lib/formatting';
@@ -126,6 +127,8 @@ export function useCalculator() {
   const [pickup, setPickup] = useState<PickupDraft | null>(null);
   const [pickupError, setPickupError] = useState<string | undefined>(undefined);
   const [pickupDone, setPickupDone] = useState<string | null>(null);
+  const [pickupPhoneError, setPickupPhoneError] = useState<string | undefined>(undefined);
+  const [pickupLandfillQuery, setPickupLandfillQuery] = useState('');
   const [filterDraft, setFilterDraft] = useState<string | null>(null);
 
   // Адрес подсказывает служба, и набранная строка сама по себе расчёту не
@@ -579,17 +582,38 @@ export function useCalculator() {
     return (shown?.items ?? []).find(option => option.landfillName === landfillName)?.landfillId;
   }
 
+  /** Названия выбранных полигонов: из них и только из них состоит список. */
+  function pickupLandfills(): string[] {
+    const query = pickupLandfillQuery.trim().toLowerCase();
+
+    return (selection?.entries ?? [])
+      .map(entry => landfillNameById(entry.landfillId) ?? '')
+      .filter(name => name.length > 0 && name.toLowerCase().includes(query));
+  }
+
   function openPickup() {
-    setPickup({
-      name: '',
-      phone: '',
-      consent: false,
-      landfillName: landfillNameById(selection?.entries[0]?.landfillId) ?? '',
-    });
+    const first = landfillNameById(selection?.entries[0]?.landfillId) ?? '';
+
+    setPickup({ name: '', phone: '', consent: false, landfillName: first });
+    setPickupLandfillQuery(first);
   }
 
   function changePickup(change: Partial<PickupDraft>) {
     setPickup(current => (current ? { ...current, ...change } : current));
+  }
+
+  function pickPickupLandfill(landfillName: string) {
+    changePickup({ landfillName });
+    setPickupLandfillQuery(landfillName);
+  }
+
+  /**
+   * Ушли из поля, ничего не выбрав. Перечень закрыт — заявка уходит на
+   * выбранный полигон, — поэтому строка возвращается к выбранному названию, а
+   * не остаётся набранной (R-053).
+   */
+  function dismissPickupLandfill() {
+    setPickupLandfillQuery(pickup?.landfillName ?? '');
   }
 
   function closePickup() {
@@ -600,6 +624,17 @@ export function useCalculator() {
     if (!pickup) {
       return;
     }
+
+    // Договор заявки допускает ровно одну запись номера: «+7» и десять цифр.
+    // По недобранному номеру перезвонить нельзя, и отказ принадлежит полю,
+    // а не форме: повторённый внизу формы, он читался бы вторым отказом (R-053).
+    if (!isPhoneComplete(pickup.phone)) {
+      setPickupPhoneError('Номер не дописан: после «+7» нужны десять цифр');
+      setPickupError(undefined);
+      return;
+    }
+
+    setPickupPhoneError(undefined);
 
     if (!pickup.consent) {
       setPickupError('Без согласия на обработку персональных данных заявка не отправляется');
@@ -665,7 +700,10 @@ export function useCalculator() {
     route,
     pickup,
     pickupError,
+    pickupPhoneError,
     pickupDone,
+    pickupLandfillQuery,
+    pickupLandfills: pickupLandfills(),
     filterDraft,
     groupTons,
     isSelected,
@@ -697,6 +735,9 @@ export function useCalculator() {
     closeRoute,
     openPickup,
     changePickup,
+    setPickupLandfillQuery,
+    pickPickupLandfill,
+    dismissPickupLandfill,
     closePickup,
     sendPickup,
   };

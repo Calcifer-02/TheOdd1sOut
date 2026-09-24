@@ -8,6 +8,7 @@
  * @adr: ADR-0008
  */
 export { Notice, Field, SuggestList, Sheet, RadioPills } from './controls';
+export { PhoneField, isPhoneComplete } from './phoneField';
 export { Button, Toolbar, type ButtonKind } from './buttons';
 export { Checkbox, Select } from './forms';
 export { Tabs, Chip, Pager } from './navigation';
