@@ -12,21 +12,25 @@
  * всплывающее окно по Escape или возвращать из него фокус, разорвите связь
  * отказа с полем выбора, оставьте кнопку «Показать ещё» при показанном
  * целиком списке, уберите часовой пояс из отметки актуальности, снимите
- * `aria-hidden` с резервной подписи кнопки — они упадут.
+ * `aria-hidden` с резервной подписи кнопки, оставьте вынесенное окно в
+ * разметке обрезающего предка, выпустите фокус из модального окна, снимите
+ * блокировку прокрутки под ним или возмещение ширины полосы прокрутки — они
+ * упадут.
  *
  *   npx vitest run tests/Controls.test.tsx
  *
  * Критерия приёмки на клавиатурную доступность общих управлений в реестре нет
  * (разрыв назван в отчёте), поэтому якорь обслуживающий.
  *
+ * @supports: R-033
  * @supports: R-058
  * @supports: R-084
  */
 import { useState } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
-import { Button, Checkbox, Chip, DateStamp, Field, Pager, Popover, Select, Tabs, Toolbar } from '@/shared/ui';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { Button, Checkbox, Chip, DateStamp, Field, Modal, Pager, Popover, Select, Tabs, Toolbar } from '@/shared/ui';
 import { SharedSection } from '@/pages/showcase/sections/shared';
 
 /** Флажок с собственным состоянием: без него нажатие не меняет вид. */
@@ -81,6 +85,50 @@ function ЖивоеОкно() {
       </Popover>
       <button type="button">Соседнее действие</button>
     </span>
+  );
+}
+
+/**
+ * Кнопка и окно внутри области, которая режет содержимое: так стоит ячейка
+ * «Маршрут» в области прокрутки таблицы сравнения (R-033).
+ */
+function ЖивоеОкноВОбрезке() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="imolt-table-scroll">
+      <span className="imolt-cell-route">
+        <Button kind="secondary" onClick={() => setOpen(true)}>
+          Показать детали маршрута
+        </Button>
+        <Popover detached title="Детали маршрута" open={open} onClose={() => setOpen(false)}>
+          <p>45 км до площадки «Восток»</p>
+        </Popover>
+      </span>
+    </div>
+  );
+}
+
+/**
+ * Кнопка и модальное окно поверх страницы. Признака «открыто» у окна нет:
+ * пока оно в разметке — оно открыто, и состояние держит экран.
+ */
+function ЖивоеМодальноеОкно() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div>
+      <button type="button" onClick={() => setOpen(true)}>
+        Показать маршрут
+      </button>
+      <button type="button">Соседнее действие</button>
+      {open && (
+        <Modal title="Маршрут до полигона" onClose={() => setOpen(false)}>
+          <button type="button">Первое действие окна</button>
+          <a href="https://example.test/route">Открыть во внешних картах</a>
+        </Modal>
+      )}
+    </div>
   );
 }
 
@@ -316,6 +364,214 @@ describe('всплывающее окно', () => {
     await user.click(screen.getByRole('button', { name: 'Соседнее действие' }));
 
     expect(screen.queryByRole('dialog', { name: 'Детали маршрута' })).not.toBeInTheDocument();
+  });
+});
+
+/**
+ * Замер живого стенда 24.09.2026 при ширине окна 1496: окно маршрута 360 × 400
+ * стояло внутри ячейки 78 × 48 и области прокрутки 776 × 254 с «overflow:
+ * auto», которая резала его справа и снизу. Раскладки в jsdom нет, поэтому
+ * проверяется устройство, из которого дефект следует: где узел окна лежит в
+ * дереве и чем он позиционируется (R-033).
+ */
+describe('всплывающее окно внутри обрезающей области', () => {
+  it('вынесенное окно лежит в корне страницы, а не в разметке обрезающего предка', async () => {
+    const user = userEvent.setup();
+
+    render(<ЖивоеОкноВОбрезке />);
+
+    await user.click(screen.getByRole('button', { name: 'Показать детали маршрута' }));
+
+    const dialog = screen.getByRole('dialog', { name: 'Детали маршрута' });
+
+    expect(dialog.closest('.imolt-table-scroll'), 'предок с «overflow: auto» режет окно по своим краям').toBeNull();
+    expect(dialog.parentElement).toBe(document.body);
+    expect(dialog, 'вынесенное окно ставится по координатам окна браузера').toHaveAttribute('data-detached', 'true');
+  });
+
+  it('вынесенное окно закрывается по Escape и возвращает фокус на вызвавшую кнопку', async () => {
+    const user = userEvent.setup();
+
+    render(<ЖивоеОкноВОбрезке />);
+
+    const opener = screen.getByRole('button', { name: 'Показать детали маршрута' });
+    await user.click(opener);
+    expect(screen.getByRole('dialog', { name: 'Детали маршрута' })).toHaveFocus();
+
+    await user.keyboard('{Escape}');
+
+    expect(screen.queryByRole('dialog', { name: 'Детали маршрута' })).not.toBeInTheDocument();
+    expect(opener).toHaveFocus();
+  });
+});
+
+/**
+ * Модальное окно: разговор поверх страницы. Решением заказчика от 24.09.2026
+ * маршрут до полигона показывается именно им, и прежний запрет дизайн-договора
+ * на модальное окно для маршрута снят (R-033).
+ *
+ * Раскладки в jsdom нет, поэтому проверяется устройство: признаки роли, место
+ * узла в дереве, ловушка фокуса и правка стилей корня страницы.
+ */
+describe('модальное окно', () => {
+  /** Возврат подменённого окружения: ширина корня и прокрутка общие на файл. */
+  const вернуть: (() => void)[] = [];
+
+  afterEach(() => {
+    while (вернуть.length > 0) {
+      вернуть.pop()?.();
+    }
+  });
+
+  /** Ширина полосы прокрутки: разница окна браузера и корня страницы. */
+  function поставитьПолосуПрокрутки(ширина: number): void {
+    const было = Object.getOwnPropertyDescriptor(document.documentElement, 'clientWidth');
+
+    Object.defineProperty(document.documentElement, 'clientWidth', {
+      value: window.innerWidth - ширина,
+      configurable: true,
+    });
+
+    вернуть.push(() => {
+      if (было === undefined) {
+        Reflect.deleteProperty(document.documentElement, 'clientWidth');
+      } else {
+        Object.defineProperty(document.documentElement, 'clientWidth', было);
+      }
+    });
+  }
+
+  /** Страница, прокрученная до названного места, и запись возвратов к нему. */
+  function поставитьПрокрутку(место: number): ReturnType<typeof vi.fn> {
+    const былоМесто = Object.getOwnPropertyDescriptor(window, 'scrollY');
+    const былВозврат = window.scrollTo;
+    const возврат = vi.fn();
+
+    Object.defineProperty(window, 'scrollY', { value: место, configurable: true });
+    window.scrollTo = возврат as unknown as typeof window.scrollTo;
+
+    вернуть.push(() => {
+      window.scrollTo = былВозврат;
+
+      if (былоМесто === undefined) {
+        Reflect.deleteProperty(window, 'scrollY');
+      } else {
+        Object.defineProperty(window, 'scrollY', былоМесто);
+      }
+    });
+
+    return возврат;
+  }
+
+  it('объявлено модальным диалогом с именем из заголовка и получает фокус', async () => {
+    const user = userEvent.setup();
+
+    render(<ЖивоеМодальноеОкно />);
+    await user.click(screen.getByRole('button', { name: 'Показать маршрут' }));
+
+    const dialog = screen.getByRole('dialog', { name: 'Маршрут до полигона' });
+
+    expect(dialog).toHaveAttribute('aria-modal', 'true');
+    expect(dialog).toHaveFocus();
+    // Окно уходит порталом в корень страницы: внутри обрезающей области оно
+    // режется по её краям (R-033).
+    expect(dialog.parentElement?.parentElement).toBe(document.body);
+  });
+
+  it('называет крестик закрытия словами, а не одним значком', async () => {
+    const user = userEvent.setup();
+
+    render(<ЖивоеМодальноеОкно />);
+    await user.click(screen.getByRole('button', { name: 'Показать маршрут' }));
+
+    const крестик = screen.getByRole('button', { name: 'Закрыть «Маршрут до полигона»' });
+
+    expect(крестик.textContent, 'подпись крестика — значок, и доступное имя даёт его кнопка').toBe('');
+  });
+
+  it('держит фокус внутри себя: с последнего управления Tab уходит на первое', async () => {
+    const user = userEvent.setup();
+
+    render(<ЖивоеМодальноеОкно />);
+    await user.click(screen.getByRole('button', { name: 'Показать маршрут' }));
+
+    const крестик = screen.getByRole('button', { name: 'Закрыть «Маршрут до полигона»' });
+    const ссылка = screen.getByRole('link', { name: 'Открыть во внешних картах' });
+
+    ссылка.focus();
+    await user.tab();
+
+    expect(крестик, 'фокус ушёл бы на страницу, перехваченную подложкой').toHaveFocus();
+
+    await user.tab({ shift: true });
+
+    expect(ссылка, 'обход назад с первого управления возвращается на последнее').toHaveFocus();
+  });
+
+  it('блокирует прокрутку страницы, пока открыто, и снимает блокировку при закрытии', async () => {
+    const user = userEvent.setup();
+
+    render(<ЖивоеМодальноеОкно />);
+    await user.click(screen.getByRole('button', { name: 'Показать маршрут' }));
+
+    expect(document.body.style.overflow).toBe('hidden');
+
+    await user.keyboard('{Escape}');
+
+    expect(document.body.style.overflow, 'страница осталась бы заблокированной после закрытия').toBe('');
+  });
+
+  it('не двигает страницу на ширину полосы прокрутки, пока она скрыта', async () => {
+    поставитьПолосуПрокрутки(15);
+
+    const user = userEvent.setup();
+
+    render(<ЖивоеМодальноеОкно />);
+    await user.click(screen.getByRole('button', { name: 'Показать маршрут' }));
+
+    expect(document.body.style.paddingRight, 'без возмещения содержимое прыгает вправо').toBe('15px');
+
+    await user.keyboard('{Escape}');
+
+    expect(document.body.style.paddingRight, 'возмещение пережило бы само окно').toBe('');
+  });
+
+  it('возвращает страницу на прежнее место после закрытия', async () => {
+    const возврат = поставитьПрокрутку(240);
+
+    const user = userEvent.setup();
+
+    render(<ЖивоеМодальноеОкно />);
+    await user.click(screen.getByRole('button', { name: 'Показать маршрут' }));
+    await user.keyboard('{Escape}');
+
+    expect(возврат, 'часть браузеров уводит страницу к началу при снятии блокировки').toHaveBeenCalledWith(0, 240);
+  });
+
+  it('закрывается нажатием по подложке и возвращает фокус на вызвавшую кнопку', async () => {
+    const user = userEvent.setup();
+
+    render(<ЖивоеМодальноеОкно />);
+
+    const opener = screen.getByRole('button', { name: 'Показать маршрут' });
+    await user.click(opener);
+
+    const подложка = screen.getByRole('dialog', { name: 'Маршрут до полигона' }).parentElement as HTMLElement;
+    await user.click(подложка);
+
+    expect(screen.queryByRole('dialog', { name: 'Маршрут до полигона' })).not.toBeInTheDocument();
+    expect(opener).toHaveFocus();
+  });
+
+  it('нажатие внутри окна его не закрывает', async () => {
+    const user = userEvent.setup();
+
+    render(<ЖивоеМодальноеОкно />);
+    await user.click(screen.getByRole('button', { name: 'Показать маршрут' }));
+
+    await user.click(screen.getByRole('button', { name: 'Первое действие окна' }));
+
+    expect(screen.getByRole('dialog', { name: 'Маршрут до полигона' })).toBeInTheDocument();
   });
 });
 

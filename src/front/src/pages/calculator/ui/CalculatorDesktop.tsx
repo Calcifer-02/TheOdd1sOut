@@ -31,12 +31,12 @@ import {
 } from '@/shared/ui';
 import { Combobox } from '@/shared/ui/combobox';
 import { Illustration } from '@/shared/ui/illustrations';
-import { OptionTable, RouteDetails } from '@/entities/landfill';
+import { OptionTable, RouteModal } from '@/entities/landfill';
 import { AllocationPanel, SummaryPanel, SELECTION_EMPTY_HINT } from '@/widgets/selection-summary';
 import type { Unit } from '@/shared/lib/formatting';
 import { formatMoney, formatNumber, unitName } from '@/shared/lib/formatting';
 import { BREAKPOINTS } from '@/shared/lib/viewport';
-import { colors, layout, radius, space } from '@/shared/ui/tokens';
+import { colors, layout, radius, space, stroke } from '@/shared/ui/tokens';
 import { SORTS, type CalculatorModel } from '../model/useCalculator';
 import { emptyResultTitle } from '../model/emptyResult';
 
@@ -122,33 +122,69 @@ const DESKTOP_CSS = `
 /* Рисунок карточки — второй план: цвет он берёт ролью из токенов, а первым
    остаётся заголовок и объяснение словами (разд. 4.5). */
 .imolt-desk-benefit .imolt-illustration { color: ${colors.textSecondary}; flex: none; }
-.imolt-desk-results { display: flex; gap: ${space.l}px; align-items: flex-start; flex-wrap: wrap; }
+/* Результаты идут одной колонкой: заголовок, вкладки и полоса управления
+   стоят над блоком результатов, а сам блок — таблица и сводка — собран в
+   общую поверхность ниже. */
+.imolt-desk-results { display: flex; flex-direction: column; gap: ${space.m}px; }
+
+/* Общая поверхность блока результатов.
+   Таблица и сводка были двумя белыми карточками рядом, и при коротком списке
+   правая кончалась заметно ниже левой: на живом стенде при одном полигоне
+   область прокрутки таблицы 254 точки высоты против примерно 400 у карточки
+   сводки, отчего низ блока получался рваным, а рядом с таблицей оставалось
+   пустое место (второй пакет замечаний заказчика, R-058). Одна плашка на оба
+   блока даёт им общий низ: колонки тянутся до высоты поверхности, а не
+   каждая до своего содержимого. */
+.imolt-desk-surface {
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: ${space.m}px;
+  min-width: 0;
+  background: ${colors.bgSurface};
+  border-radius: ${radius.card}px;
+  padding: ${space.m}px;
+}
 .imolt-desk-main { flex: 1 1 620px; min-width: 0; display: flex; flex-direction: column; gap: ${space.m}px; }
+
 /* Колонка сводки появляется только вместе с выбором: пустая она отнимала у
    таблицы 360 точек ширины и ничем их не занимала. Пока не выбран ни один
-   полигон, таблица идёт во всю ширину, а о выборе говорит строка над ней.
-   Отбивка сверху равна отбивке заголовка «Результаты» — иначе карточка
-   начинается выше него (R-027). */
+   полигон, поверхность равна таблице, а о выборе говорит строка над ней
+   (R-027). Разделитель принадлежит колонке сводки: внутри общей плашки две
+   стороны разводит линия, а не зазор между карточками. */
 .imolt-desk-side {
-  flex: 0 0 360px;
-  max-width: 360px;
+  flex: 0 0 ${layout.sideColumnWidth}px;
+  max-width: ${layout.sideColumnWidth}px;
   min-width: 0;
   align-self: stretch;
-  padding-top: ${space.xs}px;
+  border-left: ${stroke.hairline}px solid ${colors.borderDivider};
+  padding-left: ${space.m}px;
 }
+
+/* Сводка прилипает при прокрутке: итог обязан быть виден в тот момент, когда
+   отмечается очередная строка таблицы (дизайн-договор, разд. 4.4). */
 .imolt-desk-side > * { position: sticky; top: ${space.l}px; }
+
+/* Внутри общей поверхности собственных плашек у таблицы и сводки нет: иначе
+   выйдет карточка в карточке. У сводки плашка снимается здесь, а не в самой
+   панели, — в витрине компонентов панель стоит отдельно, и плашка ей нужна.
+   Составным селектором, потому что лист общего слоя ложится в страницу
+   последним и при равном весе перебивает одиночный класс панели. */
+.imolt-desk-surface .imolt-card.imolt-summary-panel {
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+}
 
 /* Объяснение выбора до того, как он сделан: одна строка над таблицей вместо
    пустой карточки в боковой колонке. */
 .imolt-desk-pick-hint { margin: 0; }
 .imolt-desk-tools { display: flex; align-items: center; gap: ${space.s}px; flex-wrap: wrap; }
 .imolt-desk-filter { position: relative; display: flex; gap: ${space.xs}px; align-items: center; }
-.imolt-desk-table {
-  background: ${colors.bgSurface};
-  border-radius: ${radius.card}px;
-  padding: ${space.m}px;
-  min-width: 0;
-}
+/* Плашку блоку результатов рисует общая поверхность, поэтому у таблицы
+   остаётся только её собственная геометрия. */
+.imolt-desk-table { min-width: 0; }
 .imolt-desk-pickup {
   background: ${colors.bgSurface};
   border-radius: ${radius.card}px;
@@ -170,7 +206,18 @@ const DESKTOP_CSS = `
   flex-wrap: wrap;
 }
 @media (max-width: ${BREAKPOINTS.sideSummary - 1}px) {
-  .imolt-desk-side { max-width: none; flex: 1 1 100%; align-self: auto; padding-top: 0; }
+  /* Узкое окно рабочего места уводит сводку под таблицу. Поверхность у них
+     по-прежнему одна, но разделяет стороны уже верхняя линия, а не боковая:
+     боковая рамка осталась бы висеть вдоль всей ширины экрана. */
+  .imolt-desk-side {
+    max-width: none;
+    flex: 1 1 100%;
+    align-self: auto;
+    border-left: 0;
+    border-top: ${stroke.hairline}px solid ${colors.borderDivider};
+    padding-left: 0;
+    padding-top: ${space.m}px;
+  }
   .imolt-desk-side > * { position: static; }
   .imolt-desk-benefits { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .imolt-desk-pickup-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -297,7 +344,7 @@ export function CalculatorDesktop({ model }: { model: CalculatorModel }) {
           />
           <Button
             // Лаймовая кнопка на экране одна: после появления результатов
-            // главное действие — «Скачать КП», а не повторный расчёт
+            // главное действие — «Сформировать предложение», а не повторный расчёт
             // (дизайн-договор, разд. 4.6).
             kind={calculation ? 'secondary' : 'primary'}
             loading={model.busy}
@@ -353,233 +400,239 @@ export function CalculatorDesktop({ model }: { model: CalculatorModel }) {
 
       {calculation && (
         <section className="imolt-desk-results" aria-label="Результаты">
-          <div className="imolt-desk-main">
-            <h2 className="imolt-section">Результаты</h2>
+          <h2 className="imolt-section">Результаты</h2>
 
-            <Tabs
-              label="Группы отходов"
-              value={view.wasteGroupId ?? ''}
-              options={calculation.items.map(item => ({
-                value: item.wasteGroupId,
-                label: item.wasteGroupName,
-              }))}
-              onPick={wasteGroupId => model.applyView({ wasteGroupId })}
+          <Tabs
+            label="Группы отходов"
+            value={view.wasteGroupId ?? ''}
+            options={calculation.items.map(item => ({
+              value: item.wasteGroupId,
+              label: item.wasteGroupName,
+            }))}
+            onPick={wasteGroupId => model.applyView({ wasteGroupId })}
+          />
+
+          <div className="imolt-desk-tools">
+            <RadioPills
+              className="imolt-sorts"
+              name="sort"
+              label="Сортировка"
+              value={view.sort}
+              options={SORTS.map(sort => ({ value: sort.field, label: sort.label }))}
+              onPick={field => model.applyView({ sort: field })}
             />
 
-            <div className="imolt-desk-tools">
-              <RadioPills
-                className="imolt-sorts"
-                name="sort"
-                label="Сортировка"
-                value={view.sort}
-                options={SORTS.map(sort => ({ value: sort.field, label: sort.label }))}
-                onPick={field => model.applyView({ sort: field })}
-              />
-
-              <div className="imolt-desk-filter">
-                <Toolbar ariaLabel="Порядок и отбор по расстоянию">
-                  {/* Подпись переключателя меняется вместе с порядком, и без
-                      резерва под вторую подпись кнопка меняла бы ширину, двигая
-                      соседей полосы управления. Резерв держит место, доступным
-                      именем остаётся текущая подпись (R-024). */}
-                  <Button
-                    kind="tertiary"
-                    size="s"
-                    reserve={view.order === 'asc' ? 'По убыванию' : 'По возрастанию'}
-                    onClick={model.toggleOrder}
-                  >
-                    {view.order === 'asc' ? 'По возрастанию' : 'По убыванию'}
-                  </Button>
-                  <Chip
-                    label={`до ${view.distanceKm} км`}
-                    pressed={view.distanceMode === 'atMost'}
-                    expanded={model.filterDraft !== null}
-                    onToggle={() => model.setFilterDraft(model.filterDraft === null ? String(view.distanceKm) : null)}
-                  />
-                  <Chip
-                    label={`не менее ${view.distanceKm} км`}
-                    pressed={view.distanceMode === 'atLeast'}
-                    onToggle={() => model.applyView({ distanceMode: 'atLeast' })}
-                  />
-                </Toolbar>
-
-                <Popover
-                  title="Предел расстояния"
-                  open={model.filterDraft !== null}
-                  onClose={() => model.setFilterDraft(null)}
+            <div className="imolt-desk-filter">
+              <Toolbar ariaLabel="Порядок и отбор по расстоянию">
+                {/* Подпись переключателя меняется вместе с порядком, и без
+                    резерва под вторую подпись кнопка меняла бы ширину, двигая
+                    соседей полосы управления. Резерв держит место, доступным
+                    именем остаётся текущая подпись (R-024). */}
+                <Button
+                  kind="tertiary"
+                  size="s"
+                  reserve={view.order === 'asc' ? 'По убыванию' : 'По возрастанию'}
+                  onClick={model.toggleOrder}
                 >
-                  <Field
-                    id="distance-limit"
-                    label="Не более, км"
-                    value={model.filterDraft ?? ''}
-                    inputMode="decimal"
-                    onChange={model.setFilterDraft}
-                  />
-                  {/* Лаймовая кнопка на экране одна, и это «Скачать КП»:
-                      применение отбора — действие вторичное (разд. 4.6). */}
-                  <Button kind="secondary" onClick={() => model.applyDistanceDraft('atMost')}>
-                    Применить
-                  </Button>
-                </Popover>
+                  {view.order === 'asc' ? 'По возрастанию' : 'По убыванию'}
+                </Button>
+                <Chip
+                  label={`до ${view.distanceKm} км`}
+                  pressed={view.distanceMode === 'atMost'}
+                  expanded={model.filterDraft !== null}
+                  onToggle={() => model.setFilterDraft(model.filterDraft === null ? String(view.distanceKm) : null)}
+                />
+                <Chip
+                  label={`не менее ${view.distanceKm} км`}
+                  pressed={view.distanceMode === 'atLeast'}
+                  onToggle={() => model.applyView({ distanceMode: 'atLeast' })}
+                />
+              </Toolbar>
+
+              <Popover
+                title="Предел расстояния"
+                open={model.filterDraft !== null}
+                onClose={() => model.setFilterDraft(null)}
+              >
+                <Field
+                  id="distance-limit"
+                  label="Не более, км"
+                  value={model.filterDraft ?? ''}
+                  inputMode="decimal"
+                  onChange={model.setFilterDraft}
+                />
+                {/* Лаймовая кнопка на экране одна, и это «Сформировать
+                      предложение»: применение отбора — действие вторичное
+                      (разд. 4.6). */}
+                <Button kind="secondary" onClick={() => model.applyDistanceDraft('atMost')}>
+                  Применить
+                </Button>
+              </Popover>
+            </div>
+          </div>
+
+          {freshness && (
+            <p className="imolt-freshness">
+              <DateStamp iso={freshness.pricesUpdatedAt} kind="prices" />
+              {' · '}
+              <DateStamp iso={freshness.statusesUpdatedAt} kind="statuses" />
+            </p>
+          )}
+
+          {model.warnings.map(warning => (
+            <Notice key={warning.landfillId} kind="warning">
+              <span>{warning.message}</span>
+            </Notice>
+          ))}
+
+          {/* До выбора боковой колонки нет, и объяснить назначение флажков
+                больше негде. Слова те же, что у пустого состояния сводки:
+                второй их редакции в проекте нет (R-027). */}
+          {(selection?.selectedLandfills ?? 0) === 0 && (
+            <p className="imolt-lead imolt-desk-pick-hint">{SELECTION_EMPTY_HINT}</p>
+          )}
+
+          {/* Блок результатов стоит на одной поверхности: слева таблица,
+              справа сводка выбора, низ у обеих сторон один (R-058). */}
+          <div className="imolt-desk-surface">
+            <div className="imolt-desk-main">
+              <div className="imolt-desk-table">
+                <OptionTable
+                  caption="Сравнение полигонов"
+                  options={shown?.items ?? []}
+                  statusesUpdatedAt={freshness?.statusesUpdatedAt ?? ''}
+                  selectedIds={selectedIds}
+                  sort={view.sort}
+                  order={view.order}
+                  onSort={model.sortBy}
+                  onToggle={option => void model.toggleLandfill(option)}
+                  onRoute={option => void model.openRoute(option)}
+                  loading={model.loadingOptions}
+                  empty={
+                    <EmptyState
+                      title={emptyResultTitle(shown?.emptyReason, view)}
+                      hint="Снимите фильтр расстояния или выберите другой тип отходов."
+                      action={
+                        shown?.emptyReason === 'filteredOutByDistance' ? (
+                          <Button kind="secondary" onClick={model.clearDistanceFilter}>
+                            Снять фильтр
+                          </Button>
+                        ) : undefined
+                      }
+                    />
+                  }
+                />
+
+                {shown && shown.items.length > 0 && (
+                  <Pager total={shown.total} shown={shown.items.length} onMore={model.loadMore} />
+                )}
               </div>
             </div>
 
-            {freshness && (
-              <p className="imolt-freshness">
-                <DateStamp iso={freshness.pricesUpdatedAt} kind="prices" />
-                {' · '}
-                <DateStamp iso={freshness.statusesUpdatedAt} kind="statuses" />
-              </p>
-            )}
-
-            {model.warnings.map(warning => (
-              <Notice key={warning.landfillId} kind="warning">
-                <span>{warning.message}</span>
-              </Notice>
-            ))}
-
-            {/* До выбора боковой колонки нет, и объяснить назначение флажков
-                больше негде. Слова те же, что у пустого состояния сводки:
-                второй их редакции в проекте нет (R-027). */}
-            {(selection?.selectedLandfills ?? 0) === 0 && (
-              <p className="imolt-lead imolt-desk-pick-hint">{SELECTION_EMPTY_HINT}</p>
-            )}
-
-            <div className="imolt-desk-table">
-              <OptionTable
-                caption="Сравнение полигонов"
-                options={shown?.items ?? []}
-                statusesUpdatedAt={freshness?.statusesUpdatedAt ?? ''}
-                selectedIds={selectedIds}
-                sort={view.sort}
-                order={view.order}
-                onSort={model.sortBy}
-                onToggle={option => void model.toggleLandfill(option)}
-                onRoute={option => void model.openRoute(option)}
-                openRouteFor={model.route?.option.landfillId}
-                routeDetails={model.route && <RouteDetails option={model.route.option} summary={model.route.summary} />}
-                onCloseRoute={model.closeRoute}
-                loading={model.loadingOptions}
-                empty={
-                  <EmptyState
-                    title={emptyResultTitle(shown?.emptyReason, view)}
-                    hint="Снимите фильтр расстояния или выберите другой тип отходов."
-                    action={
-                      shown?.emptyReason === 'filteredOutByDistance' ? (
-                        <Button kind="secondary" onClick={model.clearDistanceFilter}>
-                          Снять фильтр
-                        </Button>
-                      ) : undefined
+            {(selection?.selectedLandfills ?? 0) > 0 && (
+              <div className="imolt-desk-side">
+                <SummaryPanel
+                  selectedCount={selection?.selectedLandfills ?? 0}
+                  lines={summaryLines}
+                  total={model.allocationTotal ?? (selection ? formatMoney(selection.total) : '')}
+                  totalLabel={model.allocationTotal ? 'Итого по распределению' : 'Итого'}
+                  onRoute={() => {
+                    const first = (shown?.items ?? []).find(option => selectedIds.includes(option.landfillId));
+                    if (first) {
+                      void model.openRoute(first);
                     }
-                  />
-                }
-              />
-
-              {shown && shown.items.length > 0 && (
-                <Pager total={shown.total} shown={shown.items.length} onMore={model.loadMore} />
-              )}
-            </div>
-
-            {model.selectedInGroup.length > 1 && (
-              <AllocationPanel
-                rows={model.selectedInGroup.map(entry => ({
-                  landfillId: entry.landfillId,
-                  landfillName: model.landfillNameById(entry.landfillId) ?? 'Полигон',
-                  share: model.allocationDraft[entry.landfillId] ?? '',
-                }))}
-                mismatch={model.allocationMismatch}
-                problem={model.allocationProblem}
-                onChange={model.changeAllocationShare}
-              />
-            )}
-
-            {model.quote && (
-              <Notice kind="done">
-                <strong>КП сохранено</strong>
-                <a href={model.quoteDocumentHref} download>
-                  Открыть коммерческое предложение
-                </a>
-                <a href={model.quoteScreenHref}>Открыть экран предложения</a>
-              </Notice>
-            )}
-
-            {model.pickupDone && (
-              <Notice kind="done">
-                <strong>Заявка принята</strong>
-                <span>{model.pickupDone}</span>
-              </Notice>
-            )}
-
-            {model.pickup && (
-              <section className="imolt-desk-pickup" aria-label="Заявка на вывоз">
-                <h3 className="imolt-section">Заявка на вывоз</h3>
-                <p className="imolt-lead">Расчёт уже готов – заявка нужна, только если вывоз организуем мы.</p>
-                <div className="imolt-desk-pickup-fields">
-                  <Field
-                    id="pickup-name"
-                    label="Имя"
-                    value={model.pickup.name}
-                    placeholder="Как к вам обращаться"
-                    onChange={value => model.changePickup({ name: value })}
-                  />
-                  <Field
-                    id="pickup-phone"
-                    label="Телефон"
-                    value={model.pickup.phone}
-                    inputMode="tel"
-                    placeholder="+7"
-                    onChange={value => model.changePickup({ phone: value })}
-                  />
-                  <Select
-                    id="pickup-landfill"
-                    label="Полигон"
-                    value={model.pickup.landfillName}
-                    options={(selection?.entries ?? []).map(entry => ({
-                      value: model.landfillNameById(entry.landfillId) ?? '',
-                      label: model.landfillNameById(entry.landfillId) ?? '',
-                    }))}
-                    onPick={landfillName => model.changePickup({ landfillName })}
-                  />
-                </div>
-                <div className="imolt-desk-pickup-foot">
-                  <Checkbox
-                    id="pickup-consent"
-                    label="Согласен на обработку персональных данных согласно политике"
-                    checked={model.pickup.consent}
-                    onChange={consent => model.changePickup({ consent })}
-                  />
-                  <Button kind="secondary" onClick={() => void model.sendPickup()}>
-                    Отправить заявку
-                  </Button>
-                </div>
-                {model.pickupError && (
-                  <p className="imolt-error" role="alert">
-                    {model.pickupError}
-                  </p>
-                )}
-              </section>
+                  }}
+                  onOpenQuote={model.openQuote}
+                  onPickup={model.openPickup}
+                />
+              </div>
             )}
           </div>
 
-          {(selection?.selectedLandfills ?? 0) > 0 && (
-            <div className="imolt-desk-side">
-              <SummaryPanel
-                selectedCount={selection?.selectedLandfills ?? 0}
-                lines={summaryLines}
-                total={model.allocationTotal ?? (selection ? formatMoney(selection.total) : '')}
-                totalLabel={model.allocationTotal ? 'Итого по распределению' : 'Итого'}
-                onRoute={() => {
-                  const first = (shown?.items ?? []).find(option => selectedIds.includes(option.landfillId));
-                  if (first) {
-                    void model.openRoute(first);
-                  }
-                }}
-                onDownload={() => void model.download()}
-                onPickup={model.openPickup}
-              />
-            </div>
+          {model.selectedInGroup.length > 1 && (
+            <AllocationPanel
+              rows={model.selectedInGroup.map(entry => ({
+                landfillId: entry.landfillId,
+                landfillName: model.landfillNameById(entry.landfillId) ?? 'Полигон',
+                share: model.allocationDraft[entry.landfillId] ?? '',
+              }))}
+              mismatch={model.allocationMismatch}
+              problem={model.allocationProblem}
+              onChange={model.changeAllocationShare}
+            />
+          )}
+
+          {model.pickupDone && (
+            <Notice kind="done">
+              <strong>Заявка принята</strong>
+              <span>{model.pickupDone}</span>
+            </Notice>
+          )}
+
+          {model.pickup && (
+            <section className="imolt-desk-pickup" aria-label="Заявка на вывоз">
+              <h3 className="imolt-section">Заявка на вывоз</h3>
+              <p className="imolt-lead">Расчёт уже готов – заявка нужна, только если вывоз организуем мы.</p>
+              <div className="imolt-desk-pickup-fields">
+                <Field
+                  id="pickup-name"
+                  label="Имя"
+                  value={model.pickup.name}
+                  placeholder="Как к вам обращаться"
+                  onChange={value => model.changePickup({ name: value })}
+                />
+                <Field
+                  id="pickup-phone"
+                  label="Телефон"
+                  value={model.pickup.phone}
+                  inputMode="tel"
+                  placeholder="+7"
+                  onChange={value => model.changePickup({ phone: value })}
+                />
+                <Select
+                  id="pickup-landfill"
+                  label="Полигон"
+                  value={model.pickup.landfillName}
+                  options={(selection?.entries ?? []).map(entry => ({
+                    value: model.landfillNameById(entry.landfillId) ?? '',
+                    label: model.landfillNameById(entry.landfillId) ?? '',
+                  }))}
+                  onPick={landfillName => model.changePickup({ landfillName })}
+                />
+              </div>
+              <div className="imolt-desk-pickup-foot">
+                <Checkbox
+                  id="pickup-consent"
+                  label="Согласен на обработку персональных данных согласно политике"
+                  checked={model.pickup.consent}
+                  onChange={consent => model.changePickup({ consent })}
+                />
+                <Button kind="secondary" onClick={() => void model.sendPickup()}>
+                  Отправить заявку
+                </Button>
+              </div>
+              {model.pickupError && (
+                <p className="imolt-error" role="alert">
+                  {model.pickupError}
+                </p>
+              )}
+            </section>
           )}
         </section>
+      )}
+
+      {/* Окно маршрута стоит над страницей, а не в таблице: прежде оно
+          отрисовывалось внутри ячейки и резалось областью прокрутки таблицы
+          (решение заказчика от 24.09.2026, R-033). Открывают его и кнопка
+          строки, и сводка выбора, а фокус после закрытия возвращается на то
+          управление, которое окно открыло. */}
+      {model.route && calculation && (
+        <RouteModal
+          option={model.route.option}
+          summary={model.route.summary}
+          pickup={calculation.pickupAddress}
+          onClose={model.closeRoute}
+        />
       )}
     </div>
   );

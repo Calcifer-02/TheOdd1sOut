@@ -24,6 +24,7 @@ import {
   Pager,
   Popover,
   RadioPills,
+  Modal,
   Select,
   Sheet,
   Skeleton,
@@ -109,6 +110,8 @@ export function SharedSection() {
   const [unit, setUnit] = useState<'t' | 'm3'>('t');
   const [sheetOpen, setSheetOpen] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const [detachedOpen, setDetachedOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   const [limitOpen, setLimitOpen] = useState(false);
   const [tab, setTab] = useState<'concrete' | 'wood'>('concrete');
   const [near, setNear] = useState(false);
@@ -315,6 +318,23 @@ export function SharedSection() {
             </Popover>
           </span>
         </div>
+
+        {/* Вынесенное окно: внутри области с обрезкой — ячейки таблицы —
+            окно в потоке разметки режется её краями, поэтому оно уходит в
+            корень страницы и считает место от окна браузера. */}
+        <p className="imolt-lead">
+          Вынесенное окно: то же поведение, но узел лежит в корне страницы и обрезкой предка не режется.
+        </p>
+        <div className="imolt-sorts-line">
+          <span className="imolt-anchor">
+            <Button size="s" kind="tertiary" onClick={() => setDetachedOpen(true)}>
+              Показать вынесенное окно
+            </Button>
+            <Popover title="Детали маршрута" detached open={detachedOpen} onClose={() => setDetachedOpen(false)}>
+              <p className="imolt-lead">{formatDistance(45)} до площадки «Восток».</p>
+            </Popover>
+          </span>
+        </div>
       </Section>
 
       <Section title="Карточка, число с подписью и актуальность">
@@ -424,6 +444,24 @@ export function SharedSection() {
           }}
           onDismiss={() => setGroupQuery(groupChoice ?? '')}
         />
+      </Section>
+
+      <Section title="Модальное окно">
+        {/* Окно уходит порталом в корень страницы: внутри обрезающей области
+            оно резалось бы её краями. В витрине образец не рисуется на месте,
+            а открывается поверх неё. */}
+        <p className="imolt-lead">
+          Запирает фокус, блокирует прокрутку страницы под собой и закрывается крестиком, нажатием вне окна и клавишей
+          Escape. Фокус возвращается на кнопку, которая окно открыла.
+        </p>
+        <Button size="s" kind="secondary" onClick={() => setModalOpen(true)}>
+          Показать модальное окно
+        </Button>
+        {modalOpen && (
+          <Modal title="Заголовок окна" onClose={() => setModalOpen(false)}>
+            <p className="imolt-lead">Содержимое окна: страница за ним остаётся на месте.</p>
+          </Modal>
+        )}
       </Section>
 
       <Section title="Рисунки объяснений">

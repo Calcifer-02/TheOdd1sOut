@@ -616,16 +616,64 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
   overflow-y: auto;
 }
 
+/* Карта маршрута в окне маршрута. Тайлы идут по сети, и до их прихода на
+   месте карты стоит приглушённая поверхность, а не пустота (R-034).
+   «overflow: hidden» обязателен: библиотека карты двигает слои полотна
+   произвольно далеко за края видимой части. */
 .imolt-map {
-  height: ${layout.mapPreviewHeight}px;
+  height: ${layout.routeMapHeight}px;
+  border-radius: ${radius.field}px;
+  border: ${stroke.hairline}px solid ${colors.borderDivider};
+  background: ${colors.bgSurfaceMuted};
+  overflow: hidden;
+}
+
+/* Метка на карте. Рисуется правилом, а не картинкой: изображения библиотеки
+   карты лежат в её пакете и при сборке теряют адрес. */
+.imolt-map-pin {
+  width: ${space.m}px;
+  height: ${space.m}px;
+  border-radius: ${radius.pill}px;
+  border: ${stroke.emphasis}px solid ${colors.bgSurface};
+  box-shadow: ${layout.shadow};
+  background: ${colors.accentDark};
+}
+
+/* Полигон отличается от адреса вывоза не только цветом: у него своя рамка и
+   подпись в перечне меток под картой (разд. 4.6). */
+.imolt-map-pin[data-point='landfill'] {
+  background: ${colors.accentPrimary};
+  border-color: ${colors.accentDark};
+  cursor: pointer;
+}
+
+/* Перечень меток словами: он же объясняет карту, когда тайлы не пришли. */
+.imolt-map-legend { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: ${space.xxs}px; }
+
+.imolt-map-legend-item {
+  display: flex;
+  align-items: baseline;
+  gap: ${space.xs}px;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+/* Указание источника карты. Лицензия ODbL требует называть авторов данных,
+   поэтому подпись стоит в разметке окна, а не рисуется самой картой: при
+   отказе тайлов подпись обязана остаться видимой. */
+.imolt-map-credit { margin: 0; font-size: 12px; line-height: 16px; color: ${colors.textSecondary}; }
+
+/* Сведения о полигоне, открытые нажатием на его метку (R-033). */
+.imolt-map-facts {
+  display: flex;
+  flex-direction: column;
+  gap: ${space.xs}px;
+  padding: ${space.s}px;
   border-radius: ${radius.field}px;
   background: ${colors.bgSurfaceMuted};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: ${colors.textPlaceholder};
-  font-size: 12px;
 }
+
+.imolt-map-tariffs { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: ${space.xxs}px; }
 
 .imolt-allocation { display: flex; flex-direction: column; gap: ${space.xs}px; }
 .imolt-allocation-row { display: flex; align-items: center; gap: ${space.xs}px; }
@@ -717,8 +765,77 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
   gap: ${space.s}px;
 }
 
+/* Окно, вынесенное из своей разметки в корень страницы: координаты считает
+   компонент по месту вызвавшей кнопки и ставит их в самом узле. Замер живого
+   стенда 24.09.2026 при ширине окна 1496: окно маршрута 360 x 400 стояло в
+   ячейке 78 x 48 внутри области прокрутки 776 x 254, и «overflow: auto» резал
+   его справа и снизу (R-033). Собственный «overflow» — на случай, когда места
+   до края окна браузера меньше, чем нужно содержимому. */
+.imolt-popover[data-detached='true'] {
+  position: fixed;
+  top: 0;
+  left: 0;
+  overflow: auto;
+}
+
+/* Метка места вынесенного окна в разметке рядом с кнопкой. Ничего не
+   показывает и в раскладку не входит: у неё одна работа — назвать оправу, по
+   которой считаются координаты. */
+.imolt-popover-mark { display: none; }
+
 .imolt-popover-head { display: flex; align-items: center; justify-content: space-between; gap: ${space.s}px; }
 .imolt-popover-title { margin: 0; font-size: 16px; line-height: 22px; font-weight: 700; }
+
+/* Подложка затемнения под модальным окном: страница под ней перехвачена
+   целиком, и промах мимо окна попадает в подложку, а не в таблицу под ней
+   (решение заказчика от 24.09.2026, R-033). Поле подложки — поле страницы:
+   на узком окне окно маршрута прижимается к тем же краям, что и содержимое. */
+.imolt-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: ${zIndex.modal};
+  padding: ${layout.gutter}px;
+  background: ${colors.overlay};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Само окно. Скругление и тень — те же, что у всплывающего окна (разд. 4.4):
+   разговор поверх страницы отличается от подсказки поведением, а не видом. */
+.imolt-modal {
+  width: 100%;
+  max-width: ${layout.modalWidth}px;
+  max-height: 100%;
+  overflow: auto;
+  padding: ${space.m}px;
+  border-radius: ${radius.field}px;
+  background: ${colors.bgSurface};
+  box-shadow: ${layout.shadow};
+  display: flex;
+  flex-direction: column;
+  gap: ${space.s}px;
+}
+
+.imolt-modal-head { display: flex; align-items: center; justify-content: space-between; gap: ${space.s}px; }
+.imolt-modal-title { margin: 0; font-size: 18px; line-height: 24px; font-weight: 700; }
+.imolt-modal-body { display: flex; flex-direction: column; gap: ${space.s}px; }
+
+/* Крестик закрытия: кнопка-значок 40 x 40 (разд. 4.4). Цель касания добирает
+   поле внутри самой кнопки, а не отступ соседей. */
+.imolt-modal-close {
+  flex: none;
+  width: ${layout.iconButton}px;
+  height: ${layout.iconButton}px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: ${radius.field}px;
+  background: transparent;
+  color: ${colors.iconActive};
+  cursor: pointer;
+}
 
 .imolt-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: ${space.s}px; }
 .imolt-card-title { margin: 0; font-size: 18px; line-height: 24px; font-weight: 700; }
@@ -910,6 +1027,8 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
     color: ${colors.onAccentDark};
     opacity: 0.9;
   }
+
+  .imolt-modal-close:hover { background: ${colors.bgSurfaceMuted}; }
 
   .imolt-suggest button:hover { background: ${colors.accentRowHover}; }
   .imolt-option:hover { background: ${colors.accentRowHover}; }
