@@ -15,7 +15,7 @@ const PICTOGRAPH_RANGES: [number, number][] = [
 ];
 
 function pictographs(text: string): string[] {
-  return [...text].filter((character) => {
+  return [...text].filter(character => {
     const code = character.codePointAt(0) ?? 0;
     return PICTOGRAPH_RANGES.some(([from, to]) => code >= from && code <= to);
   });
@@ -24,11 +24,11 @@ function pictographs(text: string): string[] {
 describe('продуктовый текст мини-приложения', () => {
   it('не несёт смысла эмодзи и пиктограммами шрифта', () => {
     const offenders = sourceFiles()
-      .map((file) => ({ path: file.path, found: pictographs(file.text) }))
-      .filter((file) => file.found.length > 0);
+      .map(file => ({ path: file.path, found: pictographs(file.text) }))
+      .filter(file => file.found.length > 0);
 
     expect(
-      offenders.map((file) => `${file.path}: ${file.found.join(' ')}`),
+      offenders.map(file => `${file.path}: ${file.found.join(' ')}`),
       'состояние и действие выражаются словом и значком с доступным именем',
     ).toEqual([]);
   });

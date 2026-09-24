@@ -20,14 +20,7 @@ export function repositoryRoot(): string {
 
 export const miniappSource = join(repositoryRoot(), 'src', 'front', 'src');
 
-export const contractPath = join(
-  repositoryRoot(),
-  'src',
-  'back',
-  'Imolt.Api',
-  'contracts',
-  'openapi.yaml',
-);
+export const contractPath = join(repositoryRoot(), 'src', 'back', 'Imolt.Api', 'contracts', 'openapi.yaml');
 
 /** Исходные файлы мини-приложения с путём относительно корня репозитория. */
 export function sourceFiles(root: string = miniappSource): { path: string; text: string }[] {

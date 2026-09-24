@@ -79,13 +79,13 @@ export function EditableCell({
   return (
     <form
       className="imolt-references-cell-form"
-      onSubmit={(event) => {
+      onSubmit={event => {
         event.preventDefault();
         // Форма закрывается в обоих исходах: при отказе ячейка обязана
         // показать прежнее значение, а не набранное.
         void onSave(text).then(() => cancel());
       }}
-      onKeyDown={(event) => {
+      onKeyDown={event => {
         if (event.key === 'Escape') {
           event.preventDefault();
           cancel();
@@ -99,7 +99,7 @@ export function EditableCell({
         aria-label={name}
         inputMode="decimal"
         value={text}
-        onChange={(event) => setText(event.target.value)}
+        onChange={event => setText(event.target.value)}
       />
       <Button type="submit" size="s" disabled={busy} ariaLabel={`Сохранить ${name}`}>
         Сохранить

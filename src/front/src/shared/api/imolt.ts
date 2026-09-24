@@ -61,9 +61,7 @@ export function searchWasteGroups(query: string): Promise<Page<WasteGroup>> {
 
 /** @supports: R-012 */
 export function suggestAddresses(query: string): Promise<Page<AddressSuggestion>> {
-  return request<Page<AddressSuggestion>>(
-    `/v1/address-suggestions?${new URLSearchParams({ query, limit: '6' })}`,
-  );
+  return request<Page<AddressSuggestion>>(`/v1/address-suggestions?${new URLSearchParams({ query, limit: '6' })}`);
 }
 
 /**
@@ -119,10 +117,7 @@ export function listPlacementOptions(
 }
 
 /** @supports: R-027 */
-export function setSelection(
-  calculationId: string,
-  entries: SelectionEntry[],
-): Promise<SelectionState> {
+export function setSelection(calculationId: string, entries: SelectionEntry[]): Promise<SelectionState> {
   return request<SelectionState>(`/v1/calculations/${calculationId}/selection`, {
     method: 'PUT',
     body: JSON.stringify({ entries }),
@@ -130,10 +125,7 @@ export function setSelection(
 }
 
 /** @supports: R-030 */
-export function setAllocation(
-  calculationId: string,
-  entries: AllocationEntry[],
-): Promise<AllocationState> {
+export function setAllocation(calculationId: string, entries: AllocationEntry[]): Promise<AllocationState> {
   return request<AllocationState>(`/v1/calculations/${calculationId}/allocation`, {
     method: 'PUT',
     body: JSON.stringify({ entries }),

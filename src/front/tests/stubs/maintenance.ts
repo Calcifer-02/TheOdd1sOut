@@ -1,7 +1,7 @@
 // Заглушка расчётной части для проверок редактора цен и справочников (Э-11).
 //
 // Подменяет глобальный fetch, разбирает путь и отвечает телами договора
-// (src/back/Imolt.Api/contracts/openapi.yaml). Данные взяты с поднятой
+// (../../../back/Imolt.Api/contracts/openapi.yaml). Данные взяты с поднятой
 // службы: полигоны «Икша» и «Восток», группы «Лом бетона и железобетона»,
 // «Лом кирпичной кладки» и «Древесина от разборки», дата актуальности
 // 17.09.2026. Ничего сверх договора заглушка не выдумывает.
@@ -116,8 +116,16 @@ export const IKSHA: Landfill = {
   status: 'active',
   statusUpdatedAt: FRESHNESS_DATE,
   tariffs: [
-    { wasteGroupId: 'beton-lom', disposalPricePerTon: { amount: '380.00', currency: 'RUB' }, updatedAt: FRESHNESS_DATE },
-    { wasteGroupId: 'kirpich-lom', disposalPricePerTon: { amount: '360.00', currency: 'RUB' }, updatedAt: FRESHNESS_DATE },
+    {
+      wasteGroupId: 'beton-lom',
+      disposalPricePerTon: { amount: '380.00', currency: 'RUB' },
+      updatedAt: FRESHNESS_DATE,
+    },
+    {
+      wasteGroupId: 'kirpich-lom',
+      disposalPricePerTon: { amount: '360.00', currency: 'RUB' },
+      updatedAt: FRESHNESS_DATE,
+    },
   ],
 };
 
@@ -130,9 +138,21 @@ export const VOSTOK: Landfill = {
   status: 'active',
   statusUpdatedAt: FRESHNESS_DATE,
   tariffs: [
-    { wasteGroupId: 'beton-lom', disposalPricePerTon: { amount: '450.00', currency: 'RUB' }, updatedAt: FRESHNESS_DATE },
-    { wasteGroupId: 'drevesina', disposalPricePerTon: { amount: '300.00', currency: 'RUB' }, updatedAt: FRESHNESS_DATE },
-    { wasteGroupId: 'kirpich-lom', disposalPricePerTon: { amount: '420.00', currency: 'RUB' }, updatedAt: FRESHNESS_DATE },
+    {
+      wasteGroupId: 'beton-lom',
+      disposalPricePerTon: { amount: '450.00', currency: 'RUB' },
+      updatedAt: FRESHNESS_DATE,
+    },
+    {
+      wasteGroupId: 'drevesina',
+      disposalPricePerTon: { amount: '300.00', currency: 'RUB' },
+      updatedAt: FRESHNESS_DATE,
+    },
+    {
+      wasteGroupId: 'kirpich-lom',
+      disposalPricePerTon: { amount: '420.00', currency: 'RUB' },
+      updatedAt: FRESHNESS_DATE,
+    },
   ],
 };
 
@@ -161,12 +181,7 @@ export const SYNC_RUN = {
 };
 
 /** Документ об отказе по RFC 9457 — форма `Problem` договора. */
-export function problem(
-  type: string,
-  title: string,
-  status: number,
-  detail?: string,
-): Record<string, unknown> {
+export function problem(type: string, title: string, status: number, detail?: string): Record<string, unknown> {
   return detail === undefined ? { type, title, status } : { type, title, status, detail };
 }
 
@@ -216,9 +231,7 @@ const PROBLEM_TYPE = 'application/problem+json';
 
 function makeResponse(status: number, body: unknown, headers: Record<string, string>): Response {
   const text = body === undefined ? '' : JSON.stringify(body);
-  const lowered = new Map(
-    Object.entries(headers).map(([name, value]) => [name.toLowerCase(), value]),
-  );
+  const lowered = new Map(Object.entries(headers).map(([name, value]) => [name.toLowerCase(), value]));
 
   return {
     ok: status >= 200 && status < 300,
@@ -257,7 +270,7 @@ function routeKeyOf(method: string, path: string): RouteKey | undefined {
 
 /** Ключи записи из пути: они предметные, а не позиционные. */
 function segmentsOf(path: string): string[] {
-  return path.split('/').filter((part) => part !== '');
+  return path.split('/').filter(part => part !== '');
 }
 
 function copy<T>(value: T): T {
@@ -299,9 +312,8 @@ export function installMaintenanceStub(): MaintenanceStub {
     const parts = segmentsOf(request.path);
     const landfillId = parts[2];
     const wasteGroupId = parts[4];
-    const landfill = landfills.find((item) => item.id === landfillId);
-    const price = (request.body as { disposalPricePerTon?: Money } | undefined)
-      ?.disposalPricePerTon;
+    const landfill = landfills.find(item => item.id === landfillId);
+    const price = (request.body as { disposalPricePerTon?: Money } | undefined)?.disposalPricePerTon;
 
     if (landfill === undefined || price === undefined) {
       return refuse(problem('urn:imolt:problem:not-found', 'Запись не найдена', 404));
@@ -313,8 +325,8 @@ export function installMaintenanceStub(): MaintenanceStub {
       updatedAt: EDIT_DATE,
     };
 
-    landfill.tariffs = landfill.tariffs.some((item) => item.wasteGroupId === wasteGroupId)
-      ? landfill.tariffs.map((item) => (item.wasteGroupId === wasteGroupId ? tariff : item))
+    landfill.tariffs = landfill.tariffs.some(item => item.wasteGroupId === wasteGroupId)
+      ? landfill.tariffs.map(item => (item.wasteGroupId === wasteGroupId ? tariff : item))
       : [...landfill.tariffs, tariff];
 
     // Правка цены двигает дату актуальности цен — AC-048c.
@@ -325,7 +337,7 @@ export function installMaintenanceStub(): MaintenanceStub {
 
   function patchWasteGroup(request: RecordedRequest): StubResponse {
     const wasteGroupId = segmentsOf(request.path)[2];
-    const group = wasteGroups.find((item) => item.id === wasteGroupId);
+    const group = wasteGroups.find(item => item.id === wasteGroupId);
     const update = (request.body ?? {}) as Partial<WasteGroup>;
 
     if (group === undefined) {
@@ -351,7 +363,7 @@ export function installMaintenanceStub(): MaintenanceStub {
 
   function setStatus(request: RecordedRequest): StubResponse {
     const landfillId = segmentsOf(request.path)[2];
-    const landfill = landfills.find((item) => item.id === landfillId);
+    const landfill = landfills.find(item => item.id === landfillId);
     const sent = (request.body ?? {}) as { status?: LandfillStatus; reason?: string };
 
     if (landfill === undefined || sent.status === undefined) {
@@ -382,8 +394,8 @@ export function installMaintenanceStub(): MaintenanceStub {
   function confirmImport(): StubResponse {
     for (const change of IMPORT_CHANGES) {
       const [landfillId, wasteGroupId] = change.entityId.split('/');
-      const landfill = landfills.find((item) => item.id === landfillId);
-      const tariff = landfill?.tariffs.find((item) => item.wasteGroupId === wasteGroupId);
+      const landfill = landfills.find(item => item.id === landfillId);
+      const tariff = landfill?.tariffs.find(item => item.wasteGroupId === wasteGroupId);
 
       if (tariff !== undefined) {
         tariff.disposalPricePerTon = { amount: change.fileValue, currency: 'RUB' };
@@ -470,12 +482,7 @@ export function installMaintenanceStub(): MaintenanceStub {
   }
 
   globalThis.fetch = (async (input: unknown, init?: RequestInit): Promise<Response> => {
-    const rawUrl =
-      typeof input === 'string'
-        ? input
-        : input instanceof URL
-          ? input.toString()
-          : String((input as { url?: string }).url ?? '');
+    const rawUrl = addressOf(input);
     const address = new URL(rawUrl, 'http://mini.app');
     const method = (init?.method ?? (input as { method?: string }).method ?? 'GET').toUpperCase();
 
@@ -491,12 +498,7 @@ export function installMaintenanceStub(): MaintenanceStub {
 
     const key = routeKeyOf(method, request.path);
     const override = key === undefined ? undefined : answers.get(key);
-    const answer =
-      override === undefined
-        ? defaultAnswer(key, request)
-        : typeof override === 'function'
-          ? override(request)
-          : override;
+    const answer = answerOf(override, key, request, defaultAnswer);
 
     return makeResponse(answer.status, answer.body, answer.headers ?? { 'content-type': JSON_TYPE });
   }) as typeof globalThis.fetch;
@@ -505,7 +507,7 @@ export function installMaintenanceStub(): MaintenanceStub {
     requests,
 
     sentTo(key) {
-      return requests.filter((request) => routeKeyOf(request.method, request.path) === key);
+      return requests.filter(request => routeKeyOf(request.method, request.path) === key);
     },
 
     lastTo(key) {
@@ -536,4 +538,42 @@ export function installMaintenanceStub(): MaintenanceStub {
       wasteGroups = copy(WASTE_GROUPS);
     },
   };
+}
+
+/**
+ * Адрес обращения: `fetch` принимает строку, `URL` или объект запроса.
+ * Вложенные условные выражения читаются хуже ветвления и запрещены правилом
+ * кода, а разбор здесь — три отдельных случая, а не одно условие.
+ */
+function addressOf(input: unknown): string {
+  if (typeof input === 'string') {
+    return input;
+  }
+
+  if (input instanceof URL) {
+    return input.toString();
+  }
+
+  return String((input as { url?: string }).url ?? '');
+}
+
+/**
+ * Ответ на обращение: подменённый заглушкой, вычисленный подменой или ответ
+ * договора по умолчанию.
+ */
+function answerOf<TKey>(
+  override: StubResponse | ((request: RecordedRequest) => StubResponse) | undefined,
+  key: TKey | undefined,
+  request: RecordedRequest,
+  fallback: (key: TKey | undefined, request: RecordedRequest) => StubResponse,
+): StubResponse {
+  if (override === undefined) {
+    return fallback(key, request);
+  }
+
+  if (typeof override === 'function') {
+    return override(request);
+  }
+
+  return override;
 }

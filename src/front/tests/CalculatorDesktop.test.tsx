@@ -1,34 +1,30 @@
-// Десктопное представление экрана расчёта: таблица сравнения полигонов,
-// сортировка по столбцу, отбор по расстоянию, липкая сводка выбора и
-// состояния Э-12 (R-019, R-023 — R-029, R-032, R-053, R-060).
-//
-// Ширина окна ставится до отрисовки: представление выбирается по ней, и
-// проверка, поставившая ширину после, проверяла бы мобильную раскладку.
-//
-// Элементы ищутся по роли и доступному имени: заголовок столбца без признака
-// `aria-sort`, флажок без названия полигона и всплывающее окно без имени
-// роняют проверку, а не обходятся селектором по классу.
-//
-// Проверки фальсифицируемы: покажите на широком экране карточки вместо
-// таблицы, привяжите выбор к позиции строки, потеряйте признак `aria-sort`,
-// оставьте предел расстояния вне адреса, покажите код отказа вместо
-// заголовка, снимите отметку с заблокированного полигона — они упадут.
-//
-//   npx vitest run tests/CalculatorDesktop.test.tsx
-//
-// @ac: AC-024c, AC-025c, AC-027b, AC-028c, AC-060c
+/**
+ * Десктопное представление экрана расчёта: таблица сравнения полигонов,
+ * сортировка по столбцу, отбор по расстоянию, липкая сводка выбора и
+ * состояния Э-12 (R-019, R-023 — R-029, R-032, R-053, R-060).
+ *
+ * Ширина окна ставится до отрисовки: представление выбирается по ней, и
+ * проверка, поставившая ширину после, проверяла бы мобильную раскладку.
+ *
+ * Элементы ищутся по роли и доступному имени: заголовок столбца без признака
+ * `aria-sort`, флажок без названия полигона и всплывающее окно без имени
+ * роняют проверку, а не обходятся селектором по классу.
+ *
+ * Проверки фальсифицируемы: покажите на широком экране карточки вместо
+ * таблицы, привяжите выбор к позиции строки, потеряйте признак `aria-sort`,
+ * оставьте предел расстояния вне адреса, покажите код отказа вместо
+ * заголовка, снимите отметку с заблокированного полигона — они упадут.
+ *
+ *   npx vitest run tests/CalculatorDesktop.test.tsx
+ *
+ * @ac: AC-024c, AC-025c, AC-027b, AC-028c, AC-060c
+ */
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { App } from '@/app/App';
 import type { ApiStub } from './apiStub';
-import {
-  ALEKSIN_BLOCKED,
-  DISTANCE_SERVICE_UNAVAILABLE,
-  IKSHA,
-  VOSTOK,
-  installApiStub,
-} from './apiStub';
+import { ALEKSIN_BLOCKED, DISTANCE_SERVICE_UNAVAILABLE, IKSHA, VOSTOK, installApiStub } from './apiStub';
 import {
   calculateConcrete,
   chooseAddress,
@@ -110,9 +106,7 @@ describe('сортировка по столбцу таблицы на широ�
   beforeEach(() => {
     // Порядок задаёт расчётная часть: интерфейс показывает пришедший список,
     // а не пересортировывает его у себя (ADR-0008, инвариант 2).
-    stub.setOptions((request) =>
-      request.query.get('sort') === 'distance' ? [IKSHA, VOSTOK] : [VOSTOK, IKSHA],
-    );
+    stub.setOptions(request => (request.query.get('sort') === 'distance' ? [IKSHA, VOSTOK] : [VOSTOK, IKSHA]));
   });
 
   it('переставляет строки таблицы в порядке ответа службы', async () => {
@@ -123,9 +117,7 @@ describe('сортировка по столбцу таблицы на широ�
     await sortByDistance(user);
 
     await waitFor(() => {
-      expect(
-        precedes(landfillCheckbox(IKSHA.landfillName), landfillCheckbox(VOSTOK.landfillName)),
-      ).toBe(true);
+      expect(precedes(landfillCheckbox(IKSHA.landfillName), landfillCheckbox(VOSTOK.landfillName))).toBe(true);
     });
   });
 
@@ -172,9 +164,7 @@ describe('сортировка по столбцу таблицы на широ�
 /** @ac: AC-027b */
 describe('выбранный полигон при смене порядка на широком экране', () => {
   beforeEach(() => {
-    stub.setOptions((request) =>
-      request.query.get('sort') === 'distance' ? [IKSHA, VOSTOK] : [VOSTOK, IKSHA],
-    );
+    stub.setOptions(request => (request.query.get('sort') === 'distance' ? [IKSHA, VOSTOK] : [VOSTOK, IKSHA]));
   });
 
   it('остаётся отмеченным после перестановки строк', async () => {
@@ -295,9 +285,7 @@ describe('выбор заблокированного полигона на ши
 
     await user.click(landfillCheckbox(ALEKSIN_BLOCKED.landfillName));
 
-    expect(
-      await screen.findByText('Полигон заблокирован. Он остаётся в выборе, решение за вами.'),
-    ).toBeInTheDocument();
+    expect(await screen.findByText('Полигон заблокирован. Он остаётся в выборе, решение за вами.')).toBeInTheDocument();
   });
 
   it('оставляет полигон отмеченным: решение за пользователем', async () => {
@@ -327,9 +315,7 @@ describe('пустой результат на широком экране', () 
     await user.click(screen.getByRole('button', { name: 'Рассчитать' }));
     await screen.findByRole('region', { name: 'Результаты' });
 
-    expect(
-      await screen.findByText('Нет полигонов, принимающих этот тип отходов ближе 50 км'),
-    ).toBeInTheDocument();
+    expect(await screen.findByText('Нет полигонов, принимающих этот тип отходов ближе 50 км')).toBeInTheDocument();
   });
 
   it('предлагает снять фильтр отдельным действием', async () => {
@@ -464,10 +450,7 @@ describe('заявка на вывоз на широком экране', () => 
     await user.type(screen.getByLabelText('Телефон'), '+79161234567');
     await user.click(screen.getByRole('button', { name: 'Отправить заявку' }));
 
-    expect(
-      stub.sentTo('POST /v1/pickup-requests'),
-      'без явного согласия заявка не создаётся (R-054)',
-    ).toHaveLength(0);
+    expect(stub.sentTo('POST /v1/pickup-requests'), 'без явного согласия заявка не создаётся (R-054)').toHaveLength(0);
     expect(await screen.findByRole('alert')).toHaveTextContent(/соглас/iu);
   });
 });

@@ -16,13 +16,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { CabinetPage } from '@/pages/cabinet';
 import { CABINET_CSS } from '@/pages/cabinet/ui/styles';
 import { forget, signIn } from '@/entities/participant';
-import {
-  installCabinetStub,
-  отказ,
-  АДРЕС_ВЫВОЗА,
-  СТАРТОВЫЕ_ПАРАМЕТРЫ,
-  type CabinetStub,
-} from './stubs/cabinet';
+import { installCabinetStub, отказ, АДРЕС_ВЫВОЗА, СТАРТОВЫЕ_ПАРАМЕТРЫ, type CabinetStub } from './stubs/cabinet';
 
 // Прогон идёт в несколько потоков на одной машине, и ожидание по
 // умолчанию в одну секунду под нагрузкой истекает раньше, чем ответ
@@ -56,9 +50,7 @@ describe('кабинет на телефоне', () => {
   it('без сессии не показывает данных участника и объясняет, как войти', () => {
     render(<CabinetPage />);
 
-    expect(
-      screen.getByRole('heading', { name: 'Кабинет открывается из переписки' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Кабинет открывается из переписки' })).toBeInTheDocument();
 
     const ссылка = screen.getByRole('link', { name: 'Открыть чат-бота ИМОЛТ' });
     expect(ссылка).toHaveAttribute('href', 'https://max.ru/t782_hakaton_max_bot');
@@ -83,14 +75,10 @@ describe('кабинет на телефоне', () => {
     window.WebApp = { initData: СТАРТОВЫЕ_ПАРАМЕТРЫ };
     render(<CabinetPage />);
 
-    await пользователь.click(
-      screen.getByRole('checkbox', { name: 'Согласен на обработку персональных данных' }),
-    );
+    await пользователь.click(screen.getByRole('checkbox', { name: 'Согласен на обработку персональных данных' }));
     await пользователь.click(screen.getByRole('button', { name: 'Открыть кабинет' }));
 
-    expect(
-      await screen.findByRole('link', { name: `Открыть расчёт: ${АДРЕС_ВЫВОЗА}` }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: `Открыть расчёт: ${АДРЕС_ВЫВОЗА}` })).toBeInTheDocument();
 
     // Строка уходит как есть: подпись проверяется только по исходной строке,
     // и разобранный браузером объект личностью не считается (ADR-0006).
@@ -103,9 +91,7 @@ describe('кабинет на телефоне', () => {
     await опознать();
     render(<CabinetPage />);
 
-    expect(
-      await screen.findByRole('link', { name: `Открыть расчёт: ${АДРЕС_ВЫВОЗА}` }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: `Открыть расчёт: ${АДРЕС_ВЫВОЗА}` })).toBeInTheDocument();
 
     // Узкая ширина окна — карточки: таблица на телефоне превращается в одну
     // колонку с горизонтальной прокруткой (дизайн-договор, разд. 4.5).
@@ -117,9 +103,7 @@ describe('кабинет на телефоне', () => {
     await опознать();
     render(<CabinetPage />);
 
-    expect(
-      await screen.findByRole('heading', { name: 'Услуги по документации' }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Услуги по документации' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Расчёты' })).toBeNull();
   });
 
@@ -131,9 +115,7 @@ describe('кабинет на телефоне', () => {
 
     await пользователь.click(await screen.findByRole('tab', { name: 'Подписка' }));
 
-    expect(
-      await screen.findByRole('heading', { name: 'Подписка' }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Подписка' })).toBeInTheDocument();
     expect(window.location.hash, 'раздел не попал в адрес').toContain('tab=subscription');
   });
 

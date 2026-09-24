@@ -17,7 +17,7 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/api': { target: 'http://localhost:8080', changeOrigin: true, rewrite: (p) => p.replace(/^\/api/, '') },
+      '/api': { target: 'http://localhost:8080', changeOrigin: true, rewrite: p => p.replace(/^\/api/, '') },
     },
   },
   // Две точки входа: экран сервиса и витрина компонентов. Витрина собирается
@@ -39,5 +39,5 @@ export default defineConfig({
     include: ['tests/**/*.test.{ts,tsx}'],
     environment: 'jsdom',
     setupFiles: ['tests/setup.ts'],
-  }
+  },
 });

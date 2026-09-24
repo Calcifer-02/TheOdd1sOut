@@ -1,6 +1,6 @@
 // Заглушка расчётной части для проверок экрана коммерческого предложения.
 //
-// Отвечает телами договора (src/back/Imolt.Api/contracts/openapi.yaml) на две
+// Отвечает телами договора (../../../back/Imolt.Api/contracts/openapi.yaml) на две
 // операции области «сделка»: расчёт целиком и выпуск предложения. Числа сняты
 // с работающей службы на каноническом расчёте договора — 20 т лома бетона и
 // 15 м³ древесины с улицы Годовикова на «Восток» и «Икшу»; ничего сверх
@@ -224,12 +224,7 @@ export function calculationWithoutSelection(): Record<string, unknown> {
 }
 
 /** Документ об отказе по RFC 9457 — форма `Problem` договора. */
-export function problem(
-  type: string,
-  title: string,
-  status: number,
-  detail?: string,
-): Record<string, unknown> {
+export function problem(type: string, title: string, status: number, detail?: string): Record<string, unknown> {
   return detail === undefined ? { type, title, status } : { type, title, status, detail };
 }
 
@@ -270,9 +265,7 @@ const PROBLEM_TYPE = 'application/problem+json';
 /** Ответ без зависимости от глобального `Response`: jsdom его не обещает. */
 function makeResponse(status: number, body: unknown, headers: Record<string, string>): Response {
   const text = body === undefined ? '' : JSON.stringify(body);
-  const lowered = new Map(
-    Object.entries(headers).map(([name, value]) => [name.toLowerCase(), value]),
-  );
+  const lowered = new Map(Object.entries(headers).map(([name, value]) => [name.toLowerCase(), value]));
 
   return {
     ok: status >= 200 && status < 300,
@@ -333,8 +326,7 @@ export function installQuoteStub(): QuoteStub {
 
     const selection = calculation['selection'] as { entries?: unknown[] } | null | undefined;
     const allocation = calculation['allocation'] as { entries?: unknown[] } | null | undefined;
-    const hasLines =
-      (selection?.entries?.length ?? 0) > 0 || (allocation?.entries?.length ?? 0) > 0;
+    const hasLines = (selection?.entries?.length ?? 0) > 0 || (allocation?.entries?.length ?? 0) > 0;
 
     if (!hasLines) {
       return { status: 422, headers: { 'content-type': PROBLEM_TYPE }, body: NOTHING_TO_QUOTE };
@@ -376,12 +368,7 @@ export function installQuoteStub(): QuoteStub {
   }
 
   globalThis.fetch = (async (input: unknown, init?: RequestInit): Promise<Response> => {
-    const raw =
-      typeof input === 'string'
-        ? input
-        : input instanceof URL
-          ? input.toString()
-          : String((input as { url?: string }).url ?? '');
+    const raw = addressOf(input);
     const address = new URL(raw, 'http://mini.app');
     const method = (init?.method ?? (input as { method?: string }).method ?? 'GET').toUpperCase();
     const rawBody = init?.body;
@@ -400,12 +387,7 @@ export function installQuoteStub(): QuoteStub {
 
     const key = routeKeyOf(method, request.path);
     const override = key === undefined ? undefined : answers.get(key);
-    const answer =
-      override === undefined
-        ? defaultAnswer(key, request)
-        : typeof override === 'function'
-          ? override(request)
-          : override;
+    const answer = answerOf(override, key, request, defaultAnswer);
 
     return makeResponse(answer.status, answer.body, answer.headers ?? { 'content-type': JSON_TYPE });
   }) as typeof globalThis.fetch;
@@ -414,7 +396,7 @@ export function installQuoteStub(): QuoteStub {
     requests,
 
     sentTo(key) {
-      return requests.filter((request) => routeKeyOf(request.method, request.path) === key);
+      return requests.filter(request => routeKeyOf(request.method, request.path) === key);
     },
 
     answerWith(key, answer) {
@@ -434,4 +416,42 @@ export function installQuoteStub(): QuoteStub {
       globalThis.fetch = original;
     },
   };
+}
+
+/**
+ * Адрес обращения: `fetch` принимает строку, `URL` или объект запроса.
+ * Вложенные условные выражения читаются хуже ветвления и запрещены правилом
+ * кода, а разбор здесь — три отдельных случая, а не одно условие.
+ */
+function addressOf(input: unknown): string {
+  if (typeof input === 'string') {
+    return input;
+  }
+
+  if (input instanceof URL) {
+    return input.toString();
+  }
+
+  return String((input as { url?: string }).url ?? '');
+}
+
+/**
+ * Ответ на обращение: подменённый заглушкой, вычисленный подменой или ответ
+ * договора по умолчанию.
+ */
+function answerOf<TKey>(
+  override: StubResponse | ((request: RecordedRequest) => StubResponse) | undefined,
+  key: TKey | undefined,
+  request: RecordedRequest,
+  fallback: (key: TKey | undefined, request: RecordedRequest) => StubResponse,
+): StubResponse {
+  if (override === undefined) {
+    return fallback(key, request);
+  }
+
+  if (typeof override === 'function') {
+    return override(request);
+  }
+
+  return override;
 }

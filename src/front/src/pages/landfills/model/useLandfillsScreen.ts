@@ -21,13 +21,7 @@ import {
   type WasteGroup,
 } from '@/shared/api/references';
 import { navigate, replaceRoute, useRoute } from '@/shared/lib/routing';
-import {
-  LANDFILLS_PATH,
-  PAGE_SIZE,
-  filtersQuery,
-  parseFilters,
-  type LandfillsFilters,
-} from './filters';
+import { LANDFILLS_PATH, PAGE_SIZE, filtersQuery, parseFilters, type LandfillsFilters } from './filters';
 
 /**
  * Заголовок отказа службы. Пользователю показывается заголовок, а не код:
@@ -86,10 +80,7 @@ export function useLandfillsScreen(): LandfillsScreen {
       try {
         // Справочник групп и дата актуальности не зависят друг от друга:
         // последовательный запрос удвоил бы ожидание без причины.
-        const [groupPage, current] = await Promise.all([
-          listWasteGroups({ limit: 100 }),
-          getDataFreshness(),
-        ]);
+        const [groupPage, current] = await Promise.all([listWasteGroups({ limit: 100 }), getDataFreshness()]);
 
         if (cancelled) {
           return;
@@ -160,8 +151,7 @@ export function useLandfillsScreen(): LandfillsScreen {
     [filters],
   );
 
-  const selectedGroup =
-    groups.find((group) => group.id === filters.wasteGroupId) ?? null;
+  const selectedGroup = groups.find(group => group.id === filters.wasteGroupId) ?? null;
 
   return {
     filters,
@@ -174,19 +164,16 @@ export function useLandfillsScreen(): LandfillsScreen {
     loading,
     failure: listFailure,
     referenceFailure,
-    retry: () => setAttempt((value) => value + 1),
+    retry: () => setAttempt(value => value + 1),
     search: (value: string) => apply({ query: value.trim(), limit: PAGE_SIZE }),
-    toggleGroup: (id: string) =>
-      apply({ wasteGroupId: filters.wasteGroupId === id ? '' : id, limit: PAGE_SIZE }),
+    toggleGroup: (id: string) => apply({ wasteGroupId: filters.wasteGroupId === id ? '' : id, limit: PAGE_SIZE }),
     showMore: () => apply({ limit: filters.limit + PAGE_SIZE }),
     // Сброс снимает отбор, но открытую карточку не закрывает: она не часть
     // выборки, и закрывать её заодно пользователь не просил.
     reset: () => apply({ query: '', wasteGroupId: '', limit: PAGE_SIZE }),
     // Открытая карточка — отдельный этап пути, и «назад» обязано её закрывать,
     // поэтому здесь запись истории заводится.
-    openLandfill: (id: string) =>
-      navigate(LANDFILLS_PATH, filtersQuery({ ...filters, landfillId: id })),
-    closeLandfill: () =>
-      navigate(LANDFILLS_PATH, filtersQuery({ ...filters, landfillId: '' })),
+    openLandfill: (id: string) => navigate(LANDFILLS_PATH, filtersQuery({ ...filters, landfillId: id })),
+    closeLandfill: () => navigate(LANDFILLS_PATH, filtersQuery({ ...filters, landfillId: '' })),
   };
 }

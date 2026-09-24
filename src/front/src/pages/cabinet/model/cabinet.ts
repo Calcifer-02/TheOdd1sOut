@@ -26,12 +26,7 @@ import {
   type SubscriptionStanding,
 } from '@/shared/api/cabinet';
 import { CALCULATOR_PATH, hashOf, useRoute, navigate } from '@/shared/lib/routing';
-import {
-  DEFAULT_CABINET_SECTION,
-  SECTION_QUERY_KEY,
-  sectionOf,
-  type CabinetSection,
-} from '@/widgets/cabinet-nav';
+import { DEFAULT_CABINET_SECTION, SECTION_QUERY_KEY, sectionOf, type CabinetSection } from '@/widgets/cabinet-nav';
 
 /** Адрес экрана кабинета. Отсюда же берётся ссылка возврата в раздел. */
 export const CABINET_PATH = '/cabinet';
@@ -106,7 +101,7 @@ export function useProfile(identified: boolean): ProfileState {
     setLoading(true);
 
     getProfile()
-      .then((next) => {
+      .then(next => {
         if (alive) {
           setProfile(next);
           setFailure(null);
@@ -129,7 +124,7 @@ export function useProfile(identified: boolean): ProfileState {
   }, [identified]);
 
   const applySubscription = useCallback((subscription: SubscriptionStanding) => {
-    setProfile((current) => (current === null ? current : { ...current, subscription }));
+    setProfile(current => (current === null ? current : { ...current, subscription }));
   }, []);
 
   return { profile, failure, loading, applySubscription };
@@ -164,9 +159,9 @@ export function useCalculations(enabled: boolean): CalculationsState {
     setLoading(true);
 
     listCalculations(CALCULATIONS_PAGE, offset)
-      .then((page) => {
+      .then(page => {
         if (alive) {
-          setPages((current) => ({ ...current, [page.offset]: page.items }));
+          setPages(current => ({ ...current, [page.offset]: page.items }));
           setTotal(page.total);
           setFailure(null);
         }
@@ -192,11 +187,11 @@ export function useCalculations(enabled: boolean): CalculationsState {
       Object.keys(pages)
         .map(Number)
         .sort((left, right) => left - right)
-        .flatMap((key) => pages[key]),
+        .flatMap(key => pages[key]),
     [pages],
   );
 
-  const showMore = useCallback(() => setOffset((current) => current + CALCULATIONS_PAGE), []);
+  const showMore = useCallback(() => setOffset(current => current + CALCULATIONS_PAGE), []);
 
   return { items, total, loading, failure, showMore };
 }
@@ -222,7 +217,7 @@ export function useDocumentServices(enabled: boolean): ServicesState {
     setLoading(true);
 
     listDocumentServices()
-      .then((page) => {
+      .then(page => {
         if (alive) {
           setServices(page.items);
           setFailure(null);

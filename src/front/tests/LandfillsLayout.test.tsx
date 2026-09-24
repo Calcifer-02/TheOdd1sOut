@@ -78,10 +78,7 @@ describe('левая вертикаль справочника полигоно�
     expect({
       заголовок: leftInset(screen.getByRole('heading', { level: 1 }), корень),
       пояснение: leftInset(screen.getByText(/без ввода адреса вывоза/), корень),
-      актуальность: leftInset(
-        screen.getByRole('status', { name: 'Актуальность данных' }),
-        корень,
-      ),
+      актуальность: leftInset(screen.getByRole('status', { name: 'Актуальность данных' }), корень),
       отбор: leftInset(screen.getByRole('search', { name: 'Поиск полигона' }), корень),
     }).toEqual({
       заголовок: вертикаль,
@@ -106,10 +103,7 @@ describe('левая вертикаль справочника полигоно�
 
     expect({
       заголовок: leftInset(screen.getByRole('heading', { level: 1 }), корень),
-      актуальность: leftInset(
-        screen.getByRole('status', { name: 'Актуальность данных' }),
-        корень,
-      ),
+      актуальность: leftInset(screen.getByRole('status', { name: 'Актуальность данных' }), корень),
       отбор: leftInset(screen.getByRole('search', { name: 'Поиск полигона' }), корень),
     }).toEqual({
       заголовок: вертикаль,

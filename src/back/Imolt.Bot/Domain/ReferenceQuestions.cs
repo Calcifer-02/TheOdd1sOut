@@ -91,8 +91,8 @@ public static class ReferenceQuestions
     // что спрашивает.
     var (topic, marker) = (tariff, density) switch
     {
-      (< 0, < 0) => (ReferenceTopic.Unknown, -1),
-      (< 0, var d) => (ReferenceTopic.WasteGroupDensity, d),
+      ( < 0, < 0) => (ReferenceTopic.Unknown, -1),
+      ( < 0, var d) => (ReferenceTopic.WasteGroupDensity, d),
       (var t, < 0) => (ReferenceTopic.LandfillTariff, t),
       var (t, d) when d < t => (ReferenceTopic.WasteGroupDensity, d),
       var (t, _) => (ReferenceTopic.LandfillTariff, t),

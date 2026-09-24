@@ -24,7 +24,7 @@ export function AccessNotice({
   return (
     <Notice kind="error">
       <span className="imolt-references-access-title">{refusal.title}</span>
-      {accessExplanation(refusal).map((line) => (
+      {accessExplanation(refusal).map(line => (
         <span key={line}>{line}</span>
       ))}
       <Button kind="tertiary" size="s" onClick={onRetry}>

@@ -18,12 +18,5 @@ export function CabinetTabs({
   section: CabinetSection;
   onPick: (section: CabinetSection) => void;
 }) {
-  return (
-    <Tabs
-      label="Разделы кабинета"
-      value={section}
-      options={CABINET_SECTIONS}
-      onPick={onPick}
-    />
-  );
+  return <Tabs label="Разделы кабинета" value={section} options={CABINET_SECTIONS} onPick={onPick} />;
 }

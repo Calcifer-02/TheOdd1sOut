@@ -57,12 +57,9 @@ export function SummaryPanel({
   }
 
   return (
-    <Card
-      title={`Выбрано ${selectedCount}`}
-      className="imolt-summary-panel imolt-summary-panel--filled"
-    >
+    <Card title={`Выбрано ${selectedCount}`} className="imolt-summary-panel imolt-summary-panel--filled">
       <ul className="imolt-summary-lines">
-        {lines.map((line) => (
+        {lines.map(line => (
           <li className="imolt-summary-line" key={line.landfillId}>
             <span>{line.landfillName}</span>
             <span className="imolt-total">{line.sum}</span>
@@ -82,9 +79,7 @@ export function SummaryPanel({
         </Button>
       </div>
 
-      <p className="imolt-hint">
-        Цена предварительная. Отклонение финальной – в пределах согласованного порога.
-      </p>
+      <p className="imolt-hint">Цена предварительная. Отклонение финальной – в пределах согласованного порога.</p>
     </Card>
   );
 }

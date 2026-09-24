@@ -9,13 +9,7 @@
  * @adr: ADR-0008
  */
 import { useCallback, useEffect, useState } from 'react';
-import {
-  createReview,
-  getLandfill,
-  listReviews,
-  type LandfillCard,
-  type ReviewPage,
-} from '@/shared/api/references';
+import { createReview, getLandfill, listReviews, type LandfillCard, type ReviewPage } from '@/shared/api/references';
 import type { ReviewDraft } from '@/entities/review';
 import { accessRefusalLine } from '@/entities/participant';
 import { problemTitle } from './useLandfillsScreen';
@@ -127,9 +121,7 @@ export function useLandfillCard(landfillId: string): LandfillCardState {
           // (BUG-012, ADR-0006).
           const объяснение = accessRefusalLine(error);
 
-          setSendFailure(
-            объяснение === '' ? problemTitle(error) : `${problemTitle(error)}. ${объяснение}`,
-          );
+          setSendFailure(объяснение === '' ? problemTitle(error) : `${problemTitle(error)}. ${объяснение}`);
         } finally {
           setSending(false);
         }
@@ -148,6 +140,6 @@ export function useLandfillCard(landfillId: string): LandfillCardState {
     sendFailure,
     sent,
     submitReview,
-    retry: () => setAttempt((value) => value + 1),
+    retry: () => setAttempt(value => value + 1),
   };
 }

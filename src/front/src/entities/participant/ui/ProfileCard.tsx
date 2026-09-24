@@ -74,7 +74,7 @@ export function ProfileCard({ profile }: { profile: ParticipantProfile }) {
       </div>
 
       <dl className="imolt-participant-facts">
-        {facts.map((fact) => (
+        {facts.map(fact => (
           <div className="imolt-participant-fact" key={fact.term}>
             <dt>{fact.term}</dt>
             <dd>{fact.value}</dd>

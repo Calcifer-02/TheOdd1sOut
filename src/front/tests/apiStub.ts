@@ -1,7 +1,7 @@
 // Заглушка расчётной части для проверок экрана расчёта мини-приложения.
 //
 // Подменяет глобальный fetch, разбирает путь и отвечает телами договора
-// (src/back/Imolt.Api/contracts/openapi.yaml). Канонические данные взяты из
+// (../../back/Imolt.Api/contracts/openapi.yaml). Канонические данные взяты из
 // примера `ConcreteCalculation`: адрес «г Москва, ул Годовикова, д 9»,
 // группы `beton-lom` и `drevesina`, полигоны «Восток» и «Икша», дата
 // актуальности 17.09.2026. Ничего сверх договора заглушка не выдумывает:
@@ -109,7 +109,7 @@ export const BRICK_GROUP: WasteGroup = {
 };
 
 // Плотность 0,5 т/м³ — набор демонстрационных данных хранилища
-// (src/back/Imolt.Database/Migrations/0002_demo_dataset.sql); на ней построен
+// (../../back/Imolt.Database/Migrations/0002_demo_dataset.sql); на ней построен
 // пересчёт 15 м³ → 7,5 т критерия AC-015c.
 export const WOOD_GROUP: WasteGroup = {
   id: 'drevesina',
@@ -190,8 +190,7 @@ export const QUOTE_ID = '0b6a8f4e-3a1d-4f2e-9d55-2f1c8a0b7e31';
 
 export const QUOTE_DOCUMENT_URL = `/v1/quotes/${QUOTE_ID}/document`;
 
-export const EXTERNAL_MAP_URL =
-  'https://yandex.ru/maps/?rtext=55.8055%2C37.6206~55.7286%2C38.2153&rtt=auto';
+export const EXTERNAL_MAP_URL = 'https://yandex.ru/maps/?rtext=55.8055%2C37.6206~55.7286%2C38.2153&rtt=auto';
 
 /**
  * Ряд однотипных вариантов размещения. Нужен там, где критерий говорит о
@@ -228,12 +227,7 @@ export function rubles(amount: number): Money {
 }
 
 /** Документ об отказе по RFC 9457 — форма `Problem` договора. */
-export function problem(
-  type: string,
-  title: string,
-  status: number,
-  detail?: string,
-): Record<string, unknown> {
+export function problem(type: string, title: string, status: number, detail?: string): Record<string, unknown> {
   return detail === undefined ? { type, title, status } : { type, title, status, detail };
 }
 
@@ -277,9 +271,7 @@ const PROBLEM_TYPE = 'application/problem+json';
 /** Ответ без зависимости от глобального `Response`: jsdom его не обещает. */
 function makeResponse(status: number, body: unknown, headers: Record<string, string>): Response {
   const text = body === undefined ? '' : JSON.stringify(body);
-  const lowered = new Map(
-    Object.entries(headers).map(([name, value]) => [name.toLowerCase(), value]),
-  );
+  const lowered = new Map(Object.entries(headers).map(([name, value]) => [name.toLowerCase(), value]));
 
   return {
     ok: status >= 200 && status < 300,
@@ -293,9 +285,7 @@ function makeResponse(status: number, body: unknown, headers: Record<string, str
 }
 
 function routeKeyOf(method: string, path: string): RouteKey | undefined {
-  const calculation = /^\/v1\/calculations\/[^/]+\/(options|selection|allocation|route|quotes)$/.exec(
-    path,
-  );
+  const calculation = /^\/v1\/calculations\/[^/]+\/(options|selection|allocation|route|quotes)$/.exec(path);
 
   if (calculation) {
     return `${method} /v1/calculations/:id/${calculation[1]}` as RouteKey;
@@ -354,13 +344,13 @@ export function installApiStub(): ApiStub {
       wasteGroupId: string;
       quantity: { value: number; unit: Unit };
     }[];
-    const item = items.find((candidate) => candidate.wasteGroupId === wasteGroupId);
+    const item = items.find(candidate => candidate.wasteGroupId === wasteGroupId);
 
     if (!item) {
       return 0;
     }
 
-    const group = WASTE_GROUPS.find((candidate) => candidate.id === item.wasteGroupId);
+    const group = WASTE_GROUPS.find(candidate => candidate.id === item.wasteGroupId);
     return item.quantity.unit === 't'
       ? item.quantity.value
       : item.quantity.value * (group?.densityTonPerCubicMeter ?? 1);
@@ -375,12 +365,12 @@ export function installApiStub(): ApiStub {
       quantity: { value: number; unit: Unit };
     }[];
     const disposalRequired = sent['disposalRequired'] !== false;
-    const list = currentOptions().map((option) =>
+    const list = currentOptions().map(option =>
       disposalRequired ? option : { ...option, disposalCost: null, totalCost: option.transportCost },
     );
 
-    const items = sentItems.map((item) => {
-      const group = WASTE_GROUPS.find((candidate) => candidate.id === item.wasteGroupId);
+    const items = sentItems.map(item => {
+      const group = WASTE_GROUPS.find(candidate => candidate.id === item.wasteGroupId);
       return {
         wasteGroupId: item.wasteGroupId,
         wasteGroupName: group?.name ?? item.wasteGroupId,
@@ -410,15 +400,9 @@ export function installApiStub(): ApiStub {
         landfillsWithStaleData: 0,
       },
       items,
-      results: items.map((item) => ({
+      results: items.map(item => ({
         wasteGroupId: item.wasteGroupId,
-        options: page(
-          list.slice(0, 10),
-          list.length,
-          10,
-          0,
-          list.length === 0 ? 'filteredOutByDistance' : null,
-        ),
+        options: page(list.slice(0, 10), list.length, 10, 0, list.length === 0 ? 'filteredOutByDistance' : null),
       })),
     };
   }
@@ -430,18 +414,18 @@ export function installApiStub(): ApiStub {
     }[];
     const list = currentOptions();
     const chosen = entries
-      .map((entry) => list.find((option) => option.landfillId === entry.landfillId))
+      .map(entry => list.find(option => option.landfillId === entry.landfillId))
       .filter((option): option is PlacementOption => option !== undefined);
 
     return {
       entries,
       selectedLandfills: entries.length,
-      total: sumMoney(chosen.map((option) => option.totalCost)),
+      total: sumMoney(chosen.map(option => option.totalCost)),
       // Текст предупреждения приходит от расчётной части: макет Э-12 задаёт
       // именно эту формулировку, и интерфейс её не сочиняет.
       warnings: chosen
-        .filter((option) => option.status === 'blocked')
-        .map((option) => ({
+        .filter(option => option.status === 'blocked')
+        .map(option => ({
           code: 'landfillBlocked',
           landfillId: option.landfillId,
           message: 'Полигон заблокирован. Он остаётся в выборе, решение за вами.',
@@ -473,8 +457,8 @@ export function installApiStub(): ApiStub {
       };
     }
 
-    const parts = entries.map((entry) => {
-      const option = list.find((candidate) => candidate.landfillId === entry.landfillId);
+    const parts = entries.map(entry => {
+      const option = list.find(candidate => candidate.landfillId === entry.landfillId);
       const transportCost = share(option?.transportCost ?? null, entry.quantity.value, whole);
       const disposalCost = share(option?.disposalCost ?? null, entry.quantity.value, whole);
 
@@ -493,7 +477,7 @@ export function installApiStub(): ApiStub {
       headers: { 'content-type': JSON_TYPE },
       body: {
         entries: parts,
-        total: sumMoney(parts.map((part) => part.totalCost)),
+        total: sumMoney(parts.map(part => part.totalCost)),
       },
     };
   }
@@ -505,14 +489,12 @@ export function installApiStub(): ApiStub {
     switch (key) {
       case 'GET /v1/waste-groups': {
         const query = (request.query.get('query') ?? '').toLowerCase();
-        const found = WASTE_GROUPS.filter((group) => group.name.toLowerCase().includes(query));
+        const found = WASTE_GROUPS.filter(group => group.name.toLowerCase().includes(query));
         return ok(page(found.slice(offset, offset + limit), found.length, limit, offset, undefined));
       }
 
       case 'GET /v1/address-suggestions': {
-        return ok(
-          page(ADDRESS_SUGGESTIONS, ADDRESS_SUGGESTIONS.length, limit, 0, undefined),
-        );
+        return ok(page(ADDRESS_SUGGESTIONS, ADDRESS_SUGGESTIONS.length, limit, 0, undefined));
       }
 
       case 'POST /v1/amount-conversions': {
@@ -522,11 +504,10 @@ export function installApiStub(): ApiStub {
         }[];
 
         return ok({
-          items: sent.map((item) => {
-            const group = WASTE_GROUPS.find((candidate) => candidate.id === item.wasteGroupId);
+          items: sent.map(item => {
+            const group = WASTE_GROUPS.find(candidate => candidate.id === item.wasteGroupId);
             const density = group?.densityTonPerCubicMeter ?? 1;
-            const tons =
-              item.quantity.unit === 't' ? item.quantity.value : item.quantity.value * density;
+            const tons = item.quantity.unit === 't' ? item.quantity.value : item.quantity.value * density;
 
             return {
               wasteGroupId: item.wasteGroupId,
@@ -564,14 +545,14 @@ export function installApiStub(): ApiStub {
       case 'GET /v1/calculations/:id/route':
         return ok({
           access: { granted: true, reason: null },
-          legs: currentOptions().map((option) => ({
+          legs: currentOptions().map(option => ({
             landfillId: option.landfillId,
             distanceKm: option.distanceKm,
             durationMinutes: 70,
             externalMapUrl: EXTERNAL_MAP_URL,
             encumbrances: [],
           })),
-          total: sumMoney(currentOptions().map((option) => option.totalCost)),
+          total: sumMoney(currentOptions().map(option => option.totalCost)),
         });
 
       case 'POST /v1/calculations/:id/quotes':
@@ -616,12 +597,7 @@ export function installApiStub(): ApiStub {
   }
 
   globalThis.fetch = (async (input: unknown, init?: RequestInit): Promise<Response> => {
-    const raw =
-      typeof input === 'string'
-        ? input
-        : input instanceof URL
-          ? input.toString()
-          : String((input as { url?: string }).url ?? '');
+    const raw = addressOf(input);
     const address = new URL(raw, 'http://mini.app');
     const method = (init?.method ?? (input as { method?: string }).method ?? 'GET').toUpperCase();
     const rawBody = init?.body;
@@ -640,12 +616,7 @@ export function installApiStub(): ApiStub {
 
     const key = routeKeyOf(method, request.path);
     const override = key === undefined ? undefined : internals.answers.get(key);
-    const answer =
-      override === undefined
-        ? defaultAnswer(key, request)
-        : typeof override === 'function'
-          ? override(request)
-          : override;
+    const answer = answerOf(override, key, request, defaultAnswer);
 
     return makeResponse(answer.status, answer.body, answer.headers ?? { 'content-type': JSON_TYPE });
   }) as typeof globalThis.fetch;
@@ -654,7 +625,7 @@ export function installApiStub(): ApiStub {
     requests,
 
     sentTo(key) {
-      return requests.filter((request) => routeKeyOf(request.method, request.path) === key);
+      return requests.filter(request => routeKeyOf(request.method, request.path) === key);
     },
 
     lastTo(key) {
@@ -685,4 +656,42 @@ export function installApiStub(): ApiStub {
       globalThis.fetch = original;
     },
   };
+}
+
+/**
+ * Адрес обращения: `fetch` принимает строку, `URL` или объект запроса.
+ * Вложенные условные выражения читаются хуже ветвления и запрещены правилом
+ * кода, а разбор здесь — три отдельных случая, а не одно условие.
+ */
+function addressOf(input: unknown): string {
+  if (typeof input === 'string') {
+    return input;
+  }
+
+  if (input instanceof URL) {
+    return input.toString();
+  }
+
+  return String((input as { url?: string }).url ?? '');
+}
+
+/**
+ * Ответ на обращение: подменённый заглушкой, вычисленный подменой или ответ
+ * договора по умолчанию.
+ */
+function answerOf<TKey>(
+  override: StubResponse | ((request: RecordedRequest) => StubResponse) | undefined,
+  key: TKey | undefined,
+  request: RecordedRequest,
+  fallback: (key: TKey | undefined, request: RecordedRequest) => StubResponse,
+): StubResponse {
+  if (override === undefined) {
+    return fallback(key, request);
+  }
+
+  if (typeof override === 'function') {
+    return override(request);
+  }
+
+  return override;
 }

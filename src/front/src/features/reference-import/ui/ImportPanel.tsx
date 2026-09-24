@@ -95,7 +95,7 @@ export function ImportPanel({
               type="file"
               accept=".xlsx"
               disabled={disabled}
-              onChange={(event) => {
+              onChange={event => {
                 const file = event.target.files?.[0];
                 if (file) {
                   onPickFile(file);
@@ -132,15 +132,10 @@ export function ImportPanel({
 
       {(state.stage === 'preview' || state.stage === 'applying') && (
         <>
-          <span className="imolt-import-source">
-            {`Расхождений: ${changes.length}. Справочник пока не изменён.`}
-          </span>
+          <span className="imolt-import-source">{`Расхождений: ${changes.length}. Справочник пока не изменён.`}</span>
 
           {changes.length === 0 ? (
-            <EmptyState
-              title="Расхождений нет"
-              hint="Значения книги совпадают со справочником, применять нечего"
-            />
+            <EmptyState title="Расхождений нет" hint="Значения книги совпадают со справочником, применять нечего" />
           ) : (
             <DataTable
               caption="Расхождения между справочником и книгой"
@@ -161,7 +156,7 @@ export function ImportPanel({
             <>
               <span className="imolt-import-source">Строки, которые не применяются:</span>
               <ul className="imolt-import-rejected">
-                {rejected.map((row) => (
+                {rejected.map(row => (
                   <li key={`${row.row}:${row.reason}`}>{`Строка ${row.row}: ${row.reason}`}</li>
                 ))}
               </ul>

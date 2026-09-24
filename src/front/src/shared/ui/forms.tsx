@@ -39,7 +39,7 @@ export function Checkbox({
         className="imolt-check"
         checked={checked}
         disabled={disabled}
-        onChange={(event) => onChange(event.target.checked)}
+        onChange={event => onChange(event.target.checked)}
       />
       <label className="imolt-check-label" htmlFor={id}>
         {label}
@@ -88,9 +88,9 @@ export function Select<T extends string>({
         disabled={disabled}
         aria-invalid={error ? 'true' : undefined}
         aria-describedby={describedBy}
-        onChange={(event) => onPick(event.target.value as T)}
+        onChange={event => onPick(event.target.value as T)}
       >
-        {options.map((option) => (
+        {options.map(option => (
           <option key={option.value} value={option.value} disabled={option.disabled}>
             {option.label}
           </option>

@@ -54,7 +54,7 @@ export function QuoteLinesTable({ lines, total }: { lines: QuoteLine[]; total: M
       </thead>
 
       <tbody>
-        {lines.map((line) => (
+        {lines.map(line => (
           <tr key={line.id}>
             <th scope="row">
               <div className="imolt-quote-line-name">{line.wasteGroupName}</div>
@@ -66,13 +66,9 @@ export function QuoteLinesTable({ lines, total }: { lines: QuoteLine[]; total: M
               )}
             </th>
             <td data-align="end">{quantityTextOf(line)}</td>
-            <td data-align="end">
-              {line.distanceKm === null ? NO_VALUE : formatDistance(line.distanceKm)}
-            </td>
+            <td data-align="end">{line.distanceKm === null ? NO_VALUE : formatDistance(line.distanceKm)}</td>
             <td data-align="end">{formatMoney(line.transportCost)}</td>
-            <td data-align="end">
-              {line.disposalCost === null ? NO_VALUE : formatMoney(line.disposalCost)}
-            </td>
+            <td data-align="end">{line.disposalCost === null ? NO_VALUE : formatMoney(line.disposalCost)}</td>
             <td data-align="end" data-total="true">
               {formatMoney(line.totalCost)}
             </td>

@@ -53,7 +53,7 @@ export function ReviewForm({
     <form
       className="imolt-review-form"
       aria-label="Новый отзыв о полигоне"
-      onSubmit={(event) => {
+      onSubmit={event => {
         event.preventDefault();
 
         if (rating === '') {
@@ -71,7 +71,7 @@ export function ReviewForm({
         className="imolt-review-scale"
         options={RATING_OPTIONS}
         value={rating}
-        onPick={(picked) => {
+        onPick={picked => {
           setRating(picked);
           setMissingRating(false);
         }}

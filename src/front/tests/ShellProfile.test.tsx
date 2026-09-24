@@ -43,7 +43,7 @@ function профиль(): HTMLElement {
  */
 function форма(node: Element): string {
   return [...node.querySelectorAll('*')]
-    .map((element) => `${element.tagName.toLowerCase()}.${element.getAttribute('class') ?? '—'}`)
+    .map(element => `${element.tagName.toLowerCase()}.${element.getAttribute('class') ?? '—'}`)
     .join(' ');
 }
 

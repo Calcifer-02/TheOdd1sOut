@@ -89,16 +89,8 @@ export function QuoteSection() {
       <QuoteHeading number="КП-2026-0917-014" issuedAt={ISSUED_AT} />
 
       <p className="imolt-lead">Факты предложения: без срока действия и со сроком.</p>
-      <QuoteFacts
-        pickupAddress={PICKUP_ADDRESS}
-        pricesUpdatedAt={PRICES_UPDATED_AT}
-        validUntil={null}
-      />
-      <QuoteFacts
-        pickupAddress={PICKUP_ADDRESS}
-        pricesUpdatedAt={PRICES_UPDATED_AT}
-        validUntil={VALID_UNTIL}
-      />
+      <QuoteFacts pickupAddress={PICKUP_ADDRESS} pricesUpdatedAt={PRICES_UPDATED_AT} validUntil={null} />
+      <QuoteFacts pickupAddress={PICKUP_ADDRESS} pricesUpdatedAt={PRICES_UPDATED_AT} validUntil={VALID_UNTIL} />
 
       <p className="imolt-lead">Состав таблицей: пусто, без итога и с итогом.</p>
       <QuoteLinesTable lines={[]} total={null} />
@@ -111,14 +103,8 @@ export function QuoteSection() {
 
       <p className="imolt-lead">Итог: до выбора полигонов, по выбору и по выпущенному.</p>
       <QuoteTotal total={null} hint="Полигоны выбираются на экране расчёта" />
-      <QuoteTotal
-        total={TOTAL}
-        hint="Итог по выбранным полигонам. Номер и срок действия присваиваются при выпуске"
-      />
-      <QuoteTotal
-        total={TOTAL}
-        hint="Итог выпущенного предложения: цены закреплены снимком на момент выпуска"
-      />
+      <QuoteTotal total={TOTAL} hint="Итог по выбранным полигонам. Номер и срок действия присваиваются при выпуске" />
+      <QuoteTotal total={TOTAL} hint="Итог выпущенного предложения: цены закреплены снимком на момент выпуска" />
 
       <p className="imolt-lead">Отметка о предварительности: без срока и со сроком.</p>
       <PreliminaryPriceNotice validUntil={null} />

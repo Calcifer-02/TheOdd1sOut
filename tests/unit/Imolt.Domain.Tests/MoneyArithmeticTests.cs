@@ -17,39 +17,39 @@ namespace Imolt.Domain.Tests;
 ///
 public sealed class MoneyArithmeticTests
 {
-    [Theory(DisplayName = "половина копейки при создании суммы уходит вверх, а не исчезает")]
-    [InlineData(0.005, 0.01)]
-    [InlineData(19800.004, 19800.00)]
-    [InlineData(19800.005, 19800.01)]
-    [InlineData(-0.005, -0.01)]
-    public void CreationRoundsHalfUpToKopeck(decimal amount, decimal expected)
-    {
-        Assert.Equal(expected, Money.Rubles(amount).Amount);
-    }
+  [Theory(DisplayName = "половина копейки при создании суммы уходит вверх, а не исчезает")]
+  [InlineData(0.005, 0.01)]
+  [InlineData(19800.004, 19800.00)]
+  [InlineData(19800.005, 19800.01)]
+  [InlineData(-0.005, -0.01)]
+  public void CreationRoundsHalfUpToKopeck(decimal amount, decimal expected)
+  {
+    Assert.Equal(expected, Money.Rubles(amount).Amount);
+  }
 
-    [Fact(DisplayName = "перевозка и утилизация из примера договора складываются в совокупную цену")]
-    public void TransportAndDisposalOfCanonicalExampleAddUpToTotal()
-    {
-        // 10 800,00 ₽ перевозки и 9 000,00 ₽ утилизации — канонический пример
-        // договора (ConcreteCalculation), он же в демо-наборе базы данных.
-        var transport = Money.Rubles(10800.00m);
-        var disposal = Money.Rubles(9000.00m);
+  [Fact(DisplayName = "перевозка и утилизация из примера договора складываются в совокупную цену")]
+  public void TransportAndDisposalOfCanonicalExampleAddUpToTotal()
+  {
+    // 10 800,00 ₽ перевозки и 9 000,00 ₽ утилизации — канонический пример
+    // договора (ConcreteCalculation), он же в демо-наборе базы данных.
+    var transport = Money.Rubles(10800.00m);
+    var disposal = Money.Rubles(9000.00m);
 
-        var total = transport + disposal;
+    var total = transport + disposal;
 
-        Assert.Equal(19800.00m, total.Amount);
-        Assert.Equal(Money.RubleCode, total.Currency);
-    }
+    Assert.Equal(19800.00m, total.Amount);
+    Assert.Equal(Money.RubleCode, total.Currency);
+  }
 
-    [Fact(DisplayName = "умножение суммы на коэффициент округляет результат до копейки")]
-    public void MultiplicationRoundsResultToKopeck()
-    {
-        // 12,34 × 0,875 = 10,7975 — ровно тот случай, когда результат длиннее
-        // копейки: без округления при создании лишние разряды уехали бы в
-        // следующую операцию.
-        var scaled = Money.Rubles(12.34m) * 0.875m;
+  [Fact(DisplayName = "умножение суммы на коэффициент округляет результат до копейки")]
+  public void MultiplicationRoundsResultToKopeck()
+  {
+    // 12,34 × 0,875 = 10,7975 — ровно тот случай, когда результат длиннее
+    // копейки: без округления при создании лишние разряды уехали бы в
+    // следующую операцию.
+    var scaled = Money.Rubles(12.34m) * 0.875m;
 
-        Assert.Equal(10.80m, scaled.Amount);
-        Assert.Equal(Money.RubleCode, scaled.Currency);
-    }
+    Assert.Equal(10.80m, scaled.Amount);
+    Assert.Equal(Money.RubleCode, scaled.Currency);
+  }
 }

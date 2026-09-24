@@ -35,12 +35,7 @@ export function QuotePrimaryAction({
   }
 
   return (
-    <button
-      type="button"
-      className="imolt-button"
-      onClick={onIssue}
-      disabled={!view.canIssue || issuing}
-    >
+    <button type="button" className="imolt-button" onClick={onIssue} disabled={!view.canIssue || issuing}>
       {issuing ? QUOTE_LABELS.issuing : QUOTE_LABELS.issue}
     </button>
   );
@@ -54,18 +49,10 @@ export function QuoteSecondaryActions() {
   // по-разному, потому что это разные намерения пользователя.
   return (
     <>
-      <button
-        type="button"
-        className="imolt-button imolt-button--secondary"
-        onClick={() => navigate(CALCULATOR_PATH)}
-      >
+      <button type="button" className="imolt-button imolt-button--secondary" onClick={() => navigate(CALCULATOR_PATH)}>
         {QUOTE_LABELS.pickupRequest}
       </button>
-      <button
-        type="button"
-        className="imolt-button imolt-button--tertiary"
-        onClick={() => navigate(CALCULATOR_PATH)}
-      >
+      <button type="button" className="imolt-button imolt-button--tertiary" onClick={() => navigate(CALCULATOR_PATH)}>
         {QUOTE_LABELS.backToCalculation}
       </button>
     </>

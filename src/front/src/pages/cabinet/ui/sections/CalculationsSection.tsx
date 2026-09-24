@@ -33,9 +33,7 @@ export function CalculationsSection({ state, wide }: { state: CalculationsState;
 
       {state.failure !== null && <Notice kind="error">{state.failure}</Notice>}
 
-      {state.loading && state.items.length === 0 && (
-        <Skeleton rows={3} label="Расчёты загружаются" />
-      )}
+      {state.loading && state.items.length === 0 && <Skeleton rows={3} label="Расчёты загружаются" />}
 
       {empty && (
         <EmptyState
@@ -45,11 +43,7 @@ export function CalculationsSection({ state, wide }: { state: CalculationsState;
       )}
 
       {state.items.length > 0 &&
-        (wide ? (
-          <CalculationsTable rows={state.items} />
-        ) : (
-          <CalculationsCards rows={state.items} />
-        ))}
+        (wide ? <CalculationsTable rows={state.items} /> : <CalculationsCards rows={state.items} />)}
 
       {/* Счётчик показанного против общего остаётся и когда показано всё:
           число расчётов меняет решение участника, а не только кнопка

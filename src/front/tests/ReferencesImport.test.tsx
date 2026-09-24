@@ -26,11 +26,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { ReferencesPage } from '@/pages/references';
 import { ReferencesSection } from '@/pages/showcase/sections/references';
-import {
-  type MaintenanceStub,
-  STALE_PREVIEW,
-  installMaintenanceStub,
-} from './stubs/maintenance';
+import { type MaintenanceStub, STALE_PREVIEW, installMaintenanceStub } from './stubs/maintenance';
 import { DESKTOP_WIDTH, setViewportWidth } from './viewport';
 
 type Пользователь = ReturnType<typeof userEvent.setup>;
@@ -58,8 +54,8 @@ function книга(): File {
 function тарифИкши(): string | undefined {
   return служба
     .landfills()
-    .find((item) => item.id === 'iksha')
-    ?.tariffs.find((tariff) => tariff.wasteGroupId === 'beton-lom')?.disposalPricePerTon.amount;
+    .find(item => item.id === 'iksha')
+    ?.tariffs.find(tariff => tariff.wasteGroupId === 'beton-lom')?.disposalPricePerTon.amount;
 }
 
 /** Открыть импорт и отдать книгу на разбор. */
@@ -94,8 +90,7 @@ describe('импорт справочника на рабочем месте', (
     // До подтверждения справочник остаётся прежним.
     expect(служба.sentTo('POST /v1/reference-imports/:id/confirmation')).toHaveLength(0);
     expect(тарифИкши()).toBe('380.00');
-    expect(screen.getByRole('button', { name: new RegExp(`^${ТАРИФ_ИКША}:`) }).textContent)
-      .toContain('380');
+    expect(screen.getByRole('button', { name: new RegExp(`^${ТАРИФ_ИКША}:`) }).textContent).toContain('380');
   });
 
   it('подтверждение применяет расхождения и справочник показывает значения из файла', async () => {
@@ -111,9 +106,7 @@ describe('импорт справочника на рабочем месте', (
 
     // Экран обязан показать применённое, а не прежнее.
     await waitFor(() =>
-      expect(
-        screen.getByRole('button', { name: new RegExp(`^${ТАРИФ_ИКША}:`) }).textContent,
-      ).toContain('480'),
+      expect(screen.getByRole('button', { name: new RegExp(`^${ТАРИФ_ИКША}:`) }).textContent).toContain('480'),
     );
   });
 

@@ -36,7 +36,7 @@ export function LandfillsCards({
 }) {
   return (
     <ul className="imolt-landfill-cards" aria-label={caption}>
-      {landfills.map((landfill) => {
+      {landfills.map(landfill => {
         const status = landfillBadgeStatus(landfill, freshness);
 
         return (
@@ -44,20 +44,14 @@ export function LandfillsCards({
             {/* Название полигона — вход в карточку и первая строка записи:
                 оно выстраивается по левому краю карточки вместе с адресом,
                 а длинное переносится, а не уходит за край (BUG-011). */}
-            <Button
-              kind="tertiary"
-              className="imolt-landfill-card-name"
-              onClick={() => onOpen(landfill.id)}
-            >
+            <Button kind="tertiary" className="imolt-landfill-card-name" onClick={() => onOpen(landfill.id)}>
               {landfill.name}
             </Button>
             <span className="imolt-landfill-address">{landfill.address}</span>
             <span className="imolt-landfill-card-status">
               <StatusBadge status={status} statusUpdatedAt={landfill.statusUpdatedAt} />
             </span>
-            <span className="imolt-landfill-address">
-              {landfill.legalEntity ?? 'Юридическое лицо не указано'}
-            </span>
+            <span className="imolt-landfill-address">{landfill.legalEntity ?? 'Юридическое лицо не указано'}</span>
             <LandfillTariffs rows={tariffRows(landfill, groups, wasteGroupId)} />
           </li>
         );

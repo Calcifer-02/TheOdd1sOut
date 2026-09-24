@@ -60,15 +60,7 @@ export function Card({
  * Число с подписью. Пара «имя — значение» выражена списком описаний: это её
  * родная разметка, и связь подписи со значением не приходится дорисовывать.
  */
-export function Stat({
-  label,
-  value,
-  hint,
-}: {
-  label: string;
-  value: ReactNode;
-  hint?: string;
-}) {
+export function Stat({ label, value, hint }: { label: string; value: ReactNode; hint?: string }) {
   return (
     <dl className="imolt-stat">
       <dt className="imolt-stat-label">{label}</dt>
@@ -92,15 +84,12 @@ type Moment = { date: string; time: string | null; zone: string | null };
 
 /**
  * Разбор значения договора без обращения к часам машины: договор передаёт
- * либо дату (`2026-09-17`), либо момент со смещением
- * (`2026-09-17T12:04:00+03:00`). Преобразование в `Date` потеряло бы
- * смещение источника и подставило бы пояс браузера.
+ * либо дату в форме ГГГГ-ММ-ДД, либо момент со смещением в форме
+ * ГГГГ-ММ-ДДTчч:мм±чч:мм. Преобразование в `Date` потеряло бы смещение
+ * источника и подставило бы пояс браузера.
  */
 function parseMoment(iso: string): Moment | null {
-  const found =
-    /^(\d{4}-\d{2}-\d{2})(?:[T ](\d{2}:\d{2})(?::\d{2}(?:\.\d+)?)?(Z|[+-]\d{2}:\d{2})?)?$/.exec(
-      iso.trim(),
-    );
+  const found = /^(\d{4}-\d{2}-\d{2})(?:[T ](\d{2}:\d{2})(?::\d{2}(?:\.\d+)?)?(Z|[+-]\d{2}:\d{2})?)?$/.exec(iso.trim());
 
   if (found === null) {
     return null;
@@ -199,9 +188,7 @@ export function DateStamp({
   }
 
   const tail =
-    moment.time === null
-      ? ''
-      : `, ${moment.time}${moment.zone === null ? '' : ` (${zoneName(moment.zone)})`}`;
+    moment.time === null ? '' : `, ${moment.time}${moment.zone === null ? '' : ` (${zoneName(moment.zone)})`}`;
 
   const exact = `${KINDS[kind].prefix} ${formatDate(moment.date)}${tail}`;
   const days = now === undefined ? null : daysBetween(moment.date, now);

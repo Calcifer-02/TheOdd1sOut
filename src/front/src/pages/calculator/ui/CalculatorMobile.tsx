@@ -27,9 +27,7 @@ export function CalculatorMobile({ model }: { model: CalculatorModel }) {
   return (
     <div className="imolt-page">
       <h1 className="imolt-title">Калькулятор вывоза строительных отходов</h1>
-      <p className="imolt-lead">
-        Москва и область. Перевозка и утилизация – отдельно, результат сразу.
-      </p>
+      <p className="imolt-lead">Москва и область. Перевозка и утилизация – отдельно, результат сразу.</p>
 
       <section className="imolt-card" aria-label="Исходные данные расчёта">
         {/* Адрес — единственное поле формы со свободным вводом: перечня
@@ -44,7 +42,7 @@ export function CalculatorMobile({ model }: { model: CalculatorModel }) {
           query={model.addressQuery}
           selected={model.addressPicked}
           items={model.addressSuggestions}
-          render={(item) => item.value}
+          render={item => item.value}
           onQuery={model.changeAddress}
           onPick={model.pickAddress}
         />
@@ -61,11 +59,11 @@ export function CalculatorMobile({ model }: { model: CalculatorModel }) {
               query={line.query}
               selected={line.group ?? null}
               items={line.suggestions}
-              render={(group) => group.name}
-              onQuery={(value) => void model.searchGroup(line.key, value)}
+              render={group => group.name}
+              onQuery={value => void model.searchGroup(line.key, value)}
               onOpen={() => void model.browseGroups(line)}
               onDismiss={() => model.dismissGroup(line)}
-              onPick={(group) => model.pickGroup(line, group)}
+              onPick={group => model.pickGroup(line, group)}
             />
 
             <div className="imolt-row">
@@ -76,7 +74,7 @@ export function CalculatorMobile({ model }: { model: CalculatorModel }) {
                 value={line.amount}
                 inputMode="decimal"
                 hint={line.tons !== undefined ? `≈ ${formatNumber(line.tons)} т` : undefined}
-                onChange={(value) => model.changeAmount(line, value)}
+                onChange={value => model.changeAmount(line, value)}
               />
               <RadioPills
                 className="imolt-units"
@@ -87,7 +85,7 @@ export function CalculatorMobile({ model }: { model: CalculatorModel }) {
                   { value: 't' as Unit, label: unitName('t') },
                   { value: 'm3' as Unit, label: unitName('m3') },
                 ]}
-                onPick={(unit) => model.changeUnit(line, unit)}
+                onPick={unit => model.changeUnit(line, unit)}
               />
             </div>
           </div>
@@ -102,17 +100,12 @@ export function CalculatorMobile({ model }: { model: CalculatorModel }) {
             type="checkbox"
             className="imolt-check"
             checked={model.disposalRequired}
-            onChange={(event) => model.setDisposalRequired(event.target.checked)}
+            onChange={event => model.setDisposalRequired(event.target.checked)}
           />
           Нужна утилизация на полигоне
         </label>
 
-        <button
-          type="button"
-          className="imolt-button"
-          onClick={() => void model.calculate()}
-          disabled={model.busy}
-        >
+        <button type="button" className="imolt-button" onClick={() => void model.calculate()} disabled={model.busy}>
           Рассчитать
         </button>
       </section>
@@ -127,11 +120,7 @@ export function CalculatorMobile({ model }: { model: CalculatorModel }) {
               : model.failure.title}
           </strong>
           {model.failure.detail && <span>{model.failure.detail}</span>}
-          <button
-            type="button"
-            className="imolt-button imolt-button--secondary"
-            onClick={() => void model.calculate()}
-          >
+          <button type="button" className="imolt-button imolt-button--secondary" onClick={() => void model.calculate()}>
             Повторить
           </button>
         </Notice>
@@ -142,7 +131,7 @@ export function CalculatorMobile({ model }: { model: CalculatorModel }) {
           <h2 className="imolt-section">Результаты</h2>
 
           <div className="imolt-tabs" role="tablist" aria-label="Группы отходов">
-            {model.calculation.items.map((item) => (
+            {model.calculation.items.map(item => (
               <button
                 key={item.wasteGroupId}
                 type="button"
@@ -162,14 +151,10 @@ export function CalculatorMobile({ model }: { model: CalculatorModel }) {
               name="sort"
               label="Сортировка"
               value={view.sort}
-              options={SORTS.map((sort) => ({ value: sort.field, label: sort.label }))}
-              onPick={(field) => model.applyView({ sort: field })}
+              options={SORTS.map(sort => ({ value: sort.field, label: sort.label }))}
+              onPick={field => model.applyView({ sort: field })}
             />
-            <button
-              type="button"
-              className="imolt-button imolt-button--tertiary"
-              onClick={model.toggleOrder}
-            >
+            <button type="button" className="imolt-button imolt-button--tertiary" onClick={model.toggleOrder}>
               {view.order === 'asc' ? 'По возрастанию' : 'По убыванию'}
             </button>
           </div>
@@ -202,11 +187,7 @@ export function CalculatorMobile({ model }: { model: CalculatorModel }) {
                 inputMode="decimal"
                 onChange={model.setFilterDraft}
               />
-              <button
-                type="button"
-                className="imolt-button"
-                onClick={() => model.applyDistanceDraft('atMost')}
-              >
+              <button type="button" className="imolt-button" onClick={() => model.applyDistanceDraft('atMost')}>
                 Применить
               </button>
             </div>
@@ -220,7 +201,7 @@ export function CalculatorMobile({ model }: { model: CalculatorModel }) {
             </p>
           )}
 
-          {model.warnings.map((warning) => (
+          {model.warnings.map(warning => (
             <Notice key={warning.landfillId} kind="warning">
               <span>{warning.message}</span>
             </Notice>
@@ -243,7 +224,7 @@ export function CalculatorMobile({ model }: { model: CalculatorModel }) {
           )}
 
           <ul className="imolt-options">
-            {(shown?.items ?? []).map((option) => (
+            {(shown?.items ?? []).map(option => (
               <OptionCard
                 key={option.landfillId}
                 option={option}
@@ -256,18 +237,14 @@ export function CalculatorMobile({ model }: { model: CalculatorModel }) {
           </ul>
 
           {shown && shown.items.length < shown.total && (
-            <button
-              type="button"
-              className="imolt-button imolt-button--secondary"
-              onClick={model.loadMore}
-            >
+            <button type="button" className="imolt-button imolt-button--secondary" onClick={model.loadMore}>
               Показать ещё
             </button>
           )}
 
           {model.selectedInGroup.length > 1 && (
             <AllocationPanel
-              rows={model.selectedInGroup.map((entry) => ({
+              rows={model.selectedInGroup.map(entry => ({
                 landfillId: entry.landfillId,
                 landfillName: model.landfillNameById(entry.landfillId) ?? 'Полигон',
                 share: model.allocationDraft[entry.landfillId] ?? '',
@@ -319,7 +296,7 @@ export function CalculatorMobile({ model }: { model: CalculatorModel }) {
             id="pickup-name"
             label="Имя"
             value={model.pickup.name}
-            onChange={(value) => model.changePickup({ name: value })}
+            onChange={value => model.changePickup({ name: value })}
           />
           <Field
             id="pickup-phone"
@@ -327,7 +304,7 @@ export function CalculatorMobile({ model }: { model: CalculatorModel }) {
             value={model.pickup.phone}
             inputMode="tel"
             placeholder="+7"
-            onChange={(value) => model.changePickup({ phone: value })}
+            onChange={value => model.changePickup({ phone: value })}
           />
           <div className="imolt-grow">
             <label className="imolt-label" htmlFor="pickup-landfill">
@@ -337,9 +314,9 @@ export function CalculatorMobile({ model }: { model: CalculatorModel }) {
               id="pickup-landfill"
               className="imolt-input"
               value={model.pickup.landfillName}
-              onChange={(event) => model.changePickup({ landfillName: event.target.value })}
+              onChange={event => model.changePickup({ landfillName: event.target.value })}
             >
-              {(selection?.entries ?? []).map((entry) => (
+              {(selection?.entries ?? []).map(entry => (
                 <option key={entry.landfillId} value={model.landfillNameById(entry.landfillId) ?? ''}>
                   {model.landfillNameById(entry.landfillId)}
                 </option>
@@ -351,7 +328,7 @@ export function CalculatorMobile({ model }: { model: CalculatorModel }) {
               type="checkbox"
               className="imolt-check"
               checked={model.pickup.consent}
-              onChange={(event) => model.changePickup({ consent: event.target.checked })}
+              onChange={event => model.changePickup({ consent: event.target.checked })}
             />
             Согласен на обработку персональных данных согласно политике
           </label>

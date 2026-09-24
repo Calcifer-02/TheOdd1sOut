@@ -96,9 +96,7 @@ export function getProfile(): Promise<ParticipantProfile> {
  * Заявка на подписку (R-008, R-049, R-051). Оплата идёт вне сервиса, поэтому
  * нормальный исход операции — состояние «ожидает подтверждения», а не отказ.
  */
-export function requestSubscription(
-  input: SubscriptionRequestInput,
-): Promise<SubscriptionRequestAccepted> {
+export function requestSubscription(input: SubscriptionRequestInput): Promise<SubscriptionRequestAccepted> {
   return request<SubscriptionRequestAccepted>('/v1/subscription-requests', {
     method: 'POST',
     body: JSON.stringify(input),
@@ -121,9 +119,7 @@ export function listDocumentServices(): Promise<Page<DocumentService>> {
 }
 
 /** Заказ услуги по документации (R-009, R-052, R-054). */
-export function orderDocumentService(
-  input: DocumentServiceOrderInput,
-): Promise<DocumentServiceOrderAccepted> {
+export function orderDocumentService(input: DocumentServiceOrderInput): Promise<DocumentServiceOrderAccepted> {
   return request<DocumentServiceOrderAccepted>('/v1/document-service-orders', {
     method: 'POST',
     body: JSON.stringify(input),

@@ -25,16 +25,12 @@ export type TariffRow = {
  * режиме справочника цен пользователь сравнивает одну строку у разных
  * полигонов, а не перечень у одного.
  */
-export function tariffRows(
-  landfill: Landfill,
-  groups: WasteGroup[],
-  wasteGroupId: string,
-): TariffRow[] {
+export function tariffRows(landfill: Landfill, groups: WasteGroup[], wasteGroupId: string): TariffRow[] {
   return landfill.tariffs
-    .filter((tariff) => wasteGroupId === '' || tariff.wasteGroupId === wasteGroupId)
-    .map((tariff) => ({
+    .filter(tariff => wasteGroupId === '' || tariff.wasteGroupId === wasteGroupId)
+    .map(tariff => ({
       wasteGroupId: tariff.wasteGroupId,
-      name: groups.find((group) => group.id === tariff.wasteGroupId)?.name ?? tariff.wasteGroupId,
+      name: groups.find(group => group.id === tariff.wasteGroupId)?.name ?? tariff.wasteGroupId,
       disposalPricePerTon: tariff.disposalPricePerTon,
       updatedAt: tariff.updatedAt,
     }));

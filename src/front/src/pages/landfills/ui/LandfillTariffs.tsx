@@ -26,7 +26,7 @@ export function LandfillTariffs({
 
   return (
     <dl className="imolt-tariffs">
-      {rows.map((row) => (
+      {rows.map(row => (
         <div key={row.wasteGroupId} className="imolt-tariffs-row">
           <dt>{row.name}</dt>
           <dd>

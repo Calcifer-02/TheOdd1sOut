@@ -69,9 +69,7 @@ describe('кабинет на рабочем месте', () => {
 
     expect(screen.getByRole('columnheader', { name: 'Итого' })).toBeInTheDocument();
     expect(screen.getByRole('columnheader', { name: 'Адрес вывоза' })).toBeInTheDocument();
-    expect(
-      await screen.findByRole('link', { name: `Открыть расчёт: ${АДРЕС_ВЫВОЗА}` }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: `Открыть расчёт: ${АДРЕС_ВЫВОЗА}` })).toBeInTheDocument();
   });
 
   it('боковое меню отмечает открытый раздел и переводит в него', async () => {
@@ -80,20 +78,12 @@ describe('кабинет на рабочем месте', () => {
     render(<CabinetPage />);
 
     const переход = await screen.findByRole('button', { name: 'Услуги' });
-    expect(переход, 'закрытый раздел отмечен открытым').not.toHaveAttribute(
-      'aria-current',
-      'page',
-    );
+    expect(переход, 'закрытый раздел отмечен открытым').not.toHaveAttribute('aria-current', 'page');
 
     await пользователь.click(переход);
 
-    expect(
-      await screen.findByRole('heading', { name: 'Услуги по документации' }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Услуги' })).toHaveAttribute(
-      'aria-current',
-      'page',
-    );
+    expect(await screen.findByRole('heading', { name: 'Услуги по документации' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Услуги' })).toHaveAttribute('aria-current', 'page');
     expect(window.location.hash).toContain('tab=services');
   });
 
@@ -105,10 +95,7 @@ describe('кабинет на рабочем месте', () => {
 
     // Счётчик показанного против общего меняет решение участника, поэтому
     // утверждение идёт по нему, а не по числу строк в разметке (PRACT-024).
-    expect(
-      await screen.findByText('Показано 10 из 12'),
-      'первая страница договора — десять строк',
-    ).toBeInTheDocument();
+    expect(await screen.findByText('Показано 10 из 12'), 'первая страница договора — десять строк').toBeInTheDocument();
 
     await пользователь.click(screen.getByRole('button', { name: /Показать ещё/ }));
 

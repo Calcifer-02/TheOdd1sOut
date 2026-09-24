@@ -36,7 +36,7 @@ export function App() {
   useThemeStyles();
 
   const route = useRoute();
-  const screen = SCREENS.find((item) => item.path === route.path) ?? SCREENS[0];
+  const screen = SCREENS.find(item => item.path === route.path) ?? SCREENS[0];
 
   useEffect(() => {
     // Заголовок вкладки называет этап, а не способ доставки приложения:

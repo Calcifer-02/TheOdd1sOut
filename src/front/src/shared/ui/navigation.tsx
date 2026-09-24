@@ -48,7 +48,7 @@ export function Tabs<T extends string>({
   }
 
   function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    const at = options.findIndex((option) => option.value === value);
+    const at = options.findIndex(option => option.value === value);
 
     if (at === -1 || options.length === 0) {
       return;
@@ -73,7 +73,7 @@ export function Tabs<T extends string>({
       className={className ? `imolt-tabs ${className}` : 'imolt-tabs'}
       onKeyDown={onKeyDown}
     >
-      {options.map((option) => (
+      {options.map(option => (
         <button
           key={option.value}
           type="button"

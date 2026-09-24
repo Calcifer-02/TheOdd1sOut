@@ -40,12 +40,7 @@ export function CabinetSections({ view }: { view: CabinetView }) {
   }
 
   if (view.section === 'subscription') {
-    return (
-      <SubscriptionSection
-        subscription={view.profile.subscription}
-        onAccepted={view.applySubscription}
-      />
-    );
+    return <SubscriptionSection subscription={view.profile.subscription} onAccepted={view.applySubscription} />;
   }
 
   if (view.section === 'profile') {

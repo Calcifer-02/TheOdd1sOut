@@ -45,24 +45,19 @@ export function LandfillsFilters({
         className="imolt-landfills-search"
         role="search"
         aria-label="Поиск полигона"
-        onSubmit={(event) => {
+        onSubmit={event => {
           event.preventDefault();
           onSearch(text);
         }}
       >
-        <Field
-          id="landfills-query"
-          label="Поиск по названию полигона"
-          value={text}
-          onChange={setText}
-        />
+        <Field id="landfills-query" label="Поиск по названию полигона" value={text} onChange={setText} />
         <Button type="submit" kind="secondary">
           Найти
         </Button>
       </form>
 
       <div className="imolt-landfills-groups" role="group" aria-label="Группа отходов">
-        {groups.map((group) => (
+        {groups.map(group => (
           <Chip
             key={group.id}
             label={group.name}

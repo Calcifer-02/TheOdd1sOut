@@ -1,7 +1,7 @@
 // Заглушка расчётной части для проверок кабинета, входа и подписки.
 //
 // Подменяет глобальный fetch, разбирает путь и отвечает телами договора
-// (src/back/Imolt.Api/contracts/openapi.yaml). Ничего сверх договора она не
+// (../../../back/Imolt.Api/contracts/openapi.yaml). Ничего сверх договора она не
 // выдумывает: поля, которого договор не обещает, здесь нет, а тексты ответов
 // взяты из самой службы (Imolt.Deals/Adapters/AccessStores.cs,
 // Application/AccessScenarios.cs).
@@ -158,7 +158,7 @@ function routeKeyOf(method: string, path: string): RouteKey | undefined {
       'GET /v1/document-services',
       'POST /v1/document-service-orders',
     ] as RouteKey[]
-  ).find((candidate) => candidate === key);
+  ).find(candidate => candidate === key);
 }
 
 function makeResponse(status: number, body: unknown, headers: Record<string, string>): Response {
@@ -196,11 +196,7 @@ export function installCabinetStub(): CabinetStub {
         return {
           status: 422,
           headers: { 'content-type': PROBLEM_TYPE },
-          body: отказ(
-            'consent-required',
-            'Нужно согласие на обработку персональных данных',
-            422,
-          ),
+          body: отказ('consent-required', 'Нужно согласие на обработку персональных данных', 422),
         };
       }
 
@@ -239,8 +235,7 @@ export function installCabinetStub(): CabinetStub {
           id: 'c0ffee00-0000-4f61-9a6f-9c3d1b2a8e42',
           createdAt: '2026-09-24T10:00:00+03:00',
           subscription: { state: 'pending' },
-          message:
-            'Заявка принята. Оплата подписки оформляется вне сервиса: менеджер свяжется с вами.',
+          message: 'Заявка принята. Оплата подписки оформляется вне сервиса: менеджер свяжется с вами.',
         },
       };
     }
@@ -268,11 +263,7 @@ export function installCabinetStub(): CabinetStub {
         return {
           status: 422,
           headers: { 'content-type': PROBLEM_TYPE },
-          body: отказ(
-            'consent-required',
-            'Нужно согласие на обработку персональных данных',
-            422,
-          ),
+          body: отказ('consent-required', 'Нужно согласие на обработку персональных данных', 422),
         };
       }
 
@@ -299,12 +290,7 @@ export function installCabinetStub(): CabinetStub {
   }
 
   globalThis.fetch = (async (input: unknown, init?: RequestInit): Promise<Response> => {
-    const raw =
-      typeof input === 'string'
-        ? input
-        : input instanceof URL
-          ? input.toString()
-          : String((input as { url?: string }).url ?? '');
+    const raw = addressOf(input);
     const address = new URL(raw, 'http://mini.app');
     const method = (init?.method ?? 'GET').toUpperCase();
     const rawBody = init?.body;
@@ -322,12 +308,7 @@ export function installCabinetStub(): CabinetStub {
 
     const key = routeKeyOf(method, request.path);
     const override = key === undefined ? undefined : answers.get(key);
-    const answer =
-      override === undefined
-        ? defaultAnswer(key, request)
-        : typeof override === 'function'
-          ? override(request)
-          : override;
+    const answer = answerOf(override, key, request, defaultAnswer);
 
     return makeResponse(answer.status, answer.body, answer.headers ?? { 'content-type': JSON_TYPE });
   }) as typeof globalThis.fetch;
@@ -336,7 +317,7 @@ export function installCabinetStub(): CabinetStub {
     requests,
 
     sentTo(key) {
-      return requests.filter((request) => routeKeyOf(request.method, request.path) === key);
+      return requests.filter(request => routeKeyOf(request.method, request.path) === key);
     },
 
     lastTo(key) {
@@ -372,4 +353,42 @@ export function installCabinetStub(): CabinetStub {
       globalThis.fetch = original;
     },
   };
+}
+
+/**
+ * Адрес обращения: `fetch` принимает строку, `URL` или объект запроса.
+ * Вложенные условные выражения читаются хуже ветвления и запрещены правилом
+ * кода, а разбор здесь — три отдельных случая, а не одно условие.
+ */
+function addressOf(input: unknown): string {
+  if (typeof input === 'string') {
+    return input;
+  }
+
+  if (input instanceof URL) {
+    return input.toString();
+  }
+
+  return String((input as { url?: string }).url ?? '');
+}
+
+/**
+ * Ответ на обращение: подменённый заглушкой, вычисленный подменой или ответ
+ * договора по умолчанию.
+ */
+function answerOf<TKey>(
+  override: StubResponse | ((request: RecordedRequest) => StubResponse) | undefined,
+  key: TKey | undefined,
+  request: RecordedRequest,
+  fallback: (key: TKey | undefined, request: RecordedRequest) => StubResponse,
+): StubResponse {
+  if (override === undefined) {
+    return fallback(key, request);
+  }
+
+  if (typeof override === 'function') {
+    return override(request);
+  }
+
+  return override;
 }

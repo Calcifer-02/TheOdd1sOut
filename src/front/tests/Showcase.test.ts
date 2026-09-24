@@ -39,45 +39,45 @@ const ВНЕ_ВИТРИНЫ = new Map([['AppShell', 'оболочка стран
  * вроде `badgeStatus` начинаются со строчной и компонентами не считаются.
  */
 function компоненты(text: string): string[] {
-  return [...text.matchAll(/^export function ([A-Z][A-Za-z0-9]*)/gm)].map((match) => match[1]);
+  return [...text.matchAll(/^export function ([A-Z][A-Za-z0-9]*)/gm)].map(match => match[1]);
 }
 
 const файлы = sourceFiles();
 
-const витрина = файлы.filter((file) => file.path.startsWith(SHOWCASE_DIRECTORY));
+const витрина = файлы.filter(file => file.path.startsWith(SHOWCASE_DIRECTORY));
 
 describe('витрина компонентов', () => {
   it('существует отдельной страницей', () => {
-    const рамка = файлы.find((file) => file.path === SHOWCASE_FRAME);
+    const рамка = файлы.find(file => file.path === SHOWCASE_FRAME);
     expect(рамка, `витрина не найдена по пути ${SHOWCASE_FRAME}`).toBeDefined();
   });
 
   it('показывает каждый раздел витрины', () => {
-    const рамка = файлы.find((file) => file.path === SHOWCASE_FRAME)?.text ?? '';
+    const рамка = файлы.find(file => file.path === SHOWCASE_FRAME)?.text ?? '';
 
-    const разделы = sourceFiles(join(miniappSource, 'pages', 'showcase', 'sections')).flatMap(
-      (file) => компоненты(file.text),
+    const разделы = sourceFiles(join(miniappSource, 'pages', 'showcase', 'sections')).flatMap(file =>
+      компоненты(file.text),
     );
 
     expect(разделы.length).toBeGreaterThan(3);
 
-    const забытые = разделы.filter((имя) => !рамка.includes(`<${имя}`));
+    const забытые = разделы.filter(имя => !рамка.includes(`<${имя}`));
     expect(забытые, 'раздел витрины объявлен, но не поставлен в неё').toEqual([]);
   });
 
   it('показывает каждый объявленный компонент интерфейса', () => {
     const объявленные = файлы
-      .filter((file) => ПОКАЗЫВАЕМЫЕ_СЛОИ.some((слой) => file.path.startsWith(слой)))
-      .filter((file) => file.path.endsWith('.tsx'))
-      .flatMap((file) => компоненты(file.text));
+      .filter(file => ПОКАЗЫВАЕМЫЕ_СЛОИ.some(слой => file.path.startsWith(слой)))
+      .filter(file => file.path.endsWith('.tsx'))
+      .flatMap(file => компоненты(file.text));
 
     // Пустая выборка сделала бы проверку бессодержательной.
     expect(объявленные.length).toBeGreaterThan(4);
 
-    const текст = витрина.map((file) => file.text).join('\n');
+    const текст = витрина.map(file => file.text).join('\n');
     const пропущенные = [...new Set(объявленные)]
-      .filter((имя) => !ВНЕ_ВИТРИНЫ.has(имя))
-      .filter((имя) => !текст.includes(`<${имя}`));
+      .filter(имя => !ВНЕ_ВИТРИНЫ.has(имя))
+      .filter(имя => !текст.includes(`<${имя}`));
 
     expect(пропущенные, 'компонент объявлен интерфейсом, но не показан в витрине').toEqual([]);
   });

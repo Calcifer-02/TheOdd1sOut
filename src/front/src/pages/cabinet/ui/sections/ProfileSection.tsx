@@ -18,9 +18,7 @@ export function ProfileSection({ profile }: { profile: ParticipantProfile }) {
         <h1 className="imolt-title" id="imolt-cabinet-profile">
           Профиль
         </h1>
-        <p className="imolt-lead">
-          Реквизиты приходят из заявки на подписку – сервис их не запрашивает отдельно.
-        </p>
+        <p className="imolt-lead">Реквизиты приходят из заявки на подписку – сервис их не запрашивает отдельно.</p>
       </div>
 
       <div className="imolt-cabinet-panel">

@@ -50,7 +50,7 @@ function matches(query: string): boolean {
 }
 
 function subscribeTo(query: string): (onChange: () => void) => () => void {
-  return (onChange) => {
+  return onChange => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
       return () => undefined;
     }

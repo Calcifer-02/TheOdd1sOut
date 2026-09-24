@@ -89,11 +89,7 @@ export function LandfillsSection() {
       </Section>
 
       <Section title="Новый отзыв: отказ службы">
-        <ReviewForm
-          formId="showcase-review-failed"
-          onSubmit={() => undefined}
-          error="Требуется вход через MAX"
-        />
+        <ReviewForm formId="showcase-review-failed" onSubmit={() => undefined} error="Требуется вход через MAX" />
       </Section>
 
       <Section title="Новый отзыв: отзыв принят">

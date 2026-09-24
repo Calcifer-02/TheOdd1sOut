@@ -18,10 +18,7 @@ import type { DataFreshness, Landfill } from '@/shared/api/references';
  * производное: оно не приходит от службы записью, а выводится из даты
  * подтверждения статуса. Блокировка важнее устаревания и им не заслоняется.
  */
-export function landfillBadgeStatus(
-  landfill: Landfill,
-  freshness: DataFreshness | null,
-): BadgeStatus {
+export function landfillBadgeStatus(landfill: Landfill, freshness: DataFreshness | null): BadgeStatus {
   if (landfill.status !== 'active' || freshness === null) {
     return landfill.status;
   }

@@ -66,11 +66,7 @@ function датаНаЭкране(дата: string): Element | null {
 }
 
 /** Набор нового значения в ячейке: прежнее стирается, а не дополняется. */
-async function набрать(
-  пользователь: Пользователь,
-  имя: string,
-  значение: string,
-): Promise<HTMLElement> {
+async function набрать(пользователь: Пользователь, имя: string, значение: string): Promise<HTMLElement> {
   await пользователь.click(ячейка(имя));
 
   const поле = screen.getByRole('textbox', { name: имя });
@@ -111,11 +107,7 @@ describe('редактор цен на рабочем месте', () => {
   it('отказ службы оставляет в ячейке прежнее значение и называет причину', async () => {
     служба.answerWith('PUT /v1/landfills/:id/tariffs/:wasteGroupId', {
       status: 422,
-      body: problem(
-        'urn:imolt:problem:validation',
-        'Цена утилизации не может быть отрицательной',
-        422,
-      ),
+      body: problem('urn:imolt:problem:validation', 'Цена утилизации не может быть отрицательной', 422),
     });
 
     const пользователь = userEvent.setup();
@@ -186,9 +178,7 @@ describe('редактор цен на рабочем месте', () => {
     // персональных данных участник даёт уже на странице (R-054).
     let безСессии = true;
     служба.answerWith('GET /v1/sync-runs/latest', () =>
-      безСессии
-        ? { status: 401, body: AUTHENTICATION_REQUIRED }
-        : { status: 200, body: SYNC_RUN },
+      безСессии ? { status: 401, body: AUTHENTICATION_REQUIRED } : { status: 200, body: SYNC_RUN },
     );
 
     const пользователь = userEvent.setup();
@@ -210,10 +200,7 @@ describe('редактор цен на рабочем месте', () => {
 
     await пользователь.click(screen.getByRole('button', { name: 'Задать статус вручную' }));
     await пользователь.click(screen.getByRole('radio', { name: 'Заблокирован' }));
-    await пользователь.type(
-      screen.getByRole('textbox', { name: 'Основание' }),
-      'публикация Минэкологии области',
-    );
+    await пользователь.type(screen.getByRole('textbox', { name: 'Основание' }), 'публикация Минэкологии области');
     await пользователь.click(screen.getByRole('button', { name: 'Задать статус' }));
 
     await waitFor(() =>
@@ -223,7 +210,7 @@ describe('редактор цен на рабочем месте', () => {
       }),
     );
 
-    const полигон = служба.landfills().find((item) => item.id === 'iksha');
+    const полигон = служба.landfills().find(item => item.id === 'iksha');
     expect(полигон?.status).toBe('blocked');
     expect(полигон?.statusUpdatedAt).toBe(EDIT_DATE);
   });
@@ -273,9 +260,7 @@ describe('редактор цен на телефоне', () => {
     const пользователь = userEvent.setup();
     render(<ReferencesPage />);
 
-    await пользователь.click(
-      await screen.findByRole('button', { name: 'Править полигон: Площадка «Икша»' }),
-    );
+    await пользователь.click(await screen.findByRole('button', { name: 'Править полигон: Площадка «Икша»' }));
 
     // Какая запись правится — видно в адресе: ссылка открывает ту же карточку.
     expect(window.location.hash).toContain('landfill=iksha');
@@ -288,9 +273,8 @@ describe('редактор цен на телефоне', () => {
       expect(
         служба
           .landfills()
-          .find((item) => item.id === 'iksha')
-          ?.tariffs.find((tariff) => tariff.wasteGroupId === 'beton-lom')?.disposalPricePerTon
-          .amount,
+          .find(item => item.id === 'iksha')
+          ?.tariffs.find(tariff => tariff.wasteGroupId === 'beton-lom')?.disposalPricePerTon.amount,
       ).toBe('480.00'),
     );
 
@@ -320,9 +304,7 @@ describe('редактор цен на телефоне', () => {
     const пользователь = userEvent.setup();
     render(<ReferencesPage />);
 
-    await пользователь.click(
-      await screen.findByRole('button', { name: 'Править полигон: Площадка «Икша»' }),
-    );
+    await пользователь.click(await screen.findByRole('button', { name: 'Править полигон: Площадка «Икша»' }));
     await набрать(пользователь, ТАРИФ_ИКША, '480');
     await пользователь.keyboard('{Enter}');
 

@@ -41,9 +41,7 @@ export function landfillCard(landfillName: string): HTMLElement {
   const card = landfillCheckbox(landfillName).closest('li, article, tr');
 
   if (card === null) {
-    throw new Error(
-      `Полигон «${landfillName}» не оформлен строкой списка, карточкой или строкой таблицы`,
-    );
+    throw new Error(`Полигон «${landfillName}» не оформлен строкой списка, карточкой или строкой таблицы`);
   }
 
   return card as HTMLElement;
@@ -71,11 +69,7 @@ export async function chooseWasteGroup(
 }
 
 /** Вводит объём и, если мера названа, переключает её. */
-export async function enterQuantity(
-  user: UserEvent,
-  value: string,
-  unit: 'т' | 'м³' = 'т',
-): Promise<void> {
+export async function enterQuantity(user: UserEvent, value: string, unit: 'т' | 'м³' = 'т'): Promise<void> {
   const field = screen.getByLabelText('Объём');
 
   await user.clear(field);

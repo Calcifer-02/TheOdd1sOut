@@ -15,7 +15,7 @@ import { calculationHref } from '../../model/cabinet';
 export function CalculationsCards({ rows }: { rows: CalculationSummary[] }) {
   return (
     <ul className="imolt-calc-list" aria-label="Сохранённые расчёты">
-      {rows.map((row) => (
+      {rows.map(row => (
         <li className="imolt-calc-card" key={row.id}>
           <div className="imolt-calc-line">
             <span className="imolt-calc-address">{row.pickupAddress}</span>

@@ -46,9 +46,7 @@ const PREVIEW: ImportState = {
     id: '3f8a1d92-1c44-4c8f-9c41-0b3c6f2d7a15',
     kind: 'tariffs',
     changes: CHANGES,
-    rejectedRows: [
-      { row: 4, reason: 'Коды каталога отходов не применяются: редакция каталога не сверена' },
-    ],
+    rejectedRows: [{ row: 4, reason: 'Коды каталога отходов не применяются: редакция каталога не сверена' }],
   },
   result: null,
   refusal: null,
@@ -113,9 +111,7 @@ function panel(state: ImportState, disabled = false) {
 export function ReferencesSection() {
   return (
     <>
-      <Section title="Импорт справочника: выбор книги">
-        {panel(IDLE)}
-      </Section>
+      <Section title="Импорт справочника: выбор книги">{panel(IDLE)}</Section>
 
       <Section title="Импорт справочника: расхождения до применения">{panel(PREVIEW)}</Section>
 
@@ -124,7 +120,6 @@ export function ReferencesSection() {
       <Section title="Импорт справочника: изменения применены">{panel(APPLIED)}</Section>
 
       <Section title="Импорт справочника: права ведения нет">{panel(DENIED, true)}</Section>
-
 
       <Section title="Импорт справочника по шагам на телефоне">
         <ImportSteps

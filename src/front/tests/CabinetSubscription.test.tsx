@@ -50,19 +50,11 @@ describe('заявка на подписку', () => {
     await опознать('subscription');
     render(<CabinetPage />);
 
-    await пользователь.type(
-      await screen.findByRole('textbox', { name: 'Название компании' }),
-      'ООО «Перевозчик»',
-    );
+    await пользователь.type(await screen.findByRole('textbox', { name: 'Название компании' }), 'ООО «Перевозчик»');
     await пользователь.type(screen.getByRole('textbox', { name: 'ИНН' }), '7701234567');
-    await пользователь.click(
-      screen.getByRole('button', { name: 'Оставить заявку на подписку' }),
-    );
+    await пользователь.click(screen.getByRole('button', { name: 'Оставить заявку на подписку' }));
 
-    expect(
-      служба.sentTo('POST /v1/subscription-requests'),
-      'заявка ушла без согласия участника',
-    ).toEqual([]);
+    expect(служба.sentTo('POST /v1/subscription-requests'), 'заявка ушла без согласия участника').toEqual([]);
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Без согласия на обработку персональных данных заявка не отправляется',
     );
@@ -73,22 +65,13 @@ describe('заявка на подписку', () => {
     await опознать('subscription');
     render(<CabinetPage />);
 
-    await пользователь.type(
-      await screen.findByRole('textbox', { name: 'Название компании' }),
-      'ООО «Перевозчик»',
-    );
+    await пользователь.type(await screen.findByRole('textbox', { name: 'Название компании' }), 'ООО «Перевозчик»');
     await пользователь.type(screen.getByRole('textbox', { name: 'ИНН' }), '12345');
-    await пользователь.click(
-      screen.getByRole('checkbox', { name: 'Согласен на обработку персональных данных' }),
-    );
-    await пользователь.click(
-      screen.getByRole('button', { name: 'Оставить заявку на подписку' }),
-    );
+    await пользователь.click(screen.getByRole('checkbox', { name: 'Согласен на обработку персональных данных' }));
+    await пользователь.click(screen.getByRole('button', { name: 'Оставить заявку на подписку' }));
 
     expect(служба.sentTo('POST /v1/subscription-requests')).toEqual([]);
-    expect(
-      await screen.findByText('ИНН записывается десятью либо двенадцатью цифрами'),
-    ).toBeInTheDocument();
+    expect(await screen.findByText('ИНН записывается десятью либо двенадцатью цифрами')).toBeInTheDocument();
   });
 
   /** @ac: AC-051a */
@@ -97,20 +80,11 @@ describe('заявка на подписку', () => {
     await опознать('subscription');
     render(<CabinetPage />);
 
-    await пользователь.type(
-      await screen.findByRole('textbox', { name: 'Название компании' }),
-      'ООО «Перевозчик»',
-    );
+    await пользователь.type(await screen.findByRole('textbox', { name: 'Название компании' }), 'ООО «Перевозчик»');
     await пользователь.type(screen.getByRole('textbox', { name: 'ИНН' }), '7701234567');
-    await пользователь.click(
-      screen.getByRole('checkbox', { name: 'Транспорт зарегистрирован в АИС ОССиГ' }),
-    );
-    await пользователь.click(
-      screen.getByRole('checkbox', { name: 'Согласен на обработку персональных данных' }),
-    );
-    await пользователь.click(
-      screen.getByRole('button', { name: 'Оставить заявку на подписку' }),
-    );
+    await пользователь.click(screen.getByRole('checkbox', { name: 'Транспорт зарегистрирован в АИС ОССиГ' }));
+    await пользователь.click(screen.getByRole('checkbox', { name: 'Согласен на обработку персональных данных' }));
+    await пользователь.click(screen.getByRole('button', { name: 'Оставить заявку на подписку' }));
 
     // Состояние названо словом и в полосе над разделом, и в самом разделе.
     expect(await screen.findAllByText('Ожидает подтверждения')).not.toHaveLength(0);
@@ -127,8 +101,7 @@ describe('заявка на подписку', () => {
 
     // Согласия схема договора здесь не принимает: лишнее поле отвергается
     // целиком (`additionalProperties: false`), и слать его нельзя.
-    expect(тело.personalDataConsent, 'в заявке ушло поле, которого договор не объявляет')
-      .toBeUndefined();
+    expect(тело.personalDataConsent, 'в заявке ушло поле, которого договор не объявляет').toBeUndefined();
   });
 });
 
@@ -149,21 +122,11 @@ describe('каталог услуг по документации', () => {
     await опознать('services');
     render(<CabinetPage />);
 
-    await пользователь.click(
-      await screen.findByRole('button', { name: `Заказать: ${УСЛУГИ[0].name}` }),
-    );
-    await пользователь.type(
-      screen.getByRole('textbox', { name: 'Адрес объекта' }),
-      'г Москва, ул Годовикова, д 9',
-    );
-    await пользователь.click(
-      screen.getByRole('button', { name: `Отправить заказ: ${УСЛУГИ[0].name}` }),
-    );
+    await пользователь.click(await screen.findByRole('button', { name: `Заказать: ${УСЛУГИ[0].name}` }));
+    await пользователь.type(screen.getByRole('textbox', { name: 'Адрес объекта' }), 'г Москва, ул Годовикова, д 9');
+    await пользователь.click(screen.getByRole('button', { name: `Отправить заказ: ${УСЛУГИ[0].name}` }));
 
-    expect(
-      служба.sentTo('POST /v1/document-service-orders'),
-      'заказ ушёл без согласия участника',
-    ).toEqual([]);
+    expect(служба.sentTo('POST /v1/document-service-orders'), 'заказ ушёл без согласия участника').toEqual([]);
     expect(await screen.findByRole('alert')).toHaveTextContent(
       'Без согласия на обработку персональных данных заказ не отправляется',
     );
@@ -175,23 +138,12 @@ describe('каталог услуг по документации', () => {
     await опознать('services');
     render(<CabinetPage />);
 
-    await пользователь.click(
-      await screen.findByRole('button', { name: `Заказать: ${УСЛУГИ[0].name}` }),
-    );
-    await пользователь.type(
-      screen.getByRole('textbox', { name: 'Адрес объекта' }),
-      'г Москва, ул Годовикова, д 9',
-    );
-    await пользователь.click(
-      screen.getByRole('checkbox', { name: 'Согласен на обработку персональных данных' }),
-    );
-    await пользователь.click(
-      screen.getByRole('button', { name: `Отправить заказ: ${УСЛУГИ[0].name}` }),
-    );
+    await пользователь.click(await screen.findByRole('button', { name: `Заказать: ${УСЛУГИ[0].name}` }));
+    await пользователь.type(screen.getByRole('textbox', { name: 'Адрес объекта' }), 'г Москва, ул Годовикова, д 9');
+    await пользователь.click(screen.getByRole('checkbox', { name: 'Согласен на обработку персональных данных' }));
+    await пользователь.click(screen.getByRole('button', { name: `Отправить заказ: ${УСЛУГИ[0].name}` }));
 
-    expect(
-      await screen.findByText('Заказ принят, менеджер свяжется в течение рабочего дня'),
-    ).toBeInTheDocument();
+    expect(await screen.findByText('Заказ принят, менеджер свяжется в течение рабочего дня')).toBeInTheDocument();
 
     const тело = служба.bodyOf('POST /v1/document-service-orders');
     expect(тело.serviceId).toBe(УСЛУГИ[0].id);

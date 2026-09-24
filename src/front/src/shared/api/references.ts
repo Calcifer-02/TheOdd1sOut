@@ -85,9 +85,7 @@ export type Review = {
 export type ReviewPage = Page<Review> & { averageRating: number | null };
 
 /** Отбор и страница ответа. Незаданное в строку запроса не попадает. */
-function searchParams(
-  query: Record<string, string | number | undefined>,
-): URLSearchParams {
+function searchParams(query: Record<string, string | number | undefined>): URLSearchParams {
   const parameters = new URLSearchParams();
 
   for (const [name, value] of Object.entries(query)) {
@@ -155,10 +153,7 @@ export function getWasteGroup(wasteGroupId: string): Promise<WasteGroup> {
  *
  * @supports: R-031
  */
-export function listReviews(
-  landfillId: string,
-  query?: { limit?: number; offset?: number },
-): Promise<ReviewPage> {
+export function listReviews(landfillId: string, query?: { limit?: number; offset?: number }): Promise<ReviewPage> {
   return request<ReviewPage>(
     withQuery(`/v1/landfills/${encodeURIComponent(landfillId)}/reviews`, searchParams(query ?? {})),
   );
@@ -170,10 +165,7 @@ export function listReviews(
  *
  * @supports: R-031
  */
-export function createReview(
-  landfillId: string,
-  body: { rating: number; text?: string },
-): Promise<Review> {
+export function createReview(landfillId: string, body: { rating: number; text?: string }): Promise<Review> {
   return request<Review>(`/v1/landfills/${encodeURIComponent(landfillId)}/reviews`, {
     method: 'POST',
     body: JSON.stringify(body),

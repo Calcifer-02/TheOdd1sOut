@@ -31,9 +31,7 @@ export function LandfillsPage() {
   const viewport = useViewport();
   const screen = useLandfillsScreen();
 
-  const scope = screen.selectedGroup
-    ? `группа «${screen.selectedGroup.name}»`
-    : 'все группы отходов';
+  const scope = screen.selectedGroup ? `группа «${screen.selectedGroup.name}»` : 'все группы отходов';
 
   // Один текст на заголовок таблицы и на имя списка карточек: выборка названа
   // одинаково в обоих представлениях (карточка практики PRACT-021). Счётчик
@@ -50,17 +48,13 @@ export function LandfillsPage() {
           случайный (BUG-011). */}
       <header className="imolt-landfills-head">
         <h1 className="imolt-title">Справочник цен полигонов</h1>
-        <p className="imolt-lead">
-          Тарифы утилизации по полигонам и группам отходов – без ввода адреса вывоза.
-        </p>
+        <p className="imolt-lead">Тарифы утилизации по полигонам и группам отходов – без ввода адреса вывоза.</p>
       </header>
 
       <FreshnessBand freshness={screen.freshness} />
 
       {screen.referenceFailure ? (
-        <Notice kind="warning">
-          {`${screen.referenceFailure}. Отбор по группе отходов сейчас недоступен`}
-        </Notice>
+        <Notice kind="warning">{`${screen.referenceFailure}. Отбор по группе отходов сейчас недоступен`}</Notice>
       ) : null}
 
       <LandfillsFilters
@@ -74,15 +68,10 @@ export function LandfillsPage() {
       />
 
       {screen.unknownGroup ? (
-        <Notice kind="warning">
-          {`Группы отходов «${screen.filters.wasteGroupId}» нет в справочнике`}
-        </Notice>
+        <Notice kind="warning">{`Группы отходов «${screen.filters.wasteGroupId}» нет в справочнике`}</Notice>
       ) : null}
 
-      <div
-        className="imolt-landfills-body"
-        data-card={screen.filters.landfillId === '' ? 'closed' : 'open'}
-      >
+      <div className="imolt-landfills-body" data-card={screen.filters.landfillId === '' ? 'closed' : 'open'}>
         <div className="imolt-landfills-list">
           {screen.loading ? <Skeleton rows={5} label="Справочник полигонов загружается" /> : null}
 

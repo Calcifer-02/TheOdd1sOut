@@ -56,14 +56,14 @@ export function ManualStatusForm({
   return (
     <form
       className="imolt-references-form"
-      onSubmit={(event) => {
+      onSubmit={event => {
         event.preventDefault();
 
         if (landfillId === null) {
           return;
         }
 
-        void onSave(status, reason).then((accepted) => {
+        void onSave(status, reason).then(accepted => {
           if (accepted) {
             setReason('');
             onDone?.();
@@ -76,7 +76,7 @@ export function ManualStatusForm({
           id="manual-status-landfill"
           label="Полигон"
           value={landfillId ?? ''}
-          options={landfills.map((landfill) => ({ value: landfill.id, label: landfill.name }))}
+          options={landfills.map(landfill => ({ value: landfill.id, label: landfill.name }))}
           onPick={onPickLandfill}
         />
       )}

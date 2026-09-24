@@ -181,13 +181,7 @@ export function SharedSection() {
       </Section>
 
       <Section title="Поля ввода">
-        <Field
-          id="vitrina-pole"
-          label="Обычное поле"
-          value={text}
-          placeholder="Наберите значение"
-          onChange={setText}
-        />
+        <Field id="vitrina-pole" label="Обычное поле" value={text} placeholder="Наберите значение" onChange={setText} />
         <Field
           id="vitrina-pole-podskazka"
           label="Поле с пояснением"
@@ -258,18 +252,8 @@ export function SharedSection() {
       </Section>
 
       <Section title="Флажки">
-        <Checkbox
-          id="vitrina-flazhok"
-          label="Нужна утилизация на полигоне"
-          checked={agreed}
-          onChange={setAgreed}
-        />
-        <Checkbox
-          id="vitrina-flazhok-snyat"
-          label="Снятый флажок"
-          checked={false}
-          onChange={() => undefined}
-        />
+        <Checkbox id="vitrina-flazhok" label="Нужна утилизация на полигоне" checked={agreed} onChange={setAgreed} />
+        <Checkbox id="vitrina-flazhok-snyat" label="Снятый флажок" checked={false} onChange={() => undefined} />
         <Checkbox
           id="vitrina-flazhok-nedostupen"
           label="Недоступный флажок"
@@ -318,8 +302,8 @@ export function SharedSection() {
 
       <Section title="Всплывающее окно">
         <p className="imolt-lead">
-          Окно закрывается клавишей Escape и щелчком вне; фокус возвращается на кнопку, которая его
-          открыла. Модальным оно не является: страница за ним остаётся доступной.
+          Окно закрывается клавишей Escape и щелчком вне; фокус возвращается на кнопку, которая его открыла. Модальным
+          оно не является: страница за ним остаётся доступной.
         </p>
         <div className="imolt-sorts-line">
           <span className="imolt-anchor">
@@ -327,9 +311,7 @@ export function SharedSection() {
               Показать детали маршрута
             </Button>
             <Popover title="Детали маршрута" open={popoverOpen} onClose={() => setPopoverOpen(false)}>
-              <p className="imolt-lead">
-                {formatDistance(45)} до площадки «Восток», примерно 1 ч 10 мин.
-              </p>
+              <p className="imolt-lead">{formatDistance(45)} до площадки «Восток», примерно 1 ч 10 мин.</p>
             </Popover>
           </span>
         </div>
@@ -367,19 +349,19 @@ export function SharedSection() {
           caption="Полигоны для лома бетона, 20 т"
           columns={COLUMNS}
           rows={sorted}
-          rowKey={(row) => row.id}
-          rowLabel={(row) => row.name}
+          rowKey={row => row.id}
+          rowLabel={row => row.name}
           cell={showCell}
           sort={sort}
-          onSort={(key) =>
-            setSort((was) => ({
+          onSort={key =>
+            setSort(was => ({
               key,
               direction: was.key === key && was.direction === 'asc' ? 'desc' : 'asc',
             }))
           }
           selectedKeys={picked}
           onToggleRow={(key, selected) =>
-            setPicked((was) => (selected ? [...was, key] : was.filter((item) => item !== key)))
+            setPicked(was => (selected ? [...was, key] : was.filter(item => item !== key)))
           }
         />
         <Pager total={10} shown={sorted.length} onMore={() => undefined} />
@@ -430,15 +412,13 @@ export function SharedSection() {
           label="Тип отходов"
           listLabel="Подсказки типа отходов"
           placeholder="Название или код"
-          items={WASTE_GROUP_NAMES.filter((name) =>
-            name.toLowerCase().includes(groupQuery.trim().toLowerCase()),
-          )}
+          items={WASTE_GROUP_NAMES.filter(name => name.toLowerCase().includes(groupQuery.trim().toLowerCase()))}
           query={groupQuery}
           selected={groupChoice}
-          render={(item) => item}
+          render={item => item}
           onQuery={setGroupQuery}
           onOpen={() => setGroupQuery('')}
-          onPick={(item) => {
+          onPick={item => {
             setGroupChoice(item);
             setGroupQuery(item);
           }}
@@ -456,7 +436,7 @@ export function SharedSection() {
         <SuggestList
           label="Подсказки адреса"
           items={['г Москва, ул Годовикова, д 9', 'г Москва, ул Годовикова, д 9 стр 3']}
-          render={(item) => item}
+          render={item => item}
           onPick={() => undefined}
         />
       </Section>

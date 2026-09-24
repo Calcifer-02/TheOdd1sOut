@@ -43,12 +43,10 @@ export function parseAmount(amount: string): number {
 }
 
 /** Заполненные строки в виде позиций запроса расчёта. */
-export function filledItems(
-  lines: WasteLine[],
-): { wasteGroupId: string; quantity: { value: number; unit: Unit } }[] {
+export function filledItems(lines: WasteLine[]): { wasteGroupId: string; quantity: { value: number; unit: Unit } }[] {
   return lines
-    .filter((line) => line.group !== undefined && parseAmount(line.amount) > 0)
-    .map((line) => ({
+    .filter(line => line.group !== undefined && parseAmount(line.amount) > 0)
+    .map(line => ({
       wasteGroupId: line.group!.id,
       quantity: { value: parseAmount(line.amount), unit: line.unit },
     }));

@@ -32,27 +32,19 @@ export function ServicesSection({
           Услуги по документации
         </h1>
         <p className="imolt-lead">
-          Цена указана от минимального объёма работ – точную назовёт менеджер после уточнения
-          объекта.
+          Цена указана от минимального объёма работ – точную назовёт менеджер после уточнения объекта.
         </p>
       </div>
 
       {state.failure !== null && <Notice kind="error">{state.failure}</Notice>}
 
-      {state.loading && state.services.length === 0 && (
-        <Skeleton rows={3} label="Каталог услуг загружается" />
-      )}
+      {state.loading && state.services.length === 0 && <Skeleton rows={3} label="Каталог услуг загружается" />}
 
-      {empty && (
-        <EmptyState
-          title="Каталог услуг пуст"
-          hint="Справочник услуг по документации ещё не заполнен."
-        />
-      )}
+      {empty && <EmptyState title="Каталог услуг пуст" hint="Справочник услуг по документации ещё не заполнен." />}
 
       {state.services.length > 0 && (
         <div className={wide ? 'imolt-cabinet-services imolt-cabinet-services--wide' : 'imolt-cabinet-services'}>
-          {state.services.map((service) => (
+          {state.services.map(service => (
             <ServiceCard key={service.id} service={service} order={order} />
           ))}
         </div>

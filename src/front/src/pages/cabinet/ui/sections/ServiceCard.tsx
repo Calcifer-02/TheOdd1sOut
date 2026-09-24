@@ -27,13 +27,7 @@ function priceWord(service: DocumentService): string {
   return `от ${formatMoney(service.priceFrom)}`;
 }
 
-export function ServiceCard({
-  service,
-  order,
-}: {
-  service: DocumentService;
-  order: ServiceOrderState;
-}) {
+export function ServiceCard({ service, order }: { service: DocumentService; order: ServiceOrderState }) {
   const fieldId = useId();
   const [objectAddress, setObjectAddress] = useState('');
   const [comment, setComment] = useState('');
@@ -97,7 +91,7 @@ export function ServiceCard({
               className="imolt-textarea"
               value={comment}
               placeholder="Сроки, площадь, особенности объекта"
-              onChange={(event) => setComment(event.target.value)}
+              onChange={event => setComment(event.target.value)}
             />
           </div>
 
@@ -109,9 +103,7 @@ export function ServiceCard({
           />
 
           {touched && !consent && (
-            <Notice kind="error">
-              Без согласия на обработку персональных данных заказ не отправляется
-            </Notice>
+            <Notice kind="error">Без согласия на обработку персональных данных заказ не отправляется</Notice>
           )}
 
           {order.failure !== null && <Notice kind="error">{order.failure}</Notice>}
@@ -120,21 +112,13 @@ export function ServiceCard({
             <Button type="submit" disabled={order.sending} ariaLabel={`Отправить заказ: ${service.name}`}>
               Отправить
             </Button>
-            <Button
-              kind="secondary"
-              onClick={() => order.open(null)}
-              ariaLabel={`Отменить заказ: ${service.name}`}
-            >
+            <Button kind="secondary" onClick={() => order.open(null)} ariaLabel={`Отменить заказ: ${service.name}`}>
               Отмена
             </Button>
           </div>
         </form>
       ) : (
-        <Button
-          kind="secondary"
-          onClick={() => order.open(service.id)}
-          ariaLabel={`Заказать: ${service.name}`}
-        >
+        <Button kind="secondary" onClick={() => order.open(service.id)} ariaLabel={`Заказать: ${service.name}`}>
           Заказать
         </Button>
       )}

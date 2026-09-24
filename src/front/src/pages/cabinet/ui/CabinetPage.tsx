@@ -18,13 +18,7 @@
 import { Notice, Skeleton, useStyles } from '@/shared/ui';
 import { isWide, useViewport } from '@/shared/lib/viewport';
 import { useParticipant } from '@/entities/participant';
-import {
-  useCabinetSection,
-  useCalculations,
-  useDocumentServices,
-  useProfile,
-  useServiceOrder,
-} from '../model/cabinet';
+import { useCabinetSection, useCalculations, useDocumentServices, useProfile, useServiceOrder } from '../model/cabinet';
 import { CabinetDesktop } from './CabinetDesktop';
 import { CabinetMobile } from './CabinetMobile';
 import type { CabinetView } from './CabinetSections';

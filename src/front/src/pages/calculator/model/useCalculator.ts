@@ -120,7 +120,7 @@ export function useCalculator() {
     let cancelled = false;
     const timer = window.setTimeout(() => {
       suggestAddresses(addressQuery.trim())
-        .then((page) => {
+        .then(page => {
           if (!cancelled) {
             setAddressSuggestions(page.items);
           }
@@ -150,24 +150,19 @@ export function useCalculator() {
     replaceRoute(CALCULATOR_PATH, query);
   }, []);
 
-  const loadOptions = useCallback(
-    async (calculationId: string, next: ViewState, offset: number) => {
-      const page = await listPlacementOptions(calculationId, {
-        wasteGroupId: next.wasteGroupId ?? '',
-        sort: next.sort,
-        order: next.order,
-        distanceMode: next.distanceMode,
-        distanceKm: next.distanceKm,
-        limit: PAGE_SIZE,
-        offset,
-      });
+  const loadOptions = useCallback(async (calculationId: string, next: ViewState, offset: number) => {
+    const page = await listPlacementOptions(calculationId, {
+      wasteGroupId: next.wasteGroupId ?? '',
+      sort: next.sort,
+      order: next.order,
+      distanceMode: next.distanceMode,
+      distanceKm: next.distanceKm,
+      limit: PAGE_SIZE,
+      offset,
+    });
 
-      setOptions((previous) =>
-        offset > 0 && previous ? { ...page, items: [...previous.items, ...page.items] } : page,
-      );
-    },
-    [],
-  );
+    setOptions(previous => (offset > 0 && previous ? { ...page, items: [...previous.items, ...page.items] } : page));
+  }, []);
 
   // Расчёт восстанавливается из адреса, с которым открыли страницу:
   // обновление не теряет результат, а ссылка воспроизводит выборку
@@ -181,7 +176,7 @@ export function useCalculator() {
     }
 
     getCalculation(opened.calculationId)
-      .then((restoredCalculation) => {
+      .then(restoredCalculation => {
         setCalculation(restoredCalculation);
         setSelectionState(restoredCalculation.selection ?? null);
         const group = opened.wasteGroupId ?? restoredCalculation.results[0]?.wasteGroupId;
@@ -200,7 +195,7 @@ export function useCalculator() {
   }, [loadOptions]);
 
   function updateLine(key: string, change: Partial<WasteLine>) {
-    setLines((current) => current.map((line) => (line.key === key ? { ...line, ...change } : line)));
+    setLines(current => current.map(line => (line.key === key ? { ...line, ...change } : line)));
   }
 
   /** Записи справочника по строке поиска; пустая строка — весь справочник. */
@@ -254,9 +249,7 @@ export function useCalculator() {
     }
 
     try {
-      const result = await convertAmounts([
-        { wasteGroupId: line.group.id, quantity: { value, unit: 'm3' } },
-      ]);
+      const result = await convertAmounts([{ wasteGroupId: line.group.id, quantity: { value, unit: 'm3' } }]);
       updateLine(line.key, { tons: result.items[0]?.tons });
     } catch {
       updateLine(line.key, { tons: undefined });
@@ -279,11 +272,11 @@ export function useCalculator() {
   }
 
   function addLine() {
-    setLines((current) => [...current, emptyLine()]);
+    setLines(current => [...current, emptyLine()]);
   }
 
   function removeLine(key: string) {
-    setLines((current) => (current.length > 1 ? current.filter((line) => line.key !== key) : current));
+    setLines(current => (current.length > 1 ? current.filter(line => line.key !== key) : current));
   }
 
   function changeAddress(value: string) {
@@ -307,9 +300,7 @@ export function useCalculator() {
     const items = filledItems(lines);
     if (items.length === 0) {
       setAddressError(undefined);
-      setFailure(
-        new ApiProblem('urn:imolt:problem:validation', 'Заполните тип отходов и объём', 400),
-      );
+      setFailure(new ApiProblem('urn:imolt:problem:validation', 'Заполните тип отходов и объём', 400));
       return;
     }
 
@@ -338,14 +329,12 @@ export function useCalculator() {
       setQuote(null);
       setAllocationTotal(null);
       setAllocationDraft({});
-      setOptions(result.results.find((tab) => tab.wasteGroupId === group)?.options ?? null);
+      setOptions(result.results.find(tab => tab.wasteGroupId === group)?.options ?? null);
       setView(next);
       rememberInAddress(next);
     } catch (error: unknown) {
       setFailure(
-        error instanceof ApiProblem
-          ? error
-          : new ApiProblem('urn:imolt:problem:unknown', 'Запрос не выполнен', 0),
+        error instanceof ApiProblem ? error : new ApiProblem('urn:imolt:problem:unknown', 'Запрос не выполнен', 0),
       );
     } finally {
       setBusy(false);
@@ -370,11 +359,7 @@ export function useCalculator() {
 
   /** Сортировка по столбцу: повторный выбор того же поля меняет направление. */
   function sortBy(field: SortField) {
-    applyView(
-      field === view.sort
-        ? { order: view.order === 'asc' ? 'desc' : 'asc' }
-        : { sort: field, order: 'asc' },
-    );
+    applyView(field === view.sort ? { order: view.order === 'asc' ? 'desc' : 'asc' } : { sort: field, order: 'asc' });
   }
 
   function toggleOrder() {
@@ -405,7 +390,7 @@ export function useCalculator() {
     // сортировка не должна переносить отметку на соседа (PRACT-021).
     const entries: SelectionEntry[] = selection ? [...selection.entries] : [];
     const at = entries.findIndex(
-      (entry) => entry.landfillId === option.landfillId && entry.wasteGroupId === view.wasteGroupId,
+      entry => entry.landfillId === option.landfillId && entry.wasteGroupId === view.wasteGroupId,
     );
 
     if (at >= 0) {
@@ -422,13 +407,13 @@ export function useCalculator() {
 
   function isSelected(option: PlacementOption): boolean {
     return (selection?.entries ?? []).some(
-      (entry) => entry.landfillId === option.landfillId && entry.wasteGroupId === view.wasteGroupId,
+      entry => entry.landfillId === option.landfillId && entry.wasteGroupId === view.wasteGroupId,
     );
   }
 
   /** Объём группы в тоннах: его назвала расчётная часть, а не интерфейс. */
   function groupTons(): number | undefined {
-    return calculation?.items.find((item) => item.wasteGroupId === view.wasteGroupId)?.tons;
+    return calculation?.items.find(item => item.wasteGroupId === view.wasteGroupId)?.tons;
   }
 
   /**
@@ -443,12 +428,12 @@ export function useCalculator() {
     }
 
     const entries = landfillIds
-      .map((landfillId) => ({
+      .map(landfillId => ({
         wasteGroupId: view.wasteGroupId!,
         landfillId,
         quantity: { value: parseAmount(draft[landfillId] ?? ''), unit: 't' as Unit },
       }))
-      .filter((entry) => Number.isFinite(entry.quantity.value) && entry.quantity.value > 0);
+      .filter(entry => Number.isFinite(entry.quantity.value) && entry.quantity.value > 0);
 
     if (entries.length !== landfillIds.length) {
       setAllocationProblem(null);
@@ -484,7 +469,7 @@ export function useCalculator() {
     setAllocationDraft(draft);
     void applyAllocation(
       draft,
-      selectedInGroup.map((entry) => entry.landfillId),
+      selectedInGroup.map(entry => entry.landfillId),
     );
   }
 
@@ -530,11 +515,11 @@ export function useCalculator() {
 
   /** Название полигона для показа: идентификатор справочника наружу не идёт. */
   function landfillNameById(landfillId?: string): string | undefined {
-    return (shown?.items ?? []).find((option) => option.landfillId === landfillId)?.landfillName;
+    return (shown?.items ?? []).find(option => option.landfillId === landfillId)?.landfillName;
   }
 
   function landfillIdByName(landfillName: string): string | undefined {
-    return (shown?.items ?? []).find((option) => option.landfillName === landfillName)?.landfillId;
+    return (shown?.items ?? []).find(option => option.landfillName === landfillName)?.landfillId;
   }
 
   function openPickup() {
@@ -547,7 +532,7 @@ export function useCalculator() {
   }
 
   function changePickup(change: Partial<PickupDraft>) {
-    setPickup((current) => (current ? { ...current, ...change } : current));
+    setPickup(current => (current ? { ...current, ...change } : current));
   }
 
   function closePickup() {
@@ -587,11 +572,11 @@ export function useCalculator() {
     }
   }
 
-  const activeTab = calculation?.results.find((tab) => tab.wasteGroupId === view.wasteGroupId);
+  const activeTab = calculation?.results.find(tab => tab.wasteGroupId === view.wasteGroupId);
   const shown = options ?? activeTab?.options ?? null;
   const freshness = calculation?.dataFreshness;
   const selectedInGroup: SelectionEntry[] = (selection?.entries ?? []).filter(
-    (entry) => entry.wasteGroupId === view.wasteGroupId,
+    entry => entry.wasteGroupId === view.wasteGroupId,
   );
   const warnings: SelectionWarning[] = selection?.warnings ?? [];
 
@@ -623,9 +608,7 @@ export function useCalculator() {
     quote,
     quoteDocumentHref: quote ? quoteDocumentHref(quote) : undefined,
     /** Ссылка на экран предложения по этому расчёту (карта пути, этап 5). */
-    quoteScreenHref: calculation
-      ? hashOf('/quote', new URLSearchParams({ calc: calculation.id }))
-      : undefined,
+    quoteScreenHref: calculation ? hashOf('/quote', new URLSearchParams({ calc: calculation.id })) : undefined,
     route,
     pickup,
     pickupError,

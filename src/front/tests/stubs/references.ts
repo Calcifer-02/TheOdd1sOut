@@ -1,7 +1,7 @@
 // Заглушка расчётной части для проверок справочника полигонов.
 //
 // Подменяет глобальный fetch, разбирает путь и отвечает телами договора
-// (src/back/Imolt.Api/contracts/openapi.yaml, схемы Landfill, LandfillCard,
+// (../../../back/Imolt.Api/contracts/openapi.yaml, схемы Landfill, LandfillCard,
 // WasteGroup, LandfillReviewPage, DataFreshness). Канонические данные сняты с
 // поднятой службы: `curl http://localhost:18080/v1/landfills` и
 // `/v1/waste-groups` на 24.09.2026. Ничего сверх договора заглушка не
@@ -127,9 +127,21 @@ export const VOSTOK: LandfillCard = {
   status: 'active',
   statusUpdatedAt: FRESHNESS_DATE,
   tariffs: [
-    { wasteGroupId: 'beton-lom', disposalPricePerTon: { amount: '450.00', currency: 'RUB' }, updatedAt: FRESHNESS_DATE },
-    { wasteGroupId: 'drevesina', disposalPricePerTon: { amount: '300.00', currency: 'RUB' }, updatedAt: FRESHNESS_DATE },
-    { wasteGroupId: 'kirpich-lom', disposalPricePerTon: { amount: '420.00', currency: 'RUB' }, updatedAt: FRESHNESS_DATE },
+    {
+      wasteGroupId: 'beton-lom',
+      disposalPricePerTon: { amount: '450.00', currency: 'RUB' },
+      updatedAt: FRESHNESS_DATE,
+    },
+    {
+      wasteGroupId: 'drevesina',
+      disposalPricePerTon: { amount: '300.00', currency: 'RUB' },
+      updatedAt: FRESHNESS_DATE,
+    },
+    {
+      wasteGroupId: 'kirpich-lom',
+      disposalPricePerTon: { amount: '420.00', currency: 'RUB' },
+      updatedAt: FRESHNESS_DATE,
+    },
   ],
   legalEntityHistory: [
     { legalEntity: 'ООО «Тимохово»', since: '2023-01-01', until: '2026-02-28' },
@@ -146,8 +158,16 @@ export const IKSHA: LandfillCard = {
   status: 'active',
   statusUpdatedAt: FRESHNESS_DATE,
   tariffs: [
-    { wasteGroupId: 'beton-lom', disposalPricePerTon: { amount: '380.00', currency: 'RUB' }, updatedAt: FRESHNESS_DATE },
-    { wasteGroupId: 'kirpich-lom', disposalPricePerTon: { amount: '360.00', currency: 'RUB' }, updatedAt: FRESHNESS_DATE },
+    {
+      wasteGroupId: 'beton-lom',
+      disposalPricePerTon: { amount: '380.00', currency: 'RUB' },
+      updatedAt: FRESHNESS_DATE,
+    },
+    {
+      wasteGroupId: 'kirpich-lom',
+      disposalPricePerTon: { amount: '360.00', currency: 'RUB' },
+      updatedAt: FRESHNESS_DATE,
+    },
   ],
 };
 
@@ -160,12 +180,7 @@ export const DATA_FRESHNESS = {
 };
 
 /** Документ об отказе по RFC 9457 — форма `Problem` договора. */
-export function problem(
-  type: string,
-  title: string,
-  status: number,
-  detail?: string,
-): Record<string, unknown> {
+export function problem(type: string, title: string, status: number, detail?: string): Record<string, unknown> {
   return detail === undefined ? { type, title, status } : { type, title, status, detail };
 }
 
@@ -181,11 +196,7 @@ export const REGISTRY_UNAVAILABLE = problem(
  * `ProblemResponses`). Заглушка, отвечающая своими словами, проверяет не службу,
  * а саму себя: ветвление экрана по коду причины на ней не срабатывало.
  */
-export const SESSION_REQUIRED = problem(
-  'urn:imolt:problem:authentication-required',
-  'Нужна сессия участника',
-  401,
-);
+export const SESSION_REQUIRED = problem('urn:imolt:problem:authentication-required', 'Нужна сессия участника', 401);
 
 /** Отзыв, разобранный из тела запроса: служба возвращает его с номером и моментом. */
 export function acceptedReview(landfillId: string, body: unknown, index: number): Review {
@@ -229,9 +240,7 @@ const PROBLEM_TYPE = 'application/problem+json';
 /** Ответ без зависимости от глобального `Response`: jsdom его не обещает. */
 function makeResponse(status: number, body: unknown, headers: Record<string, string>): Response {
   const text = body === undefined ? '' : JSON.stringify(body);
-  const lowered = new Map(
-    Object.entries(headers).map(([name, value]) => [name.toLowerCase(), value]),
-  );
+  const lowered = new Map(Object.entries(headers).map(([name, value]) => [name.toLowerCase(), value]));
 
   return {
     ok: status >= 200 && status < 300,
@@ -301,12 +310,8 @@ export function installReferencesStub(): ReferencesStub {
     const wasteGroupId = request.query.get('wasteGroupId') ?? '';
 
     return registry
-      .filter((landfill) => landfill.name.toLowerCase().includes(query))
-      .filter(
-        (landfill) =>
-          wasteGroupId === '' ||
-          landfill.tariffs.some((tariff) => tariff.wasteGroupId === wasteGroupId),
-      );
+      .filter(landfill => landfill.name.toLowerCase().includes(query))
+      .filter(landfill => wasteGroupId === '' || landfill.tariffs.some(tariff => tariff.wasteGroupId === wasteGroupId));
   }
 
   function defaultAnswer(key: RouteKey | undefined, request: RecordedRequest): StubResponse {
@@ -317,7 +322,7 @@ export function installReferencesStub(): ReferencesStub {
     switch (key) {
       case 'GET /v1/waste-groups': {
         const query = (request.query.get('query') ?? '').toLowerCase();
-        const found = WASTE_GROUPS.filter((group) => group.name.toLowerCase().includes(query));
+        const found = WASTE_GROUPS.filter(group => group.name.toLowerCase().includes(query));
         return ok(page(found.slice(offset, offset + limit), found.length, limit, offset));
       }
 
@@ -334,12 +339,12 @@ export function installReferencesStub(): ReferencesStub {
       }
 
       case 'GET /v1/landfills/:id': {
-        const found = registry.find((landfill) => landfill.id === landfillId);
+        const found = registry.find(landfill => landfill.id === landfillId);
         return found ? ok(found) : notFound();
       }
 
       case 'GET /v1/landfills/:id/reviews': {
-        if (!registry.some((landfill) => landfill.id === landfillId)) {
+        if (!registry.some(landfill => landfill.id === landfillId)) {
           return notFound();
         }
 
@@ -351,7 +356,7 @@ export function installReferencesStub(): ReferencesStub {
       }
 
       case 'POST /v1/landfills/:id/reviews': {
-        if (!registry.some((landfill) => landfill.id === landfillId)) {
+        if (!registry.some(landfill => landfill.id === landfillId)) {
           return notFound();
         }
 
@@ -378,12 +383,7 @@ export function installReferencesStub(): ReferencesStub {
   }
 
   globalThis.fetch = (async (input: unknown, init?: RequestInit): Promise<Response> => {
-    const raw =
-      typeof input === 'string'
-        ? input
-        : input instanceof URL
-          ? input.toString()
-          : String((input as { url?: string }).url ?? '');
+    const raw = addressOf(input);
     const address = new URL(raw, 'http://mini.app');
     const method = (init?.method ?? (input as { method?: string }).method ?? 'GET').toUpperCase();
     const rawBody = init?.body;
@@ -402,12 +402,7 @@ export function installReferencesStub(): ReferencesStub {
 
     const key = routeKeyOf(method, request.path);
     const override = key === undefined ? undefined : answers.get(key);
-    const answer =
-      override === undefined
-        ? defaultAnswer(key, request)
-        : typeof override === 'function'
-          ? override(request)
-          : override;
+    const answer = answerOf(override, key, request, defaultAnswer);
 
     return makeResponse(answer.status, answer.body, answer.headers ?? { 'content-type': JSON_TYPE });
   }) as typeof globalThis.fetch;
@@ -416,7 +411,7 @@ export function installReferencesStub(): ReferencesStub {
     requests,
 
     sentTo(key) {
-      return requests.filter((request) => routeKeyOf(request.method, request.path) === key);
+      return requests.filter(request => routeKeyOf(request.method, request.path) === key);
     },
 
     lastTo(key) {
@@ -451,4 +446,42 @@ export function installReferencesStub(): ReferencesStub {
       globalThis.fetch = original;
     },
   };
+}
+
+/**
+ * Адрес обращения: `fetch` принимает строку, `URL` или объект запроса.
+ * Вложенные условные выражения читаются хуже ветвления и запрещены правилом
+ * кода, а разбор здесь — три отдельных случая, а не одно условие.
+ */
+function addressOf(input: unknown): string {
+  if (typeof input === 'string') {
+    return input;
+  }
+
+  if (input instanceof URL) {
+    return input.toString();
+  }
+
+  return String((input as { url?: string }).url ?? '');
+}
+
+/**
+ * Ответ на обращение: подменённый заглушкой, вычисленный подменой или ответ
+ * договора по умолчанию.
+ */
+function answerOf<TKey>(
+  override: StubResponse | ((request: RecordedRequest) => StubResponse) | undefined,
+  key: TKey | undefined,
+  request: RecordedRequest,
+  fallback: (key: TKey | undefined, request: RecordedRequest) => StubResponse,
+): StubResponse {
+  if (override === undefined) {
+    return fallback(key, request);
+  }
+
+  if (typeof override === 'function') {
+    return override(request);
+  }
+
+  return override;
 }

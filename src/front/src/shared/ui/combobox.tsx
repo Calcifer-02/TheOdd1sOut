@@ -232,7 +232,7 @@ export function Combobox<T>({
           onFocus={show}
           onBlur={dismiss}
           onKeyDown={onKeyDown}
-          onChange={(event) => {
+          onChange={event => {
             setOpen(true);
             setActive(-1);
             onQuery(event.target.value);
@@ -251,7 +251,7 @@ export function Combobox<T>({
                 // Нажатие по строке не уводит фокус из поля: иначе первым
                 // сработал бы уход из поля, вернул бы прежнее значение, и
                 // выбор пришёл бы в уже закрытый список.
-                onMouseDown={(event) => event.preventDefault()}
+                onMouseDown={event => event.preventDefault()}
                 onClick={() => pick(item)}
               >
                 {render(item)}

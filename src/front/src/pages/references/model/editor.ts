@@ -16,12 +16,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { DataFreshness, LandfillStatus, WasteGroup } from '@/shared/api/contracts';
 import type { Money } from '@/shared/lib/formatting';
-import {
-  type Landfill,
-  getDataFreshness,
-  listLandfills,
-  listWasteGroups,
-} from '@/shared/api/references';
+import { type Landfill, getDataFreshness, listLandfills, listWasteGroups } from '@/shared/api/references';
 import {
   type LandfillTariff,
   type Refusal,
@@ -72,7 +67,7 @@ export function moneyOf(text: string): Money | null {
 
 /** Тариф утилизации полигона по группе отходов или его отсутствие. */
 export function tariffOf(landfill: Landfill, wasteGroupId: string): LandfillTariff | undefined {
-  return landfill.tariffs.find((tariff) => tariff.wasteGroupId === wasteGroupId);
+  return landfill.tariffs.find(tariff => tariff.wasteGroupId === wasteGroupId);
 }
 
 /**
@@ -91,9 +86,9 @@ function matchesLandfill(landfill: Landfill, query: string): boolean {
   const lowered = query.trim().toLowerCase();
 
   return (
-    lowered === ''
-    || landfill.name.toLowerCase().includes(lowered)
-    || (landfill.legalEntity ?? '').toLowerCase().includes(lowered)
+    lowered === '' ||
+    landfill.name.toLowerCase().includes(lowered) ||
+    (landfill.legalEntity ?? '').toLowerCase().includes(lowered)
   );
 }
 
@@ -101,9 +96,9 @@ function matchesWasteGroup(group: WasteGroup, query: string): boolean {
   const lowered = query.trim().toLowerCase();
 
   return (
-    lowered === ''
-    || group.name.toLowerCase().includes(lowered)
-    || group.fkkoCodes.some((code) => code.toLowerCase().includes(lowered))
+    lowered === '' ||
+    group.name.toLowerCase().includes(lowered) ||
+    group.fkkoCodes.some(code => code.toLowerCase().includes(lowered))
   );
 }
 
@@ -244,15 +239,13 @@ export function useReferenceEditor(): ReferenceEditor {
       try {
         const tariff = await setLandfillTariff(landfillId, wasteGroupId, price);
 
-        setLandfills((current) =>
-          current.map((landfill) =>
+        setLandfills(current =>
+          current.map(landfill =>
             landfill.id === landfillId
               ? {
                   ...landfill,
-                  tariffs: landfill.tariffs.some((item) => item.wasteGroupId === wasteGroupId)
-                    ? landfill.tariffs.map((item) =>
-                        item.wasteGroupId === wasteGroupId ? tariff : item,
-                      )
+                  tariffs: landfill.tariffs.some(item => item.wasteGroupId === wasteGroupId)
+                    ? landfill.tariffs.map(item => (item.wasteGroupId === wasteGroupId ? tariff : item))
                     : [...landfill.tariffs, tariff],
                 }
               : landfill,
@@ -287,9 +280,7 @@ export function useReferenceEditor(): ReferenceEditor {
       try {
         const updated = await updateWasteGroup(wasteGroupId, { transportPricePerTonKm: price });
 
-        setWasteGroups((current) =>
-          current.map((group) => (group.id === wasteGroupId ? updated : group)),
-        );
+        setWasteGroups(current => current.map(group => (group.id === wasteGroupId ? updated : group)));
 
         await refreshDates();
         return true;
@@ -312,8 +303,8 @@ export function useReferenceEditor(): ReferenceEditor {
       try {
         const state = await setLandfillStatus(landfillId, status, reason);
 
-        setLandfills((current) =>
-          current.map((landfill) =>
+        setLandfills(current =>
+          current.map(landfill =>
             landfill.id === landfillId
               ? { ...landfill, status: state.status, statusUpdatedAt: state.statusUpdatedAt }
               : landfill,
@@ -340,12 +331,12 @@ export function useReferenceEditor(): ReferenceEditor {
   }, [readSyncRun]);
 
   const visibleLandfills = useCallback(
-    (query: string) => landfills.filter((landfill) => matchesLandfill(landfill, query)),
+    (query: string) => landfills.filter(landfill => matchesLandfill(landfill, query)),
     [landfills],
   );
 
   const visibleWasteGroups = useCallback(
-    (query: string) => wasteGroups.filter((group) => matchesWasteGroup(group, query)),
+    (query: string) => wasteGroups.filter(group => matchesWasteGroup(group, query)),
     [wasteGroups],
   );
 

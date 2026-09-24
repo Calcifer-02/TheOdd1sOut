@@ -43,7 +43,7 @@ export const SECTIONS: Section[] = [
  * Горизонтальный перечень шапки — производная единственного перечня, а не
  * второй список: второй список разошёлся бы с первым молча.
  */
-export const TOP_SECTIONS: Section[] = SECTIONS.filter((section) => !section.phoneOnly);
+export const TOP_SECTIONS: Section[] = SECTIONS.filter(section => !section.phoneOnly);
 
 /** Доступное имя перечня переходов. Оболочка называет его обоим представлениям. */
 export const NAVIGATION_LABEL = 'Разделы сервиса';

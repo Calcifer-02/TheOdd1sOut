@@ -56,23 +56,16 @@ export type QuoteComposition = {
   omitted: number;
 };
 
-function optionOf(
-  calculation: Calculation,
-  wasteGroupId: string,
-  landfillId: string,
-): PlacementOption | undefined {
+function optionOf(calculation: Calculation, wasteGroupId: string, landfillId: string): PlacementOption | undefined {
   return calculation.results
-    .find((result) => result.wasteGroupId === wasteGroupId)
-    ?.options.items.find((option) => option.landfillId === landfillId);
+    .find(result => result.wasteGroupId === wasteGroupId)
+    ?.options.items.find(option => option.landfillId === landfillId);
 }
 
 function wasteGroupNameOf(calculation: Calculation, wasteGroupId: string): string {
   // Имя группы приходит с расчётом; запасной вариант — идентификатор группы:
   // пустая ячейка в документе хуже технического имени.
-  return (
-    calculation.items.find((item) => item.wasteGroupId === wasteGroupId)?.wasteGroupName ??
-    wasteGroupId
-  );
+  return calculation.items.find(item => item.wasteGroupId === wasteGroupId)?.wasteGroupName ?? wasteGroupId;
 }
 
 /** Состав по распределению объёма: доли приходят уже с ценами. */
@@ -109,7 +102,7 @@ function fromSelection(calculation: Calculation): QuoteComposition {
 
   selection.entries.forEach((entry, index) => {
     const option = optionOf(calculation, entry.wasteGroupId, entry.landfillId);
-    const item = calculation.items.find((candidate) => candidate.wasteGroupId === entry.wasteGroupId);
+    const item = calculation.items.find(candidate => candidate.wasteGroupId === entry.wasteGroupId);
 
     if (!option || !item) {
       omitted += 1;

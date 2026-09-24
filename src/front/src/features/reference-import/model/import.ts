@@ -14,7 +14,6 @@
  * @adr: ADR-0008
  */
 import { useCallback, useMemo, useState } from 'react';
-import { accessToken } from '@/entities/participant';
 import {
   type ReferenceImportKind,
   type ReferenceImportPreview,
@@ -52,7 +51,7 @@ export const IMPORT_KINDS: { value: ReferenceImportKind; label: string }[] = [
 
 /** Имя вида справочника для экрана. */
 export function importKindName(kind: ReferenceImportKind): string {
-  return IMPORT_KINDS.find((item) => item.value === kind)?.label ?? kind;
+  return IMPORT_KINDS.find(item => item.value === kind)?.label ?? kind;
 }
 
 /**
@@ -108,7 +107,7 @@ export function useReferenceImport(onApplied: () => void): ReferenceImport {
 
   const parseBook = useCallback(async (kind: ReferenceImportKind, file: File) => {
     setBook(file);
-    setState((current) => ({
+    setState(current => ({
       ...current,
       kind,
       stage: 'parsing',
@@ -121,16 +120,13 @@ export function useReferenceImport(onApplied: () => void): ReferenceImport {
 
     try {
       const preview = await startReferenceImport(kind, file);
-      setState((current) => ({ ...current, stage: 'preview', preview }));
+      setState(current => ({ ...current, stage: 'preview', preview }));
     } catch (error) {
-      setState((current) => ({ ...current, stage: 'idle', refusal: refusalOf(error) }));
+      setState(current => ({ ...current, stage: 'idle', refusal: refusalOf(error) }));
     }
   }, []);
 
-  const parse = useCallback(
-    (file: File) => parseBook(state.kind, file),
-    [parseBook, state.kind],
-  );
+  const parse = useCallback((file: File) => parseBook(state.kind, file), [parseBook, state.kind]);
 
   const rebuild = useCallback(async () => {
     if (book === null) {
@@ -147,18 +143,18 @@ export function useReferenceImport(onApplied: () => void): ReferenceImport {
       return;
     }
 
-    setState((current) => ({ ...current, stage: 'applying', refusal: null, stale: false }));
+    setState(current => ({ ...current, stage: 'applying', refusal: null, stale: false }));
 
     try {
       const result = await confirmReferenceImport(preview.id);
-      setState((current) => ({ ...current, stage: 'applied', result }));
+      setState(current => ({ ...current, stage: 'applied', result }));
       onApplied();
     } catch (error) {
       const refusal = refusalOf(error);
 
       // Устаревший предпросмотр остаётся на экране, но применить его уже
       // нельзя: следующий шаг — разобрать книгу заново, а не повторить.
-      setState((current) => ({
+      setState(current => ({
         ...current,
         stage: 'preview',
         refusal,
@@ -168,7 +164,7 @@ export function useReferenceImport(onApplied: () => void): ReferenceImport {
   }, [onApplied, state.preview]);
 
   const pickKind = useCallback((kind: ReferenceImportKind) => {
-    setState((current) => ({ ...current, kind }));
+    setState(current => ({ ...current, kind }));
   }, []);
 
   const reset = useCallback(() => {

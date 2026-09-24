@@ -37,8 +37,8 @@ export function QuotePage() {
       <section className="imolt-card">
         <h1 className="imolt-quote-title">{QUOTE_LABELS.screen}</h1>
         <Notice kind="empty">
-          Предложение выпускается по расчёту, а расчёт в ссылке не назван. Вернитесь к расчёту,
-          выберите полигоны и нажмите «Скачать КП»
+          Предложение выпускается по расчёту, а расчёт в ссылке не назван. Вернитесь к расчёту, выберите полигоны и
+          нажмите «Скачать КП»
         </Notice>
         <button
           type="button"
@@ -88,18 +88,8 @@ export function QuotePage() {
   const view = quoteView(state);
 
   return isWide(viewport) ? (
-    <QuoteDesktop
-      view={view}
-      issuing={state.issuing}
-      issueFailure={state.issueFailure}
-      onIssue={issue}
-    />
+    <QuoteDesktop view={view} issuing={state.issuing} issueFailure={state.issueFailure} onIssue={issue} />
   ) : (
-    <QuoteMobile
-      view={view}
-      issuing={state.issuing}
-      issueFailure={state.issueFailure}
-      onIssue={issue}
-    />
+    <QuoteMobile view={view} issuing={state.issuing} issueFailure={state.issueFailure} onIssue={issue} />
   );
 }

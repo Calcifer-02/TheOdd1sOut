@@ -53,7 +53,7 @@ export function CabinetSideNav({
 
   return (
     <nav className="imolt-cabinet-nav" aria-label="Разделы кабинета">
-      {CABINET_SECTIONS.map((item) => (
+      {CABINET_SECTIONS.map(item => (
         <button
           key={item.value}
           type="button"

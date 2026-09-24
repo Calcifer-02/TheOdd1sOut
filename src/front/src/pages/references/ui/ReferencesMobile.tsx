@@ -15,18 +15,7 @@
  * @adr: ADR-0008
  */
 import { useState } from 'react';
-import {
-  Button,
-  Card,
-  DateStamp,
-  EmptyState,
-  Field,
-  Notice,
-  Sheet,
-  Skeleton,
-  Tabs,
-  useStyles,
-} from '@/shared/ui';
+import { Button, Card, DateStamp, EmptyState, Field, Notice, Sheet, Skeleton, Tabs, useStyles } from '@/shared/ui';
 import { StatusBadge } from '@/entities/landfill';
 import { ImportSteps } from '@/features/reference-import';
 import type { Landfill } from '@/shared/api/references';
@@ -51,18 +40,15 @@ export function ReferencesMobile({ editor, route, importing }: ReferencesViewPro
   const cellRefusalOf = (key: string) =>
     editor.cellRefusal !== null && editor.cellRefusal.key === key ? editor.cellRefusal.title : null;
 
-  const openLandfill = editor.landfills.find((landfill) => landfill.id === route.landfillId) ?? null;
-  const openGroup = editor.wasteGroups.find((group) => group.id === route.wasteGroupId) ?? null;
+  const openLandfill = editor.landfills.find(landfill => landfill.id === route.landfillId) ?? null;
+  const openGroup = editor.wasteGroups.find(group => group.id === route.wasteGroupId) ?? null;
 
   const refusals = (
     <>
       {/* Объяснение закрытой правки — то же, что на рабочем месте: текст
           один на оба представления, вторая копия разошлась бы (BUG-012). */}
       {editor.maintenanceRefusal !== null && (
-        <AccessNotice
-          refusal={editor.maintenanceRefusal}
-          onRetry={() => void editor.retryMaintenance()}
-        />
+        <AccessNotice refusal={editor.maintenanceRefusal} onRetry={() => void editor.retryMaintenance()} />
       )}
       {editor.loadRefusal !== null && (
         <Notice kind="error">
@@ -86,7 +72,7 @@ export function ReferencesMobile({ editor, route, importing }: ReferencesViewPro
         {refusals}
 
         <Card title="Тарифы утилизации за тонну" className="imolt-references-form">
-          {editor.wasteGroups.map((group) => {
+          {editor.wasteGroups.map(group => {
             const tariff = tariffOf(openLandfill, group.id);
             const key = tariffCellKey(openLandfill.id, group.id);
 
@@ -101,7 +87,7 @@ export function ReferencesMobile({ editor, route, importing }: ReferencesViewPro
                   busy={editor.saving === key}
                   refusal={cellRefusalOf(key)}
                   onStart={editor.forgetCellRefusal}
-                  onSave={(text) => editor.saveTariff(openLandfill.id, group.id, text)}
+                  onSave={text => editor.saveTariff(openLandfill.id, group.id, text)}
                 />
               </div>
             );
@@ -110,10 +96,7 @@ export function ReferencesMobile({ editor, route, importing }: ReferencesViewPro
 
         <Card title="Статус приёма">
           <div className="imolt-references-status">
-            <StatusBadge
-              status={openLandfill.status}
-              statusUpdatedAt={openLandfill.statusUpdatedAt}
-            />
+            <StatusBadge status={openLandfill.status} statusUpdatedAt={openLandfill.statusUpdatedAt} />
           </div>
           <ManualStatusForm
             landfills={[]}
@@ -150,7 +133,7 @@ export function ReferencesMobile({ editor, route, importing }: ReferencesViewPro
               busy={editor.saving === key}
               refusal={cellRefusalOf(key)}
               onStart={editor.forgetCellRefusal}
-              onSave={(text) => editor.saveTransportPrice(openGroup.id, text)}
+              onSave={text => editor.saveTransportPrice(openGroup.id, text)}
             />
           </div>
           <dl>
@@ -160,11 +143,7 @@ export function ReferencesMobile({ editor, route, importing }: ReferencesViewPro
             </div>
             <div>
               <dt>Коды каталога отходов</dt>
-              <dd>
-                {openGroup.fkkoCodes.length === 0
-                  ? 'коды не заведены'
-                  : openGroup.fkkoCodes.join(', ')}
-              </dd>
+              <dd>{openGroup.fkkoCodes.length === 0 ? 'коды не заведены' : openGroup.fkkoCodes.join(', ')}</dd>
             </div>
             <div>
               <dt>Актуально</dt>
@@ -215,9 +194,7 @@ export function ReferencesMobile({ editor, route, importing }: ReferencesViewPro
             busy={editor.saving === `status:${statusLandfillId ?? ''}`}
             refusal={cellRefusalOf(`status:${statusLandfillId ?? ''}`)}
             onSave={(status, reason) =>
-              statusLandfillId === null
-                ? Promise.resolve(false)
-                : editor.saveStatus(statusLandfillId, status, reason)
+              statusLandfillId === null ? Promise.resolve(false) : editor.saveStatus(statusLandfillId, status, reason)
             }
             onDone={() => setStatusOpen(false)}
           />
@@ -235,7 +212,7 @@ export function ReferencesMobile({ editor, route, importing }: ReferencesViewPro
           state={importing.state}
           disabled={!editor.editable}
           onPickKind={importing.pickKind}
-          onPickFile={(file) => void importing.parse(file)}
+          onPickFile={file => void importing.parse(file)}
           onApply={() => void importing.apply()}
           onRebuild={() => void importing.rebuild()}
           onClose={() => {
@@ -257,11 +234,7 @@ export function ReferencesMobile({ editor, route, importing }: ReferencesViewPro
 
       <Field
         id="references-query-mobile"
-        label={
-          route.tab === 'landfills'
-            ? 'Поиск по полигону или юрлицу'
-            : 'Поиск по группе или коду каталога'
-        }
+        label={route.tab === 'landfills' ? 'Поиск по полигону или юрлицу' : 'Поиск по группе или коду каталога'}
         value={query}
         onChange={setQuery}
       />
@@ -271,12 +244,9 @@ export function ReferencesMobile({ editor, route, importing }: ReferencesViewPro
       {!editor.loading && route.tab === 'landfills' && (
         <div className="imolt-references-cards">
           {landfills.length === 0 && (
-            <EmptyState
-              title="Полигонов с таким названием или юрлицом нет"
-              hint="Измените строку поиска"
-            />
+            <EmptyState title="Полигонов с таким названием или юрлицом нет" hint="Измените строку поиска" />
           )}
-          {landfills.map((landfill) => (
+          {landfills.map(landfill => (
             <LandfillCard
               key={landfill.id}
               landfill={landfill}
@@ -290,17 +260,10 @@ export function ReferencesMobile({ editor, route, importing }: ReferencesViewPro
       {!editor.loading && route.tab === 'wasteGroups' && (
         <div className="imolt-references-cards">
           {wasteGroups.length === 0 && (
-            <EmptyState
-              title="Групп отходов с таким названием или кодом нет"
-              hint="Измените строку поиска"
-            />
+            <EmptyState title="Групп отходов с таким названием или кодом нет" hint="Измените строку поиска" />
           )}
-          {wasteGroups.map((group) => (
-            <WasteGroupCard
-              key={group.id}
-              group={group}
-              onOpen={() => route.openWasteGroup(group.id)}
-            />
+          {wasteGroups.map(group => (
+            <WasteGroupCard key={group.id} group={group} onOpen={() => route.openWasteGroup(group.id)} />
           ))}
         </div>
       )}
@@ -323,19 +286,14 @@ function LandfillCard({
   return (
     <article className="imolt-references-card">
       <span className="imolt-references-card-name">{landfill.name}</span>
-      <span className="imolt-references-card-entity">
-        {landfill.legalEntity ?? 'юридическое лицо не указано'}
-      </span>
+      <span className="imolt-references-card-entity">{landfill.legalEntity ?? 'юридическое лицо не указано'}</span>
       <div className="imolt-references-status">
         <StatusBadge status={landfill.status} statusUpdatedAt={landfill.statusUpdatedAt} />
       </div>
       <dl>
-        {landfill.tariffs.map((tariff) => (
+        {landfill.tariffs.map(tariff => (
           <div key={tariff.wasteGroupId}>
-            <dt>
-              {wasteGroups.find((group) => group.id === tariff.wasteGroupId)?.name
-                ?? tariff.wasteGroupId}
-            </dt>
+            <dt>{wasteGroups.find(group => group.id === tariff.wasteGroupId)?.name ?? tariff.wasteGroupId}</dt>
             <dd>{formatMoney(tariff.disposalPricePerTon)}</dd>
           </div>
         ))}
@@ -369,9 +327,7 @@ function WasteGroupCard({ group, onOpen }: { group: WasteGroup; onOpen: () => vo
           <dd>{group.fkkoCodes.length === 0 ? 'коды не заведены' : group.fkkoCodes.join(', ')}</dd>
         </div>
       </dl>
-      <span className="imolt-references-card-entity">
-        {`Актуально на ${formatDate(group.updatedAt)}`}
-      </span>
+      <span className="imolt-references-card-entity">{`Актуально на ${formatDate(group.updatedAt)}`}</span>
       <Button kind="secondary" onClick={onOpen} ariaLabel={`Править группу отходов: ${group.name}`}>
         Править
       </Button>

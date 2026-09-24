@@ -50,8 +50,7 @@ export function QuoteDesktop({
 
         {view.omitted > 0 && (
           <Notice kind="warning">
-            Расчёт не раскрыл ценами выбранные полигоны: {view.omitted}. Вернитесь к расчёту и
-            выберите их заново
+            Расчёт не раскрыл ценами выбранные полигоны: {view.omitted}. Вернитесь к расчёту и выберите их заново
           </Notice>
         )}
 

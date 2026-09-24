@@ -97,15 +97,12 @@ export function ParticipantSummary({ profile, compact = false }: ParticipantSumm
 
   // Гость — участник без входа: расчёт и предложение доступны и ему
   // (глоссарий проекта, ADR-0006), поэтому имя у заглушки утвердительное.
-  const name = profile === null ? 'Гость' : profile.displayName ?? 'Участник';
+  const name = profile === null ? 'Гость' : (profile.displayName ?? 'Участник');
 
   // Состояние подписки — запись `{ state, activeUntil }`, а не код строкой:
   // сравнение самой записи с кодом молча давало ложь у любого участника с
   // действующей подпиской.
-  const note =
-    profile === null
-      ? 'Личность даёт платформа MAX'
-      : subscriptionLine(profile.subscription.state);
+  const note = profile === null ? 'Личность даёт платформа MAX' : subscriptionLine(profile.subscription.state);
 
   return (
     <span className="imolt-participant-summary">

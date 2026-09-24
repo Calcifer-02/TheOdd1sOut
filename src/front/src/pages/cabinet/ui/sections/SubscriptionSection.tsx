@@ -16,11 +16,7 @@
  */
 import { useState } from 'react';
 import { Notice } from '@/shared/ui';
-import {
-  SubscriptionBadge,
-  acceptsSubscriptionRequest,
-  subscriptionExplanation,
-} from '@/entities/participant';
+import { SubscriptionBadge, acceptsSubscriptionRequest, subscriptionExplanation } from '@/entities/participant';
 import { SubscriptionRequestForm } from '@/features/subscription';
 import type { SubscriptionStanding } from '@/shared/api/cabinet';
 
@@ -47,8 +43,8 @@ export function SubscriptionSection({
           <SubscriptionBadge subscription={subscription} />
         </div>
         <p className="imolt-lead">
-          Состав доступа по подписке заказчиком пока не назван, поэтому сервис перечня привилегий не
-          показывает. Условия называет менеджер.
+          Состав доступа по подписке заказчиком пока не назван, поэтому сервис перечня привилегий не показывает. Условия
+          называет менеджер.
         </p>
       </div>
 

@@ -94,10 +94,7 @@ export const AUTHENTICATION_REQUIRED = 'urn:imolt:problem:authentication-require
  * Правка цены перевозки и прочих полей группы отходов (R-042, R-043).
  * Дату актуальности двигает служба: второго места, где она считается, нет.
  */
-export function updateWasteGroup(
-  wasteGroupId: string,
-  update: WasteGroupUpdate,
-): Promise<WasteGroup> {
+export function updateWasteGroup(wasteGroupId: string, update: WasteGroupUpdate): Promise<WasteGroup> {
   return request<WasteGroup>(`/v1/waste-groups/${encodeURIComponent(wasteGroupId)}`, {
     method: 'PATCH',
     body: JSON.stringify(update),
@@ -148,10 +145,7 @@ export function getLatestSyncRun(): Promise<SyncRun> {
  * Тело составное: общий обмен не назначает ему типа содержимого, потому что
  * границу частей проставляет среда.
  */
-export function startReferenceImport(
-  kind: ReferenceImportKind,
-  file: File,
-): Promise<ReferenceImportPreview> {
+export function startReferenceImport(kind: ReferenceImportKind, file: File): Promise<ReferenceImportPreview> {
   const form = new FormData();
   form.append('kind', kind);
   form.append('file', file, file.name);
@@ -165,10 +159,9 @@ export function startReferenceImport(
  * книгу надо разобрать заново (R-045).
  */
 export function confirmReferenceImport(importId: string): Promise<ReferenceImportResult> {
-  return request<ReferenceImportResult>(
-    `/v1/reference-imports/${encodeURIComponent(importId)}/confirmation`,
-    { method: 'POST' },
-  );
+  return request<ReferenceImportResult>(`/v1/reference-imports/${encodeURIComponent(importId)}/confirmation`, {
+    method: 'POST',
+  });
 }
 
 /** Отказ службы, пригодный для показа: заголовок, пояснение и код причины. */

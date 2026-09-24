@@ -81,7 +81,7 @@ export function LandfillDetails({
 
           {card.legalEntityHistory && card.legalEntityHistory.length > 0 ? (
             <ul className="imolt-landfill-history" aria-label="История юридических лиц">
-              {card.legalEntityHistory.map((period) => (
+              {card.legalEntityHistory.map(period => (
                 <li key={`${period.legalEntity}-${period.since}`}>
                   {`${period.legalEntity}, с `}
                   <time dateTime={period.since}>{formatDate(period.since)}</time>
@@ -104,10 +104,7 @@ export function LandfillDetails({
           <LandfillTariffs rows={tariffRows(card, groups, '')} withDates />
 
           <h4 className="imolt-section">Отзывы о достоверности сведений</h4>
-          <ReviewSummary
-            averageRating={state.reviews?.averageRating ?? null}
-            total={state.reviews?.total ?? 0}
-          />
+          <ReviewSummary averageRating={state.reviews?.averageRating ?? null} total={state.reviews?.total ?? 0} />
           <ReviewList
             reviews={state.reviews?.items ?? []}
             loading={state.reviews === null && state.reviewsFailure === ''}

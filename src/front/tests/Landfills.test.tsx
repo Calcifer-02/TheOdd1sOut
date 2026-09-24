@@ -144,9 +144,7 @@ describe('отбор справочника по группе отходов', (
     expect(запрос.query.get('wasteGroupId')).toBeNull();
     expect(запрос.query.get('query')).toBe('Восток');
 
-    expect(screen.getByRole('textbox', { name: 'Поиск по названию полигона' })).toHaveValue(
-      'Восток',
-    );
+    expect(screen.getByRole('textbox', { name: 'Поиск по названию полигона' })).toHaveValue('Восток');
     expect(screen.getByRole('button', { name: VOSTOK.name })).toBeInTheDocument();
   });
 
@@ -267,7 +265,7 @@ describe('состояния справочника', () => {
     await screen.findByRole('list', { name: ВСЕ_ГРУППЫ });
 
     // Формулировку счётчика ведёт общий слой; экран отвечает за числа в нём.
-    const сообщения = screen.getAllByRole('status').map((узел) => узел.textContent ?? '');
+    const сообщения = screen.getAllByRole('status').map(узел => узел.textContent ?? '');
     expect(сообщения.join(' ')).toMatch(/2 из 2/);
   });
 

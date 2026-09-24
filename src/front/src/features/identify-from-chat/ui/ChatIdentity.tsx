@@ -43,13 +43,10 @@ export function ChatIdentity() {
           Открыто из чат-бота
         </h2>
         <p className="imolt-lead">
-          Разрешите обработку персональных данных, чтобы получать извещения о заявке в чат и
-          видеть свои прежние расчёты.
+          Разрешите обработку персональных данных, чтобы получать извещения о заявке в чат и видеть свои прежние
+          расчёты.
         </p>
-        <SignInPrompt
-          actionLabel="Получать извещения в чате"
-          onSignedIn={(session) => setProfile(session.profile)}
-        />
+        <SignInPrompt actionLabel="Получать извещения в чате" onSignedIn={session => setProfile(session.profile)} />
       </section>
     </div>
   );

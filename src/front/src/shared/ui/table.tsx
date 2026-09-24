@@ -35,14 +35,7 @@ export type TableColumn = {
 /** Стрелка направления сортировки. Смысл несёт `aria-sort`, это только вид. */
 function SortMark({ direction }: { direction: 'asc' | 'desc' }) {
   return (
-    <svg
-      className="imolt-table-sort-mark"
-      width="12"
-      height="12"
-      viewBox="0 0 12 12"
-      fill="none"
-      aria-hidden="true"
-    >
+    <svg className="imolt-table-sort-mark" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
       <path
         d={direction === 'asc' ? 'M6 10V2M2.8 5.2L6 2L9.2 5.2' : 'M6 2V10M2.8 6.8L6 10L9.2 6.8'}
         stroke="currentColor"
@@ -112,7 +105,7 @@ export function DataTable<T>({
                 <span className="imolt-visually-hidden">Выбор строки</span>
               </th>
             )}
-            {columns.map((column) => {
+            {columns.map(column => {
               const active = sort !== undefined && sort.key === column.key;
               const order = !column.sortable
                 ? undefined
@@ -131,11 +124,7 @@ export function DataTable<T>({
                   style={column.width === undefined ? undefined : { width: column.width }}
                 >
                   {column.sortable && onSort ? (
-                    <button
-                      type="button"
-                      className="imolt-table-sort"
-                      onClick={() => onSort(column.key)}
-                    >
+                    <button type="button" className="imolt-table-sort" onClick={() => onSort(column.key)}>
                       {column.title}
                       {active && <SortMark direction={sort.direction} />}
                     </button>
@@ -158,7 +147,7 @@ export function DataTable<T>({
                     <span className="imolt-skeleton-bar" />
                   </td>
                 )}
-                {columns.map((column) => (
+                {columns.map(column => (
                   <td key={column.key} data-align={column.align ?? 'start'}>
                     <span className="imolt-skeleton-bar" />
                   </td>
@@ -169,18 +158,13 @@ export function DataTable<T>({
           {!loading && rows.length === 0 && (
             <tr>
               <td className="imolt-table-empty" colSpan={span}>
-                {empty ?? (
-                  <EmptyState
-                    title="Ничего не найдено"
-                    hint="Измените условия отбора или снимите фильтр"
-                  />
-                )}
+                {empty ?? <EmptyState title="Ничего не найдено" hint="Измените условия отбора или снимите фильтр" />}
               </td>
             </tr>
           )}
 
           {!loading &&
-            rows.map((row) => {
+            rows.map(row => {
               const key = rowKey(row);
               const picked = selected.has(key);
               const name = rowLabel ? rowLabel(row) : key;
@@ -194,11 +178,11 @@ export function DataTable<T>({
                         className="imolt-check"
                         checked={picked}
                         aria-label={`Выбрать ${name}`}
-                        onChange={(event) => onToggleRow(key, event.target.checked)}
+                        onChange={event => onToggleRow(key, event.target.checked)}
                       />
                     </td>
                   )}
-                  {columns.map((column) => (
+                  {columns.map(column => (
                     <td key={column.key} data-align={column.align ?? 'start'}>
                       {cell(row, column.key)}
                     </td>

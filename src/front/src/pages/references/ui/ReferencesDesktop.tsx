@@ -11,29 +11,13 @@
  */
 import { useState } from 'react';
 import { STATUS_WORD } from '@/entities/landfill';
-import {
-  Button,
-  DataTable,
-  DateStamp,
-  Field,
-  Notice,
-  Popover,
-  Skeleton,
-  Tabs,
-  Toolbar,
-  useStyles,
-} from '@/shared/ui';
+import { Button, DataTable, DateStamp, Field, Notice, Popover, Skeleton, Tabs, Toolbar, useStyles } from '@/shared/ui';
 import { StatusBadge } from '@/entities/landfill';
 import { ImportPanel } from '@/features/reference-import';
 import type { Landfill } from '@/shared/api/references';
 import type { WasteGroup } from '@/shared/api/contracts';
 import { formatDate, formatMoney, formatNumber } from '@/shared/lib/formatting';
-import {
-  latestTariffDate,
-  tariffCellKey,
-  tariffOf,
-  transportCellKey,
-} from '../model/editor';
+import { latestTariffDate, tariffCellKey, tariffOf, transportCellKey } from '../model/editor';
 import { AccessNotice } from './AccessNotice';
 import { EditableCell } from './EditableCell';
 import { ManualStatusForm } from './ManualStatusForm';
@@ -92,8 +76,8 @@ export function ReferencesDesktop({ editor, route, importing }: ReferencesViewPr
       </div>
 
       <span className="imolt-references-subtitle">
-        Полигон заводится из официального перечня, а не в редакторе: книга импорта существующие
-        записи меняет, а новых не создаёт.
+        Полигон заводится из официального перечня, а не в редакторе: книга импорта существующие записи меняет, а новых
+        не создаёт.
       </span>
 
       {editor.freshness !== null && (
@@ -104,10 +88,7 @@ export function ReferencesDesktop({ editor, route, importing }: ReferencesViewPr
       )}
 
       {editor.maintenanceRefusal !== null && (
-        <AccessNotice
-          refusal={editor.maintenanceRefusal}
-          onRetry={() => void editor.retryMaintenance()}
-        />
+        <AccessNotice refusal={editor.maintenanceRefusal} onRetry={() => void editor.retryMaintenance()} />
       )}
 
       {editor.loadRefusal !== null && (
@@ -136,9 +117,7 @@ export function ReferencesDesktop({ editor, route, importing }: ReferencesViewPr
           busy={editor.saving === `status:${statusLandfillId ?? ''}`}
           refusal={cellRefusalOf(`status:${statusLandfillId ?? ''}`)}
           onSave={(status, reason) =>
-            statusLandfillId === null
-              ? Promise.resolve(false)
-              : editor.saveStatus(statusLandfillId, status, reason)
+            statusLandfillId === null ? Promise.resolve(false) : editor.saveStatus(statusLandfillId, status, reason)
           }
           onDone={() => setStatusOpen(false)}
         />
@@ -149,7 +128,7 @@ export function ReferencesDesktop({ editor, route, importing }: ReferencesViewPr
           state={importing.state}
           disabled={!editor.editable}
           onPickKind={importing.pickKind}
-          onPickFile={(file) => void importing.parse(file)}
+          onPickFile={file => void importing.parse(file)}
           onApply={() => void importing.apply()}
           onRebuild={() => void importing.rebuild()}
           onClose={() => {
@@ -192,7 +171,7 @@ export function ReferencesDesktop({ editor, route, importing }: ReferencesViewPr
           caption="Тарифы утилизации за тонну по полигонам и группам отходов"
           columns={[
             NAME_COLUMN,
-            ...editor.wasteGroups.map((group) => ({
+            ...editor.wasteGroups.map(group => ({
               key: `group:${group.id}`,
               title: group.name,
               align: 'end' as const,
@@ -203,9 +182,7 @@ export function ReferencesDesktop({ editor, route, importing }: ReferencesViewPr
           rows={landfills}
           rowKey={(landfill: Landfill) => landfill.id}
           empty="Полигонов с таким названием или юрлицом нет"
-          cell={(landfill: Landfill, column: string) =>
-            landfillCell(landfill, column, editor, cellRefusalOf)
-          }
+          cell={(landfill: Landfill, column: string) => landfillCell(landfill, column, editor, cellRefusalOf)}
         />
       )}
 
@@ -216,16 +193,14 @@ export function ReferencesDesktop({ editor, route, importing }: ReferencesViewPr
           rows={wasteGroups}
           rowKey={(group: WasteGroup) => group.id}
           empty="Групп отходов с таким названием или кодом нет"
-          cell={(group: WasteGroup, column: string) =>
-            wasteGroupCell(group, column, editor, cellRefusalOf)
-          }
+          cell={(group: WasteGroup, column: string) => wasteGroupCell(group, column, editor, cellRefusalOf)}
         />
       )}
 
       {!editor.loading && route.tab === 'wasteGroups' && (
         <span className="imolt-references-subtitle">
-          Изменение цены перевозки применяется ко всем новым расчётам. Выпущенные коммерческие
-          предложения остаются с ценами на дату выпуска.
+          Изменение цены перевозки применяется ко всем новым расчётам. Выпущенные коммерческие предложения остаются с
+          ценами на дату выпуска.
         </span>
       )}
     </div>
@@ -245,9 +220,7 @@ function landfillCell(
     return (
       <span className="imolt-references-cell-name">
         <span className="imolt-references-card-name">{landfill.name}</span>
-        <span className="imolt-references-card-entity">
-          {landfill.legalEntity ?? 'юридическое лицо не указано'}
-        </span>
+        <span className="imolt-references-card-entity">{landfill.legalEntity ?? 'юридическое лицо не указано'}</span>
       </span>
     );
   }
@@ -279,8 +252,7 @@ function landfillCell(
   const wasteGroupId = column.slice('group:'.length);
   const tariff = tariffOf(landfill, wasteGroupId);
   const key = tariffCellKey(landfill.id, wasteGroupId);
-  const groupName =
-    editor.wasteGroups.find((group) => group.id === wasteGroupId)?.name ?? wasteGroupId;
+  const groupName = editor.wasteGroups.find(group => group.id === wasteGroupId)?.name ?? wasteGroupId;
 
   return (
     <EditableCell
@@ -291,7 +263,7 @@ function landfillCell(
       busy={editor.saving === key}
       refusal={refusalOfCell(key)}
       onStart={editor.forgetCellRefusal}
-      onSave={(text) => editor.saveTariff(landfill.id, wasteGroupId, text)}
+      onSave={text => editor.saveTariff(landfill.id, wasteGroupId, text)}
     />
   );
 }
@@ -330,7 +302,7 @@ function wasteGroupCell(
       busy={editor.saving === key}
       refusal={refusalOfCell(key)}
       onStart={editor.forgetCellRefusal}
-      onSave={(text) => editor.saveTransportPrice(group.id, text)}
+      onSave={text => editor.saveTransportPrice(group.id, text)}
     />
   );
 }

@@ -35,7 +35,7 @@ export const CABINET_SECTIONS: { value: CabinetSection; label: string }[] = [
  * а не пустой экран: испорченную ссылку присылают чаще, чем кажется.
  */
 export function sectionOf(raw: string | null): CabinetSection {
-  const found = CABINET_SECTIONS.find((section) => section.value === raw);
+  const found = CABINET_SECTIONS.find(section => section.value === raw);
 
   return found?.value ?? DEFAULT_CABINET_SECTION;
 }

@@ -21,14 +21,12 @@ export function QuoteLineCards({ lines }: { lines: QuoteLine[] }) {
 
   return (
     <ul className="imolt-quote-cards" aria-label="Состав предложения">
-      {lines.map((line) => (
+      {lines.map(line => (
         <li className="imolt-quote-card" key={line.id}>
           <div className="imolt-quote-card-head">
             <div>
               <div className="imolt-quote-line-name">{line.wasteGroupName}</div>
-              {line.landfillName !== null && (
-                <div className="imolt-quote-line-place">{line.landfillName}</div>
-              )}
+              {line.landfillName !== null && <div className="imolt-quote-line-place">{line.landfillName}</div>}
             </div>
             <div className="imolt-quote-card-sum">{formatMoney(line.totalCost)}</div>
           </div>

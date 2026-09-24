@@ -62,13 +62,7 @@ const DRAWINGS: Record<IllustrationKind, ReactNode> = {
   ),
 };
 
-export function Illustration({
-  kind,
-  className,
-}: {
-  kind: IllustrationKind;
-  className?: string;
-}) {
+export function Illustration({ kind, className }: { kind: IllustrationKind; className?: string }) {
   return (
     <svg
       className={className ? `imolt-illustration ${className}` : 'imolt-illustration'}

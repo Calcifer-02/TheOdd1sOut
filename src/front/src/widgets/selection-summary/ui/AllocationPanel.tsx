@@ -30,14 +30,14 @@ export function AllocationPanel({
   return (
     <section className="imolt-card imolt-allocation" aria-label="Распределение объёма">
       <strong>Распределение объёма</strong>
-      {rows.map((row) => (
+      {rows.map(row => (
         <div className="imolt-allocation-row" key={row.landfillId}>
           <Field
             id={`allocation-${row.landfillId}`}
             label={row.landfillName}
             value={row.share}
             inputMode="decimal"
-            onChange={(value) => onChange(row.landfillId, value)}
+            onChange={value => onChange(row.landfillId, value)}
           />
           <span className="imolt-hint">т</span>
         </div>

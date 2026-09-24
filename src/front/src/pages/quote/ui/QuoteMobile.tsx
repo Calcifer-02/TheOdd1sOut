@@ -50,8 +50,7 @@ export function QuoteMobile({
 
       {view.omitted > 0 && (
         <Notice kind="warning">
-          Расчёт не раскрыл ценами выбранные полигоны: {view.omitted}. Вернитесь к расчёту и
-          выберите их заново
+          Расчёт не раскрыл ценами выбранные полигоны: {view.omitted}. Вернитесь к расчёту и выберите их заново
         </Notice>
       )}
 
@@ -73,9 +72,7 @@ export function QuoteMobile({
       <div className="imolt-bar" role="group" aria-label={QUOTE_LABELS.actions}>
         <div className="imolt-bar-line">
           <span className="imolt-quote-sum-label">К оплате</span>
-          <span className="imolt-quote-sum-value">
-            {view.total === null ? 'нет суммы' : formatMoney(view.total)}
-          </span>
+          <span className="imolt-quote-sum-value">{view.total === null ? 'нет суммы' : formatMoney(view.total)}</span>
         </div>
         <div className="imolt-bar-actions">
           <QuotePrimaryAction view={view} issuing={issuing} onIssue={onIssue} />

@@ -83,7 +83,7 @@ export function CalculatorSection() {
   return (
     <>
       <Section title="Состояния полигона">
-        {STATUSES.map((status) => (
+        {STATUSES.map(status => (
           <div className="imolt-split" key={status}>
             <StatusBadge status={status} statusUpdatedAt={FRESHNESS_DATE} />
           </div>
@@ -125,10 +125,10 @@ export function CalculatorSection() {
           sort="total"
           order="asc"
           onSort={() => undefined}
-          onToggle={(option) =>
-            setSelected((current) =>
+          onToggle={option =>
+            setSelected(current =>
               current.includes(option.landfillId)
-                ? current.filter((id) => id !== option.landfillId)
+                ? current.filter(id => id !== option.landfillId)
                 : [...current, option.landfillId],
             )
           }

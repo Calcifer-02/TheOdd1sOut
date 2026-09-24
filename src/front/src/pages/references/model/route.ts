@@ -61,17 +61,11 @@ export function useEditorRoute(): EditorRoute {
   }, []);
 
   const openLandfill = useCallback((id: string) => {
-    navigate(
-      REFERENCES_PATH,
-      new URLSearchParams({ [TAB_PARAMETER]: 'landfills', [LANDFILL_PARAMETER]: id }),
-    );
+    navigate(REFERENCES_PATH, new URLSearchParams({ [TAB_PARAMETER]: 'landfills', [LANDFILL_PARAMETER]: id }));
   }, []);
 
   const openWasteGroup = useCallback((id: string) => {
-    navigate(
-      REFERENCES_PATH,
-      new URLSearchParams({ [TAB_PARAMETER]: 'wasteGroups', [WASTE_GROUP_PARAMETER]: id }),
-    );
+    navigate(REFERENCES_PATH, new URLSearchParams({ [TAB_PARAMETER]: 'wasteGroups', [WASTE_GROUP_PARAMETER]: id }));
   }, []);
 
   const closeCard = useCallback(() => {

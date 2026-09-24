@@ -29,15 +29,7 @@ export function Skeleton({ rows = 3, label = 'Идёт загрузка' }: { ro
  * Пустой результат. Подсказка обязательна по смыслу, а не по типу: «ничего не
  * найдено» без указания, что снять, оставляет пользователя в тупике (Э-12).
  */
-export function EmptyState({
-  title,
-  hint,
-  action,
-}: {
-  title: string;
-  hint?: string;
-  action?: ReactNode;
-}) {
+export function EmptyState({ title, hint, action }: { title: string; hint?: string; action?: ReactNode }) {
   return (
     <div className="imolt-empty" role="status">
       <p className="imolt-empty-title">{title}</p>

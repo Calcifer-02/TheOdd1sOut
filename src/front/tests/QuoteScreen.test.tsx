@@ -1,20 +1,22 @@
-// Экран коммерческого предложения: оба представления, выпуск номера, снимок
-// цен, предварительность и отказы (R-036, R-037, R-038, R-059).
-//
-// Видимые тексты сверяются с макетами «ux/КП.dc.html» и «ux/КП мобильный.
-// dc.html». Суммы сверяются посимвольно, через textContent: неразрывный
-// пробел — часть требования R-061, и обычный пробел его не заменяет.
-//
-// Проверки фальсифицируемы: выпустите предложение при открытии экрана,
-// сложите итог из строк вместо ответа службы, выпустите второе предложение
-// при повторном скачивании, покажите код отказа вместо заголовка, уберите
-// слово «предварительная» или оставьте пустой экран без расчёта в адресе —
-// они упадут.
-//
-//   npx vitest run tests/QuoteScreen.test.tsx
-//
-// @ac: AC-036e
-// @supports: R-036, R-037, R-038, R-059
+/**
+ * Экран коммерческого предложения: оба представления, выпуск номера, снимок
+ * цен, предварительность и отказы (R-036, R-037, R-038, R-059).
+ *
+ * Видимые тексты сверяются с макетами «ux/КП.dc.html» и «ux/КП мобильный.
+ * dc.html». Суммы сверяются посимвольно, через textContent: неразрывный
+ * пробел — часть требования R-061, и обычный пробел его не заменяет.
+ *
+ * Проверки фальсифицируемы: выпустите предложение при открытии экрана,
+ * сложите итог из строк вместо ответа службы, выпустите второе предложение
+ * при повторном скачивании, покажите код отказа вместо заголовка, уберите
+ * слово «предварительная» или оставьте пустой экран без расчёта в адресе —
+ * они упадут.
+ *
+ *   npx vitest run tests/QuoteScreen.test.tsx
+ *
+ * @ac: AC-036e
+ * @supports: R-036, R-037, R-038, R-059
+ */
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -144,9 +146,7 @@ describe('выпуск предложения', () => {
 
     expect(issuedQuotes()).toBe(0);
     expect(issueButton()).toBeEnabled();
-    expect(
-      screen.getByText('Номер присваивается при выпуске', { selector: 'span' }),
-    ).toBeInTheDocument();
+    expect(screen.getByText('Номер присваивается при выпуске', { selector: 'span' })).toBeInTheDocument();
   });
 
   it('по нажатию показывает номер, дату выпуска и срок действия из ответа службы', async () => {
@@ -214,9 +214,7 @@ describe('выпуск предложения', () => {
     stub.setCalculation(calculationWithoutSelection());
     await openQuote();
 
-    expect(
-      await screen.findByText('В расчёте не выбрано ни одного полигона'),
-    ).toBeInTheDocument();
+    expect(await screen.findByText('В расчёте не выбрано ни одного полигона')).toBeInTheDocument();
     expect(issueButton()).toBeDisabled();
     expect(issuedQuotes()).toBe(0);
   });
@@ -226,12 +224,7 @@ describe('выпуск предложения', () => {
 
     stub.answerWith('POST /v1/calculations/:id/quotes', {
       status: 503,
-      body: problem(
-        'urn:imolt:problem:upstream-unavailable',
-        'Не удалось собрать документ',
-        503,
-        'Повторите попытку',
-      ),
+      body: problem('urn:imolt:problem:upstream-unavailable', 'Не удалось собрать документ', 503, 'Повторите попытку'),
     });
 
     await openQuote();

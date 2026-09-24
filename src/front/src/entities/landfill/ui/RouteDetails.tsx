@@ -24,14 +24,8 @@ function formatDuration(minutes: number): string {
   return hours > 0 ? `~${hours} ч ${rest} мин` : `~${rest} мин`;
 }
 
-export function RouteDetails({
-  option,
-  summary,
-}: {
-  option: PlacementOption;
-  summary: RouteSummary | null;
-}) {
-  const leg = summary?.legs.find((candidate) => candidate.landfillId === option.landfillId);
+export function RouteDetails({ option, summary }: { option: PlacementOption; summary: RouteSummary | null }) {
+  const leg = summary?.legs.find(candidate => candidate.landfillId === option.landfillId);
 
   return (
     <>
@@ -53,8 +47,8 @@ export function RouteDetails({
         <>
           <strong>Детали маршрута – по подписке</strong>
           <span>
-            Расстояние и стоимость видны всем. Время в пути и переход в Яндекс.Карты –
-            перевозчикам и демонтажным компаниям.
+            Расстояние и стоимость видны всем. Время в пути и переход в Яндекс.Карты – перевозчикам и демонтажным
+            компаниям.
           </span>
           <span>{formatDistance(option.distanceKm)}</span>
         </>

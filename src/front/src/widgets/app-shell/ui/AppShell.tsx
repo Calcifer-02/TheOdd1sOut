@@ -44,7 +44,7 @@ function navIcon(path: string): ReactNode {
 
   return (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-      {(paths[path] ?? []).map((shape) => (
+      {(paths[path] ?? []).map(shape => (
         <path
           key={shape}
           d={shape}
@@ -71,15 +71,7 @@ function navIcon(path: string): ReactNode {
  * управление. Скрытый зачин называет назначение ссылки, видимое имя участника
  * остаётся частью доступного имени.
  */
-function ProfileLink({
-  profile,
-  current,
-  compact,
-}: {
-  profile: Profile | null;
-  current: string;
-  compact: boolean;
-}) {
+function ProfileLink({ profile, current, compact }: { profile: Profile | null; current: string; compact: boolean }) {
   return (
     <a
       className="imolt-shell-profile"
@@ -100,7 +92,7 @@ function ProfileLink({
 function TopNav({ current }: { current: string }) {
   return (
     <nav className="imolt-shell-nav" aria-label={NAVIGATION_LABEL}>
-      {TOP_SECTIONS.map((section) => (
+      {TOP_SECTIONS.map(section => (
         <a
           key={section.path}
           className="imolt-shell-link"
@@ -118,7 +110,7 @@ function TopNav({ current }: { current: string }) {
 function BottomNav({ current }: { current: string }) {
   return (
     <nav className="imolt-shell-tabbar" aria-label={NAVIGATION_LABEL}>
-      {SECTIONS.map((section) => (
+      {SECTIONS.map(section => (
         <a
           key={section.path}
           className="imolt-shell-tab"

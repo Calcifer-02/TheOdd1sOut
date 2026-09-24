@@ -53,9 +53,7 @@ export type QuoteScreen = {
 };
 
 function failureOf(error: unknown): Failure {
-  return error instanceof ApiProblem
-    ? { title: error.title, detail: error.detail }
-    : { title: 'Запрос не выполнен' };
+  return error instanceof ApiProblem ? { title: error.title, detail: error.detail } : { title: 'Запрос не выполнен' };
 }
 
 export function useQuoteScreen(): QuoteScreen {
@@ -79,7 +77,7 @@ export function useQuoteScreen(): QuoteScreen {
     setState({ kind: 'loading' });
 
     getCalculation(calculationId).then(
-      (calculation) => {
+      calculation => {
         if (current) {
           setState({
             kind: 'ready',
@@ -113,22 +111,18 @@ export function useQuoteScreen(): QuoteScreen {
     setState({ ...state, issuing: true, issueFailure: null });
 
     issueQuote(calculationId).then(
-      (quote) => {
-        setState((previous) =>
-          previous.kind === 'ready' ? { ...previous, quote, issuing: false } : previous,
-        );
+      quote => {
+        setState(previous => (previous.kind === 'ready' ? { ...previous, quote, issuing: false } : previous));
       },
       (error: unknown) => {
-        setState((previous) =>
-          previous.kind === 'ready'
-            ? { ...previous, issuing: false, issueFailure: failureOf(error) }
-            : previous,
+        setState(previous =>
+          previous.kind === 'ready' ? { ...previous, issuing: false, issueFailure: failureOf(error) } : previous,
         );
       },
     );
   }, [calculationId, state]);
 
-  const retry = useCallback(() => setAttempt((value) => value + 1), []);
+  const retry = useCallback(() => setAttempt(value => value + 1), []);
 
   return { state, issue, retry };
 }

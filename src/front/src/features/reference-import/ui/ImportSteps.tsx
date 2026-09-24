@@ -65,7 +65,7 @@ export function ImportSteps({
               type="file"
               accept=".xlsx"
               disabled={disabled}
-              onChange={(event) => {
+              onChange={event => {
                 const file = event.target.files?.[0];
                 if (file) {
                   onPickFile(file);
@@ -103,13 +103,10 @@ export function ImportSteps({
           </span>
 
           {changes.length === 0 ? (
-            <EmptyState
-              title="Расхождений нет"
-              hint="Значения книги совпадают со справочником, применять нечего"
-            />
+            <EmptyState title="Расхождений нет" hint="Значения книги совпадают со справочником, применять нечего" />
           ) : (
             <div className="imolt-import-cards">
-              {changes.map((change) => (
+              {changes.map(change => (
                 <div className="imolt-import-card" key={`${change.entityId}:${change.field}`}>
                   <strong>{change.entityId}</strong>
                   <span className="imolt-import-source">{fieldName(change.field)}</span>
@@ -130,7 +127,7 @@ export function ImportSteps({
 
           {rejected.length > 0 && (
             <ul className="imolt-import-rejected">
-              {rejected.map((row) => (
+              {rejected.map(row => (
                 <li key={`${row.row}:${row.reason}`}>{`Строка ${row.row}: ${row.reason}`}</li>
               ))}
             </ul>

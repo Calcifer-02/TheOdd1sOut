@@ -28,9 +28,7 @@ export function QuoteTotal({
     <div className="imolt-quote-sum">
       <div className="imolt-quote-sum-line">
         <span className="imolt-quote-sum-label">К оплате</span>
-        <span className="imolt-quote-sum-value">
-          {total === null ? 'нет суммы' : formatMoney(total)}
-        </span>
+        <span className="imolt-quote-sum-value">{total === null ? 'нет суммы' : formatMoney(total)}</span>
       </div>
       <p className="imolt-quote-sum-hint">{hint}</p>
     </div>

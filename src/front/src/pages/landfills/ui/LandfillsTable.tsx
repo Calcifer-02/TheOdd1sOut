@@ -71,10 +71,7 @@ export function LandfillsTable({
           }
 
           return (
-            <StatusBadge
-              status={landfillBadgeStatus(landfill, freshness)}
-              statusUpdatedAt={landfill.statusUpdatedAt}
-            />
+            <StatusBadge status={landfillBadgeStatus(landfill, freshness)} statusUpdatedAt={landfill.statusUpdatedAt} />
           );
         }}
       />

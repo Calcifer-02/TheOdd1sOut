@@ -27,7 +27,7 @@ export function CalculationsTable({ rows }: { rows: CalculationSummary[] }) {
       caption="Сохранённые расчёты"
       columns={COLUMNS}
       rows={rows}
-      rowKey={(row) => row.id}
+      rowKey={row => row.id}
       cell={(row, columnKey) => {
         if (columnKey === 'address') {
           return row.pickupAddress;

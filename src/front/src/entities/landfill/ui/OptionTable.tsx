@@ -110,10 +110,7 @@ export function OptionTable({
     if (columnKey === 'status') {
       return (
         <span className="imolt-cell-status">
-          <StatusBadge
-            status={badgeStatus(option, statusesUpdatedAt)}
-            statusUpdatedAt={option.statusUpdatedAt}
-          />
+          <StatusBadge status={badgeStatus(option, statusesUpdatedAt)} statusUpdatedAt={option.statusUpdatedAt} />
         </span>
       );
     }
@@ -154,14 +151,14 @@ export function OptionTable({
       caption={caption}
       columns={COLUMNS}
       rows={options}
-      rowKey={(option) => option.landfillId}
-      rowLabel={(option) => `полигон ${option.landfillName}`}
+      rowKey={option => option.landfillId}
+      rowLabel={option => `полигон ${option.landfillName}`}
       cell={cell}
       sort={{ key: sort, direction: order }}
-      onSort={(key) => onSort(key as SortField)}
+      onSort={key => onSort(key as SortField)}
       selectedKeys={selectedIds}
-      onToggleRow={(key) => {
-        const option = options.find((candidate) => candidate.landfillId === key);
+      onToggleRow={key => {
+        const option = options.find(candidate => candidate.landfillId === key);
         if (option) {
           onToggle(option);
         }

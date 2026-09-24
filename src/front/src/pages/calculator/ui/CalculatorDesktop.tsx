@@ -152,11 +152,9 @@ export function CalculatorDesktop({ model }: { model: CalculatorModel }) {
   useStyles('calculator-desktop', DESKTOP_CSS);
 
   const { view, shown, freshness, selection, calculation } = model;
-  const selectedIds = model.selectedInGroup.map((entry) => entry.landfillId);
-  const summaryLines = model.selectedInGroup.map((entry) => {
-    const option = (shown?.items ?? []).find(
-      (candidate) => candidate.landfillId === entry.landfillId,
-    );
+  const selectedIds = model.selectedInGroup.map(entry => entry.landfillId);
+  const summaryLines = model.selectedInGroup.map(entry => {
+    const option = (shown?.items ?? []).find(candidate => candidate.landfillId === entry.landfillId);
 
     return {
       landfillId: entry.landfillId,
@@ -170,8 +168,7 @@ export function CalculatorDesktop({ model }: { model: CalculatorModel }) {
       <div className="imolt-desk-intro">
         <h1 className="imolt-title">Калькулятор стоимости вывоза строительных отходов</h1>
         <p className="imolt-lead">
-          Москва и Московская область. Перевозка и утилизация считаются отдельно, результат –
-          сразу на этой странице.
+          Москва и Московская область. Перевозка и утилизация считаются отдельно, результат – сразу на этой странице.
         </p>
       </div>
 
@@ -191,7 +188,7 @@ export function CalculatorDesktop({ model }: { model: CalculatorModel }) {
             query={model.addressQuery}
             selected={model.addressPicked}
             items={model.addressSuggestions}
-            render={(item) => item.value}
+            render={item => item.value}
             onQuery={model.changeAddress}
             onPick={model.pickAddress}
           />
@@ -210,11 +207,11 @@ export function CalculatorDesktop({ model }: { model: CalculatorModel }) {
                 query={line.query}
                 selected={line.group ?? null}
                 items={line.suggestions}
-                render={(group) => group.name}
-                onQuery={(value) => void model.searchGroup(line.key, value)}
+                render={group => group.name}
+                onQuery={value => void model.searchGroup(line.key, value)}
                 onOpen={() => void model.browseGroups(line)}
                 onDismiss={() => model.dismissGroup(line)}
-                onPick={(group) => model.pickGroup(line, group)}
+                onPick={group => model.pickGroup(line, group)}
               />
 
               <div className="imolt-desk-line-amount">
@@ -225,7 +222,7 @@ export function CalculatorDesktop({ model }: { model: CalculatorModel }) {
                   value={line.amount}
                   inputMode="decimal"
                   hint={line.tons !== undefined ? `≈ ${formatNumber(line.tons)} т` : undefined}
-                  onChange={(value) => model.changeAmount(line, value)}
+                  onChange={value => model.changeAmount(line, value)}
                 />
                 <RadioPills
                   className="imolt-units"
@@ -236,7 +233,7 @@ export function CalculatorDesktop({ model }: { model: CalculatorModel }) {
                     { value: 't' as Unit, label: unitName('t') },
                     { value: 'm3' as Unit, label: unitName('m3') },
                   ]}
-                  onPick={(unit) => model.changeUnit(line, unit)}
+                  onPick={unit => model.changeUnit(line, unit)}
                 />
               </div>
 
@@ -289,16 +286,14 @@ export function CalculatorDesktop({ model }: { model: CalculatorModel }) {
             <Illustration kind="transport" />
             <strong>Цена видна сразу</strong>
             <span className="imolt-lead">
-              Никаких «оставьте телефон». Перевозка и утилизация показаны отдельно по каждому
-              полигону.
+              Никаких «оставьте телефон». Перевозка и утилизация показаны отдельно по каждому полигону.
             </span>
           </li>
           <li className="imolt-desk-benefit">
             <Illustration kind="route" />
             <strong>Расстояние по дорогам</strong>
             <span className="imolt-lead">
-              Не по прямой: маршрут от вашего адреса до каждой площадки считается по дорожной
-              сети.
+              Не по прямой: маршрут от вашего адреса до каждой площадки считается по дорожной сети.
             </span>
           </li>
           <li className="imolt-desk-benefit">
@@ -333,11 +328,11 @@ export function CalculatorDesktop({ model }: { model: CalculatorModel }) {
             <Tabs
               label="Группы отходов"
               value={view.wasteGroupId ?? ''}
-              options={calculation.items.map((item) => ({
+              options={calculation.items.map(item => ({
                 value: item.wasteGroupId,
                 label: item.wasteGroupName,
               }))}
-              onPick={(wasteGroupId) => model.applyView({ wasteGroupId })}
+              onPick={wasteGroupId => model.applyView({ wasteGroupId })}
             />
 
             <div className="imolt-desk-tools">
@@ -346,8 +341,8 @@ export function CalculatorDesktop({ model }: { model: CalculatorModel }) {
                 name="sort"
                 label="Сортировка"
                 value={view.sort}
-                options={SORTS.map((sort) => ({ value: sort.field, label: sort.label }))}
-                onPick={(field) => model.applyView({ sort: field })}
+                options={SORTS.map(sort => ({ value: sort.field, label: sort.label }))}
+                onPick={field => model.applyView({ sort: field })}
               />
 
               <div className="imolt-desk-filter">
@@ -359,11 +354,7 @@ export function CalculatorDesktop({ model }: { model: CalculatorModel }) {
                     label={`до ${view.distanceKm} км`}
                     pressed={view.distanceMode === 'atMost'}
                     expanded={model.filterDraft !== null}
-                    onToggle={() =>
-                      model.setFilterDraft(
-                        model.filterDraft === null ? String(view.distanceKm) : null,
-                      )
-                    }
+                    onToggle={() => model.setFilterDraft(model.filterDraft === null ? String(view.distanceKm) : null)}
                   />
                   <Chip
                     label={`не менее ${view.distanceKm} км`}
@@ -401,7 +392,7 @@ export function CalculatorDesktop({ model }: { model: CalculatorModel }) {
               </p>
             )}
 
-            {model.warnings.map((warning) => (
+            {model.warnings.map(warning => (
               <Notice key={warning.landfillId} kind="warning">
                 <span>{warning.message}</span>
               </Notice>
@@ -416,14 +407,10 @@ export function CalculatorDesktop({ model }: { model: CalculatorModel }) {
                 sort={view.sort}
                 order={view.order}
                 onSort={model.sortBy}
-                onToggle={(option) => void model.toggleLandfill(option)}
-                onRoute={(option) => void model.openRoute(option)}
+                onToggle={option => void model.toggleLandfill(option)}
+                onRoute={option => void model.openRoute(option)}
                 openRouteFor={model.route?.option.landfillId}
-                routeDetails={
-                  model.route && (
-                    <RouteDetails option={model.route.option} summary={model.route.summary} />
-                  )
-                }
+                routeDetails={model.route && <RouteDetails option={model.route.option} summary={model.route.summary} />}
                 onCloseRoute={model.closeRoute}
                 loading={model.loadingOptions}
                 empty={
@@ -448,7 +435,7 @@ export function CalculatorDesktop({ model }: { model: CalculatorModel }) {
 
             {model.selectedInGroup.length > 1 && (
               <AllocationPanel
-                rows={model.selectedInGroup.map((entry) => ({
+                rows={model.selectedInGroup.map(entry => ({
                   landfillId: entry.landfillId,
                   landfillName: model.landfillNameById(entry.landfillId) ?? 'Полигон',
                   share: model.allocationDraft[entry.landfillId] ?? '',
@@ -479,16 +466,14 @@ export function CalculatorDesktop({ model }: { model: CalculatorModel }) {
             {model.pickup && (
               <section className="imolt-desk-pickup" aria-label="Заявка на вывоз">
                 <h3 className="imolt-section">Заявка на вывоз</h3>
-                <p className="imolt-lead">
-                  Расчёт уже готов – заявка нужна, только если вывоз организуем мы.
-                </p>
+                <p className="imolt-lead">Расчёт уже готов – заявка нужна, только если вывоз организуем мы.</p>
                 <div className="imolt-desk-pickup-fields">
                   <Field
                     id="pickup-name"
                     label="Имя"
                     value={model.pickup.name}
                     placeholder="Как к вам обращаться"
-                    onChange={(value) => model.changePickup({ name: value })}
+                    onChange={value => model.changePickup({ name: value })}
                   />
                   <Field
                     id="pickup-phone"
@@ -496,17 +481,17 @@ export function CalculatorDesktop({ model }: { model: CalculatorModel }) {
                     value={model.pickup.phone}
                     inputMode="tel"
                     placeholder="+7"
-                    onChange={(value) => model.changePickup({ phone: value })}
+                    onChange={value => model.changePickup({ phone: value })}
                   />
                   <Select
                     id="pickup-landfill"
                     label="Полигон"
                     value={model.pickup.landfillName}
-                    options={(selection?.entries ?? []).map((entry) => ({
+                    options={(selection?.entries ?? []).map(entry => ({
                       value: model.landfillNameById(entry.landfillId) ?? '',
                       label: model.landfillNameById(entry.landfillId) ?? '',
                     }))}
-                    onPick={(landfillName) => model.changePickup({ landfillName })}
+                    onPick={landfillName => model.changePickup({ landfillName })}
                   />
                 </div>
                 <div className="imolt-desk-pickup-foot">
@@ -514,7 +499,7 @@ export function CalculatorDesktop({ model }: { model: CalculatorModel }) {
                     id="pickup-consent"
                     label="Согласен на обработку персональных данных согласно политике"
                     checked={model.pickup.consent}
-                    onChange={(consent) => model.changePickup({ consent })}
+                    onChange={consent => model.changePickup({ consent })}
                   />
                   <Button kind="secondary" onClick={() => void model.sendPickup()}>
                     Отправить заявку
@@ -536,9 +521,7 @@ export function CalculatorDesktop({ model }: { model: CalculatorModel }) {
               total={model.allocationTotal ?? (selection ? formatMoney(selection.total) : '')}
               totalLabel={model.allocationTotal ? 'Итого по распределению' : 'Итого'}
               onRoute={() => {
-                const first = (shown?.items ?? []).find((option) =>
-                  selectedIds.includes(option.landfillId),
-                );
+                const first = (shown?.items ?? []).find(option => selectedIds.includes(option.landfillId));
                 if (first) {
                   void model.openRoute(first);
                 }

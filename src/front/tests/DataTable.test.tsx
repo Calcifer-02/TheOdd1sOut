@@ -1,22 +1,24 @@
-// Таблица сравнения как модель состояния: сортировка, выбор строк, загрузка и
-// пустой результат (карточка практики PRACT-021).
-//
-// Ближайшая фальсифицируемая проверка практики названа ею прямо: изменить
-// порядок строк после выбора и убедиться, что выбранной осталась та же
-// запись. Здесь она и стоит.
-//
-// Проверки фальсифицируемы: замените предметный ключ строки её позицией,
-// перестаньте объявлять направление сортировки через `aria-sort`, назовите
-// флажок строки номером вместо полигона, уберите подпись таблицы или показ
-// пустого результата — они упадут.
-//
-//   npx vitest run tests/DataTable.test.tsx
-//
-// Таблица сравнения — широкое представление экрана (AC-085a); отдельного
-// критерия на сортировку и выбор в реестре нет, разрыв назван в отчёте.
-//
-// @ac: AC-085a
-// @supports: R-084
+/**
+ * Таблица сравнения как модель состояния: сортировка, выбор строк, загрузка и
+ * пустой результат (карточка практики PRACT-021).
+ *
+ * Ближайшая фальсифицируемая проверка практики названа ею прямо: изменить
+ * порядок строк после выбора и убедиться, что выбранной осталась та же
+ * запись. Здесь она и стоит.
+ *
+ * Проверки фальсифицируемы: замените предметный ключ строки её позицией,
+ * перестаньте объявлять направление сортировки через `aria-sort`, назовите
+ * флажок строки номером вместо полигона, уберите подпись таблицы или показ
+ * пустого результата — они упадут.
+ *
+ *   npx vitest run tests/DataTable.test.tsx
+ *
+ * Таблица сравнения — широкое представление экрана (AC-085a); отдельного
+ * критерия на сортировку и выбор в реестре нет, разрыв назван в отчёте.
+ *
+ * @ac: AC-085a
+ * @supports: R-084
+ */
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
@@ -94,7 +96,7 @@ function порядокСтрок(): string[] {
 
   return within(body)
     .getAllByRole('row')
-    .map((row) => within(row).getAllByRole('cell')[1].textContent ?? '');
+    .map(row => within(row).getAllByRole('cell')[1].textContent ?? '');
 }
 
 describe('таблица сравнения', () => {
@@ -108,10 +110,7 @@ describe('таблица сравнения', () => {
     render(таблица({ rows: [ВОСТОК] }));
 
     for (const title of ['Полигон', 'Расстояние', 'Итого', 'Статус']) {
-      expect(screen.getByRole('columnheader', { name: new RegExp(title, 'u') })).toHaveAttribute(
-        'scope',
-        'col',
-      );
+      expect(screen.getByRole('columnheader', { name: new RegExp(title, 'u') })).toHaveAttribute('scope', 'col');
     }
   });
 
@@ -124,14 +123,8 @@ describe('таблица сравнения', () => {
       }),
     );
 
-    expect(screen.getByRole('columnheader', { name: /Расстояние/u })).toHaveAttribute(
-      'aria-sort',
-      'ascending',
-    );
-    expect(screen.getByRole('columnheader', { name: /Итого/u })).toHaveAttribute(
-      'aria-sort',
-      'none',
-    );
+    expect(screen.getByRole('columnheader', { name: /Расстояние/u })).toHaveAttribute('aria-sort', 'ascending');
+    expect(screen.getByRole('columnheader', { name: /Итого/u })).toHaveAttribute('aria-sort', 'none');
     // Несортируемый столбец направления не объявляет: «none» у него означало бы
     // «сейчас не отсортирован, но можно», а нажать там не на что.
     expect(screen.getByRole('columnheader', { name: 'Статус' })).not.toHaveAttribute('aria-sort');
@@ -144,10 +137,7 @@ describe('таблица сравнения', () => {
       }),
     );
 
-    expect(screen.getByRole('columnheader', { name: /Расстояние/u })).toHaveAttribute(
-      'aria-sort',
-      'descending',
-    );
+    expect(screen.getByRole('columnheader', { name: /Расстояние/u })).toHaveAttribute('aria-sort', 'descending');
   });
 
   it('нажатие на заголовок с клавиатуры просит экран пересортировать строки', async () => {
@@ -163,13 +153,9 @@ describe('таблица сравнения', () => {
   });
 
   it('флажок строки называет полигон, а не её положение в списке', () => {
-    render(
-      таблица({ rows: [ВОСТОК, ИКША], selectedKeys: [], onToggleRow: () => undefined }),
-    );
+    render(таблица({ rows: [ВОСТОК, ИКША], selectedKeys: [], onToggleRow: () => undefined }));
 
-    expect(
-      screen.getByRole('checkbox', { name: 'Выбрать Комплекс переработки «Восток»' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: 'Выбрать Комплекс переработки «Восток»' })).toBeInTheDocument();
     expect(screen.queryByRole('checkbox', { name: /строк[ауи]\s*1/iu })).toBeNull();
   });
 
@@ -217,10 +203,7 @@ describe('таблица сравнения', () => {
   it('загрузка объявлена занятостью таблицы и не показывает строк данных', () => {
     render(таблица({ rows: [], loading: true }));
 
-    expect(screen.getByRole('table', { name: 'Полигоны для лома бетона, 20 т' })).toHaveAttribute(
-      'aria-busy',
-      'true',
-    );
+    expect(screen.getByRole('table', { name: 'Полигоны для лома бетона, 20 т' })).toHaveAttribute('aria-busy', 'true');
     expect(screen.getByRole('status')).toHaveTextContent('идёт загрузка строк');
 
     // Полосы ожидания скрыты от обхода: в дереве доступности остаётся только

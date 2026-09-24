@@ -49,7 +49,7 @@ export function ReviewList({
 
   return (
     <ul className="imolt-review-list" aria-label="Отзывы о полигоне">
-      {reviews.map((review) => (
+      {reviews.map(review => (
         <li key={review.id} className="imolt-review-item">
           <div className="imolt-review-item-head">
             <RatingValue rating={review.rating} />

@@ -1,39 +1,31 @@
-// Поведение и доступность общего набора управлений: кнопка, флажок, вкладки,
-// чип, выбор из списка, всплывающее окно, показ следующей порции, полоса
-// управлений и отметка актуальности.
-//
-// Проверяется поведение, а не разметка: нажатие с клавиатуры, доступное имя,
-// перенос фокуса стрелкой, закрытие всплывающего окна и возврат фокуса.
-// Совпадение имён классов ничего о работе компонента не доказывает.
-//
-// Проверки фальсифицируемы: уберите `aria-label` у кнопки-значка, снимите
-// обработку стрелок у вкладок и полосы управлений, перестаньте закрывать
-// всплывающее окно по Escape или возвращать из него фокус, разорвите связь
-// отказа с полем выбора, оставьте кнопку «Показать ещё» при показанном
-// целиком списке, уберите часовой пояс из отметки актуальности — они упадут.
-//
-//   npx vitest run tests/Controls.test.tsx
-//
-// Критерия приёмки на клавиатурную доступность общих управлений в реестре нет
-// (разрыв назван в отчёте), поэтому якорь обслуживающий.
-//
-// @supports: R-058
-// @supports: R-084
+/**
+ * Поведение и доступность общего набора управлений: кнопка, флажок, вкладки,
+ * чип, выбор из списка, всплывающее окно, показ следующей порции, полоса
+ * управлений и отметка актуальности.
+ *
+ * Проверяется поведение, а не разметка: нажатие с клавиатуры, доступное имя,
+ * перенос фокуса стрелкой, закрытие всплывающего окна и возврат фокуса.
+ * Совпадение имён классов ничего о работе компонента не доказывает.
+ *
+ * Проверки фальсифицируемы: уберите `aria-label` у кнопки-значка, снимите
+ * обработку стрелок у вкладок и полосы управлений, перестаньте закрывать
+ * всплывающее окно по Escape или возвращать из него фокус, разорвите связь
+ * отказа с полем выбора, оставьте кнопку «Показать ещё» при показанном
+ * целиком списке, уберите часовой пояс из отметки актуальности — они упадут.
+ *
+ *   npx vitest run tests/Controls.test.tsx
+ *
+ * Критерия приёмки на клавиатурную доступность общих управлений в реестре нет
+ * (разрыв назван в отчёте), поэтому якорь обслуживающий.
+ *
+ * @supports: R-058
+ * @supports: R-084
+ */
 import { useState } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import {
-  Button,
-  Checkbox,
-  Chip,
-  DateStamp,
-  Pager,
-  Popover,
-  Select,
-  Tabs,
-  Toolbar,
-} from '@/shared/ui';
+import { Button, Checkbox, Chip, DateStamp, Pager, Popover, Select, Tabs, Toolbar } from '@/shared/ui';
 import { SharedSection } from '@/pages/showcase/sections/shared';
 
 /** Флажок с собственным состоянием: без него нажатие не меняет вид. */
@@ -45,7 +37,7 @@ function ЖивойФлажок({ onChange }: { onChange: (value: boolean) => vo
       id="soglasie"
       label="Нужна утилизация на полигоне"
       checked={checked}
-      onChange={(value) => {
+      onChange={value => {
         setChecked(value);
         onChange(value);
       }}
@@ -66,7 +58,7 @@ function ЖивыеВкладки({ onPick }: { onPick: (value: string) => void 
         { value: 'wood' as const, label: 'Древесина' },
         { value: 'soil' as const, label: 'Грунт' },
       ]}
-      onPick={(next) => {
+      onPick={next => {
         setValue(next);
         onPick(next);
       }}
@@ -247,10 +239,7 @@ describe('выбор из списка', () => {
       />,
     );
 
-    await user.selectOptions(
-      screen.getByRole('combobox', { name: 'Группа отходов' }),
-      'Древесина от разборки',
-    );
+    await user.selectOptions(screen.getByRole('combobox', { name: 'Группа отходов' }), 'Древесина от разборки');
 
     expect(onPick).toHaveBeenCalledWith('wood');
   });
@@ -342,9 +331,7 @@ describe('полоса управлений', () => {
 
 describe('отметка актуальности', () => {
   it('точный момент виден без наведения и сохраняет часовой пояс источника', () => {
-    const { container } = render(
-      <DateStamp iso="2026-09-17T12:04:00+03:00" kind="issued" now="2026-09-18" />,
-    );
+    const { container } = render(<DateStamp iso="2026-09-17T12:04:00+03:00" kind="issued" now="2026-09-18" />);
 
     expect(container.textContent).toContain('Выпущено 17.09.2026, 12:04 (UTC+03:00)');
 
@@ -384,9 +371,7 @@ describe('раздел витрины общего слоя', () => {
     expect(screen.getByRole('tablist', { name: 'Типы отходов расчёта' })).toBeInTheDocument();
     expect(screen.getByRole('toolbar', { name: 'Действия над выбором' })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'Группа отходов' })).toBeInTheDocument();
-    expect(
-      screen.getByRole('checkbox', { name: 'Нужна утилизация на полигоне' }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: 'Нужна утилизация на полигоне' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Рассчитать' })).toBeInTheDocument();
   });
 });

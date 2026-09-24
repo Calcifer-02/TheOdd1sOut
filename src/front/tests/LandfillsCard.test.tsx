@@ -24,13 +24,7 @@ import userEvent from '@testing-library/user-event';
 import { LandfillsPage } from '@/pages/landfills';
 import { IDENTITY_FROM_MAX, READING_OPEN } from '@/entities/participant';
 import { DESKTOP_WIDTH, setViewportWidth } from './viewport';
-import {
-  IKSHA,
-  SESSION_REQUIRED,
-  VOSTOK,
-  installReferencesStub,
-  type ReferencesStub,
-} from './stubs/references';
+import { IKSHA, SESSION_REQUIRED, VOSTOK, installReferencesStub, type ReferencesStub } from './stubs/references';
 
 const КАРТОЧКА_ВОСТОКА = '#/landfills?landfill=vostok-timohovo';
 
@@ -136,9 +130,7 @@ describe('содержимое карточки полигона', () => {
 
     await заголовокКарточки(VOSTOK.name);
 
-    expect(вКарточке(VOSTOK.name).getAllByText('Обновлено 17.09.2026')).toHaveLength(
-      VOSTOK.tariffs.length,
-    );
+    expect(вКарточке(VOSTOK.name).getAllByText('Обновлено 17.09.2026')).toHaveLength(VOSTOK.tariffs.length);
   });
 
   it('карточка заблокированного полигона предупреждает о недопустимости вывоза', async () => {
@@ -148,9 +140,7 @@ describe('содержимое карточки полигона', () => {
 
     await заголовокКарточки(VOSTOK.name);
 
-    expect(
-      screen.getByText('Полигон заблокирован: вывоз на него сейчас недопустим'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('Полигон заблокирован: вывоз на него сейчас недопустим')).toBeInTheDocument();
   });
 });
 
@@ -208,9 +198,7 @@ describe('отзывы о полигоне', () => {
     await заголовокКарточки(VOSTOK.name);
     await пользователь.click(screen.getByRole('button', { name: 'Отправить отзыв' }));
 
-    expect(screen.getByRole('alert')).toHaveTextContent(
-      'Укажите оценку: без неё отзыв не попадёт в среднюю',
-    );
+    expect(screen.getByRole('alert')).toHaveTextContent('Укажите оценку: без неё отзыв не попадёт в среднюю');
     expect(служба.sentTo('POST /v1/landfills/:id/reviews')).toHaveLength(0);
   });
 
@@ -295,9 +283,8 @@ describe('отзывы о полигоне', () => {
 
     expect(отказ.textContent, 'причина отказа не названа').toContain(IDENTITY_FROM_MAX);
     expect(отказ.textContent, 'не сказано, что чтение осталось открытым').toContain(READING_OPEN);
-    expect(
-      отказ.textContent,
-      'экран советует открыть мини-приложение, которое уже открыто',
-    ).not.toContain('откройте мини-приложение');
+    expect(отказ.textContent, 'экран советует открыть мини-приложение, которое уже открыто').not.toContain(
+      'откройте мини-приложение',
+    );
   });
 });

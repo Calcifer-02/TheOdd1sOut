@@ -43,13 +43,8 @@ export function Button({
    */
   loading?: boolean;
 }) {
-  const classes = [
-    'imolt-button',
-    `imolt-button--${kind}`,
-    `imolt-button--${size}`,
-    className,
-  ]
-    .filter((name) => name !== undefined && name !== '')
+  const classes = ['imolt-button', `imolt-button--${kind}`, `imolt-button--${size}`, className]
+    .filter(name => name !== undefined && name !== '')
     .join(' ');
 
   return (

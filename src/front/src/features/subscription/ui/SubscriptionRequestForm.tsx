@@ -89,7 +89,7 @@ export function SubscriptionRequestForm({
         label="Кто вы"
         value={draft.role}
         options={SUBSCRIBER_ROLES}
-        onPick={(role) => change({ role })}
+        onPick={role => change({ role })}
       />
 
       <Field
@@ -98,7 +98,7 @@ export function SubscriptionRequestForm({
         value={draft.companyName}
         placeholder="ООО «Перевозчик»"
         error={shown.companyName}
-        onChange={(companyName) => change({ companyName })}
+        onChange={companyName => change({ companyName })}
       />
 
       <Field
@@ -109,26 +109,26 @@ export function SubscriptionRequestForm({
         placeholder="7701234567"
         hint="Десять цифр у организации, двенадцать у предпринимателя"
         error={shown.inn}
-        onChange={(inn) => change({ inn })}
+        onChange={inn => change({ inn })}
       />
 
       <Checkbox
         id={`${fieldId}-ais`}
         label="Транспорт зарегистрирован в АИС ОССиГ"
         checked={draft.registeredInAisOssig}
-        onChange={(registeredInAisOssig) => change({ registeredInAisOssig })}
+        onChange={registeredInAisOssig => change({ registeredInAisOssig })}
       />
 
       <p className="imolt-subscription-terms">
-        Оплата проходит вне сервиса: менеджер свяжется, назовёт условия и откроет доступ. Стоимость
-        и состав подписки заказчиком пока не названы, поэтому сервис их не показывает.
+        Оплата проходит вне сервиса: менеджер свяжется, назовёт условия и откроет доступ. Стоимость и состав подписки
+        заказчиком пока не названы, поэтому сервис их не показывает.
       </p>
 
       <Checkbox
         id={`${fieldId}-consent`}
         label="Согласен на обработку персональных данных"
         checked={draft.personalDataConsent}
-        onChange={(personalDataConsent) => change({ personalDataConsent })}
+        onChange={personalDataConsent => change({ personalDataConsent })}
       />
 
       <Button type="submit" disabled={sending}>
@@ -136,9 +136,7 @@ export function SubscriptionRequestForm({
       </Button>
 
       {touched && !draft.personalDataConsent && (
-        <Notice kind="error">
-          Без согласия на обработку персональных данных заявка не отправляется
-        </Notice>
+        <Notice kind="error">Без согласия на обработку персональных данных заявка не отправляется</Notice>
       )}
 
       {failure !== null && <Notice kind="error">{failure}</Notice>}
