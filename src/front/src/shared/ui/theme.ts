@@ -88,7 +88,15 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
   color: ${colors.textPrimary};
 }
 
-.imolt-input:focus { border-color: ${colors.textPrimary}; }
+/* Фокус меняет цвет собственной рамки поля и уплотняет её изнутри. Второе
+   кольцо поверх первого читается как дефект, а толщина рядом с цветом
+   оставляет признак фокуса заметным и без различения цветов. */
+.imolt-input:focus,
+.imolt-input:focus-visible {
+  outline: none;
+  border-color: ${colors.link};
+  box-shadow: inset 0 0 0 1px ${colors.link};
+}
 .imolt-input[aria-invalid='true'] { border-color: ${colors.statusBlockedText}; }
 
 .imolt-hint { font-size: 12px; line-height: 16px; color: ${colors.textSecondary}; }
@@ -149,7 +157,9 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
   flex: none;
 }
 
-.imolt-units .imolt-pill { border-radius: ${radius.field}px; min-height: ${layout.touchTarget}px; }
+/* Переключатель меры стоит рядом с полем количества и обязан быть той же
+   высоты: два соседних управления разной высоты читаются как сбой вёрстки. */
+.imolt-units .imolt-pill { border-radius: ${radius.field}px; min-height: ${layout.fieldHeight}px; }
 
 .imolt-pill input {
   position: absolute;
@@ -286,13 +296,67 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
   flex-wrap: wrap;
 }
 
+/* Полоса над экраном: та же колонка, что у страницы. Без неё содержимое
+   растекается на всю ширину окна и поля выглядят непомерно широкими. */
+.imolt-band {
+  max-width: ${layout.screenWidth}px;
+  margin: 0 auto;
+  padding: ${space.m}px ${layout.gutter}px 0;
+}
+
+/* Строка согласия: флажок и подпись на одной оптической линии. */
+.imolt-consent {
+  display: flex;
+  align-items: center;
+  gap: ${space.xs}px;
+  min-height: ${layout.touchTarget}px;
+  font-size: 14px;
+  line-height: 20px;
+  cursor: pointer;
+}
+
+/* Флажок рисуется сам: базовый вид браузера не принадлежит дизайн-договору
+   и на разных платформах выглядит по-разному. Размер — та же цель касания,
+   галочка — повёрнутый угол рамки, поэтому прямых цветов здесь нет. */
 .imolt-check {
+  appearance: none;
+  -webkit-appearance: none;
   width: ${space.l}px;
   height: ${space.l}px;
-  margin: ${space.xxs}px 0 0;
-  accent-color: ${colors.accentDark};
   flex: none;
+  margin: 0;
+  display: inline-grid;
+  place-content: center;
+  border: 2px solid ${colors.borderDefault};
+  border-radius: ${radius.badge}px;
+  background: ${colors.bgSurface};
+  color: ${colors.accentDark};
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
 }
+
+.imolt-check::after {
+  content: '';
+  width: 10px;
+  height: 5px;
+  border-left: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg) translate(1px, -1px);
+  opacity: 0;
+}
+
+.imolt-check:hover { border-color: ${colors.accentDark}; }
+
+.imolt-check:checked {
+  background: ${colors.accentPrimary};
+  border-color: ${colors.accentDark};
+}
+
+.imolt-check:checked::after { opacity: 1; }
+
+/* В карточке полигона флажок стоит против названия, а не против середины
+   карточки: название — первая строка блока. */
+.imolt-option-head > .imolt-check { align-self: flex-start; margin-top: 2px; }
 
 .imolt-badge {
   display: inline-flex;
