@@ -28,7 +28,7 @@ const LINE = 1.5;
 const SIZE = space.xxl;
 
 /** Что именно объясняет карточка. */
-export type IllustrationKind = 'transport' | 'route' | 'statuses';
+export type IllustrationKind = 'transport' | 'route' | 'statuses' | 'demolition' | 'interior' | 'excavation' | 'metal';
 
 const DRAWINGS: Record<IllustrationKind, ReactNode> = {
   // Самосвал с кузовом: перевозка — первая из двух слагаемых цены (R-019).
@@ -58,6 +58,45 @@ const DRAWINGS: Record<IllustrationKind, ReactNode> = {
       <path d="M6 16h28" />
       <path d="M14 4.5V11M26 4.5V11" />
       <path d="M14.5 24.5l4 4 7.5-8" />
+    </>
+  ),
+  // Экскаватор-разрушитель со стрелой над зданием: механизированный снос
+  // целого объёма (выполненные проекты, R-087).
+  demolition: (
+    <>
+      <rect x="4" y="18" width="13" height="14" />
+      <path d="M4 22h13M4 26h13" />
+      <path d="M21 32V22l8-11 4 2-6 11" />
+      <path d="M19 32h18" />
+      <path d="M31 6.5l3.5 2.5" />
+    </>
+  ),
+  // Стены и перекрытия внутри контура здания: разборка изнутри, когда
+  // наружная коробка остаётся.
+  interior: (
+    <>
+      <rect x="6" y="7" width="28" height="26" rx="2" />
+      <path d="M13 33V17h9v16" />
+      <path d="M22 22h8" />
+      <path d="M6 17h7" />
+    </>
+  ),
+  // Ковш над откосом котлована: вывоз грунта объёмом, а не разбор строения.
+  excavation: (
+    <>
+      <path d="M3 30h9l6-9h14l5 9" />
+      <path d="M12 30h25" />
+      <path d="M24 8v7M24 15l-5 6M24 15l5 6" />
+      <path d="M19 21h10" />
+    </>
+  ),
+  // Балка под резаком: разделка металла в габарит перед вывозом.
+  metal: (
+    <>
+      <path d="M5 14h30v6H5z" />
+      <path d="M5 26h30" />
+      <path d="M20 20v6" />
+      <path d="M13 31l4-5M27 31l-4-5" />
     </>
   ),
 };

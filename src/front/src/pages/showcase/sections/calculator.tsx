@@ -10,6 +10,7 @@
 import { useState } from 'react';
 import { OptionCard, OptionTable, RouteDetails, RouteModal, StatusBadge, type BadgeStatus } from '@/entities/landfill';
 import { AllocationPanel, SummaryBar, SummaryPanel } from '@/widgets/selection-summary';
+import { CompanyProfile } from '@/widgets/company-profile';
 import { Button, EmptyState } from '@/shared/ui';
 import { formatMoney } from '@/shared/lib/formatting';
 import { ApiProblem } from '@/shared/api/http';
@@ -275,6 +276,12 @@ export function CalculatorSection() {
           onOpenQuote={() => undefined}
           onPickup={() => undefined}
         />
+      </Section>
+
+      <Section title="Представление компании">
+        {/* Образец идёт со своими сведениями: услуги, проекты и контакты
+            приходят из модуля сведений, а не из службы (R-087). */}
+        <CompanyProfile />
       </Section>
 
       <Section title="Сводка выбора: нижняя панель">

@@ -30,7 +30,7 @@ namespace Imolt.Domain.Tests;
 ///
 ///   dotnet test tests/unit/Imolt.Domain.Tests
 ///
-/// @ac: AC-018a, AC-018b, AC-018c, AC-019a, AC-021a, AC-022a
+/// @ac: AC-017a, AC-018a, AC-018b, AC-018c, AC-019a, AC-021a, AC-022a
 public sealed class PlacementCostFormulaTests
 {
   /// Коэффициент перевозки, который ничего не меняет. Отдельное имя, потому
@@ -39,6 +39,9 @@ public sealed class PlacementCostFormulaTests
 
   /// Цена перевозки группы «beton-lom» за тонна-километр (начальный набор).
   private const decimal ConcreteTransportPrice = 12.00m;
+
+  /// Цена перевозки группы «drevesina» там же: другая группа — другая цена.
+  private const decimal WoodTransportPrice = 16.00m;
 
   /// Объём примера договора: 20 тонн лома бетона.
   private const decimal ConcreteTons = 20m;
@@ -125,6 +128,35 @@ public sealed class PlacementCostFormulaTests
     // не распространяется, иначе R-022 молча переписал бы R-018.
     Assert.Equal(Money.Rubles(9000.00m), cost.DisposalCost);
     Assert.Equal(Money.Rubles(21420.00m), cost.TotalCost);
+  }
+
+  [Fact(DisplayName = "цена перевозки берётся у группы отходов и между группами различается")]
+  public void TransportPriceComesFromWasteGroupAndDiffersBetweenGroups()
+  {
+    // Один вес, одно плечо, один полигон — разные только группы. Разница
+    // в перевозке может взяться только из цены группы (R-017, AC-017a).
+    var concrete = PlacementCost.Of(
+        tons: ConcreteTons,
+        transportPricePerTonKm: Money.Rubles(ConcreteTransportPrice),
+        distanceKm: 45m,
+        disposalPricePerTon: Money.Rubles(450.00m),
+        transportCoefficient: NoTransportCoefficient);
+
+    var wood = PlacementCost.Of(
+        tons: ConcreteTons,
+        transportPricePerTonKm: Money.Rubles(WoodTransportPrice),
+        distanceKm: 45m,
+        disposalPricePerTon: Money.Rubles(450.00m),
+        transportCoefficient: NoTransportCoefficient);
+
+    // 20 т x 12,00 ₽ x 45 км = 10 800,00 ₽; 20 т x 16,00 ₽ x 45 км = 14 400,00 ₽.
+    Assert.Equal(Money.Rubles(10800.00m), concrete.TransportCost);
+    Assert.Equal(Money.Rubles(14400.00m), wood.TransportCost);
+    Assert.NotEqual(concrete.TransportCost, wood.TransportCost);
+
+    // Утилизация не тронута: цена группы относится к перевозке, а тариф —
+    // свойство пары «полигон и группа» (R-018).
+    Assert.Equal(concrete.DisposalCost, wood.DisposalCost);
   }
 
   private static PlacementCost VostokCost(decimal transportCoefficient) => PlacementCost.Of(

@@ -16,6 +16,7 @@ import { Button, Field, Notice, PhoneField, RadioPills, Sheet, Skeleton } from '
 import { Combobox } from '@/shared/ui/combobox';
 import { OptionCard, RouteDetails, badgeStatus } from '@/entities/landfill';
 import { AllocationPanel, SummaryBar } from '@/widgets/selection-summary';
+import { CompanyProfile } from '@/widgets/company-profile';
 import type { Unit } from '@/shared/lib/formatting';
 import { formatDate, formatNumber, formatMoney, unitName } from '@/shared/lib/formatting';
 import { SORTS, type CalculatorModel } from '../model/useCalculator';
@@ -297,6 +298,11 @@ export function CalculatorMobile({ model }: { model: CalculatorModel }) {
           />
         </Sheet>
       )}
+
+      {/* Представление компании стоит под работой, а не над ней: пришедший за
+          расчётом начинает с формы, а вопросы «кто это» и «как связаться» приходят после
+          неё (R-087). */}
+      <CompanyProfile />
 
       {model.pickup && (
         <Sheet title="Заявка на вывоз" onClose={model.closePickup}>

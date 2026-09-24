@@ -17,6 +17,7 @@
  * Подключение к `./routing` направлено в одну сторону: адрес о представлении
  * не знает, иначе два отрезка общего слоя замкнулись бы в кольцо.
  *
+ * @req: R-085
  * @shared: imolt-miniapp
  * @adr: ADR-0008
  */
@@ -86,6 +87,11 @@ function viewportByWidth(wide: boolean, wider: boolean): Viewport {
 /**
  * Текущее представление экрана: закреплённое адресом, иначе — выбранное
  * шириной окна. С подпиской и на адрес, и на ширину.
+ *
+ * Здесь и принимается решение о представлении: экраны его не выбирают, а
+ * спрашивают готовое и рисуют свою ветку.
+ *
+ * @req: R-085
  */
 export function useViewport(): Viewport {
   const wide = useSyncExternalStore(
@@ -137,6 +143,8 @@ export function useViewport(): Viewport {
 /**
  * Широкий экран — рабочее место: таблица, столбцы, боковая колонка. Узкий —
  * телефон у объекта сноса: карточки и одна колонка.
+ *
+ * @req: R-085
  */
 export function isWide(viewport: Viewport): boolean {
   return viewport !== 'mobile';
