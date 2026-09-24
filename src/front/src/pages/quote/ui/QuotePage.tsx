@@ -11,7 +11,10 @@
  * выпускать предложение.
  *
  * Каждое состояние названо словом. Пустой экран вместо объяснения — самый
- * дорогой из отказов: пользователь не знает, что делать дальше.
+ * дорогой из отказов: пользователь не знает, что делать дальше. Состояние без
+ * расчёта в адресе перестало быть тупиком: пункт шапки ведёт сюда всегда, и
+ * опознанному участнику здесь показывается перечень ранее выпущенных
+ * предложений (решение заказчика от 24.09.2026, AC-036h).
  *
  * @supports: R-036, R-037, R-038, R-059
  * @adr: ADR-0008
@@ -20,34 +23,50 @@ import { useQuoteStyles } from '@/entities/quote';
 import { Notice } from '@/shared/ui';
 import { CALCULATOR_PATH, useNavigate } from '@/shared/lib/routing';
 import { isWide, useViewport } from '@/shared/lib/viewport';
+import { useQuoteHistory } from '../model/useQuoteHistory';
 import { useQuoteScreen } from '../model/useQuoteScreen';
 import { QUOTE_LABELS, quoteView } from '../model/view';
 import { QuoteDesktop } from './QuoteDesktop';
+import { QuoteHistoryCards, QuoteHistoryTable } from './QuoteHistory';
 import { QuoteMobile } from './QuoteMobile';
+import { useQuoteScreenStyles } from './styles';
 
 export function QuotePage() {
   useQuoteStyles();
+  useQuoteScreenStyles();
 
-  const { state, issue, retry } = useQuoteScreen();
+  // Перечень запрашивается до разбора состояния экрана: он не зависит от того,
+  // назван ли расчёт в адресе, а перенос вызова внутрь ветки сделал бы порядок
+  // подключений React разным у разных состояний.
+  const history = useQuoteHistory();
+  const { state, calculationId, issue, retry } = useQuoteScreen();
   const viewport = useViewport();
   const navigate = useNavigate();
+  const wide = isWide(viewport);
 
   if (state.kind === 'noCalculation') {
     return (
-      <section className="imolt-card">
-        <h1 className="imolt-quote-title">{QUOTE_LABELS.screen}</h1>
-        <Notice kind="empty">
-          Предложение выпускается по расчёту, а расчёт в ссылке не назван. Вернитесь к расчёту, выберите полигоны и
-          нажмите «Скачать КП»
-        </Notice>
-        <button
-          type="button"
-          className="imolt-button imolt-button--secondary"
-          onClick={() => navigate(CALCULATOR_PATH)}
-        >
-          {QUOTE_LABELS.backToCalculation}
-        </button>
-      </section>
+      <div className="imolt-quote-screen">
+        <section className="imolt-card">
+          <h1 className="imolt-quote-title">{QUOTE_LABELS.screen}</h1>
+          <Notice kind="empty">
+            Предложение выпускается по расчёту, а расчёт в ссылке не назван. Вернитесь к расчёту, выберите полигоны и
+            нажмите «Сформировать предложение»
+          </Notice>
+          <button
+            type="button"
+            className="imolt-button imolt-button--secondary"
+            onClick={() => navigate(CALCULATOR_PATH)}
+          >
+            {QUOTE_LABELS.backToCalculation}
+          </button>
+        </section>
+
+        {/* Текущего предложения здесь нет и выдумать его нечем: показывается
+            только то, что уже выпущено, либо причина, по которой перечень
+            закрыт. */}
+        {wide ? <QuoteHistoryTable history={history} /> : <QuoteHistoryCards history={history} />}
+      </div>
     );
   }
 
@@ -87,9 +106,23 @@ export function QuotePage() {
 
   const view = quoteView(state);
 
-  return isWide(viewport) ? (
-    <QuoteDesktop view={view} issuing={state.issuing} issueFailure={state.issueFailure} onIssue={issue} />
+  return wide ? (
+    <QuoteDesktop
+      view={view}
+      calculationId={calculationId}
+      history={history}
+      issuing={state.issuing}
+      issueFailure={state.issueFailure}
+      onIssue={issue}
+    />
   ) : (
-    <QuoteMobile view={view} issuing={state.issuing} issueFailure={state.issueFailure} onIssue={issue} />
+    <QuoteMobile
+      view={view}
+      calculationId={calculationId}
+      history={history}
+      issuing={state.issuing}
+      issueFailure={state.issueFailure}
+      onIssue={issue}
+    />
   );
 }

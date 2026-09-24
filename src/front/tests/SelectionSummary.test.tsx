@@ -1,5 +1,5 @@
 // Сводка выбора, распределение объёма и документы: панель выбора, доли по
-// полигонам, ссылка на внешние карты, выпуск коммерческого предложения и
+// полигонам, ссылка на внешние карты, переход к коммерческому предложению и
 // заявка на вывоз (R-030, R-032, R-034, R-036, R-053, R-061).
 //
 // Видимые тексты взяты дословно из макета «ux/Калькулятор мобильный.dc.html».
@@ -8,14 +8,14 @@
 //
 // Проверки фальсифицируемы: покажите сводку до выбора, посчитайте итог
 // распределения у себя вместо ответа расчётной части, отправьте несошедшиеся
-// доли, выпустите второе предложение при повторном скачивании, примите заявку
+// доли, выпустите предложение прямо с экрана расчёта, примите заявку
 // без согласия на обработку персональных данных — они упадут.
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { App } from '@/app/App';
 import type { ApiStub } from './apiStub';
-import { CONCRETE_GROUP, EXTERNAL_MAP_URL, IKSHA, QUOTE_DOCUMENT_URL, VOSTOK, installApiStub } from './apiStub';
+import { CALCULATION_ID, CONCRETE_GROUP, EXTERNAL_MAP_URL, IKSHA, VOSTOK, installApiStub } from './apiStub';
 import { calculateConcrete, landfillCard, landfillCheckbox } from './flows';
 
 /** Неразрывный пробел U+00A0 — разделитель разрядов и отбивка знака рубля. */
@@ -315,55 +315,52 @@ describe('детали маршрута без подписки', () => {
   });
 });
 
-/** @ac: AC-036e */
-describe('скачивание коммерческого предложения', () => {
-  async function downloadQuote(user: ReturnType<typeof userEvent.setup>): Promise<void> {
+/**
+ * Решением заказчика от 24.09.2026 выпуск предложения ушёл с экрана расчёта на
+ * экран предпросмотра: у коммерческого предложения есть номер и срок действия,
+ * и закреплять их одним нажатием, не показав документ, нельзя. Нижняя панель
+ * телефона несёт то же действие, что боковая сводка рабочего места.
+ *
+ * @ac: AC-036f
+ */
+describe('переход к предложению с нижней панели сводки', () => {
+  /** Доводит экран до выбора полигонов и нажимает действие нижней панели. */
+  async function formQuote(user: ReturnType<typeof userEvent.setup>): Promise<void> {
     await calculateConcrete(user);
     await selectLandfills(user, [VOSTOK.landfillName, IKSHA.landfillName]);
-    await user.click(screen.getByRole('button', { name: 'Скачать КП' }));
-    await screen.findByText('КП сохранено');
+    await user.click(screen.getByRole('button', { name: 'Сформировать предложение' }));
   }
 
-  it('выпускает предложение при первом нажатии', async () => {
+  it('ведёт на экран предложения с этим расчётом в адресе', async () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await downloadQuote(user);
+    await formQuote(user);
 
-    expect(stub.sentTo('POST /v1/calculations/:id/quotes')).toHaveLength(1);
+    expect(window.location.hash).toBe(`#/quote?calc=${CALCULATION_ID}`);
   });
 
-  it('подтверждает выпуск словами «КП сохранено»', async () => {
+  it('предложения не выпускает: номер закрепляет экран предложения', async () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await downloadQuote(user);
+    await formQuote(user);
 
-    expect(screen.getByText('КП сохранено')).toBeInTheDocument();
+    expect(
+      stub.sentTo('POST /v1/calculations/:id/quotes'),
+      'экран расчёта выпустил предложение вслепую (R-036)',
+    ).toHaveLength(0);
   });
 
-  it('не выпускает второго предложения при повторном нажатии', async () => {
-    // Выпуск закрепляет цены и номер: второе нажатие не должно давать второй
-    // номер (договор, операция `createQuote`).
+  it('уводит с экрана расчёта, а не показывает извещение под карточками', async () => {
     const user = userEvent.setup();
     render(<App />);
 
-    await downloadQuote(user);
-    await user.click(screen.getByRole('button', { name: 'Скачать КП' }));
+    await formQuote(user);
 
-    expect(stub.sentTo('POST /v1/calculations/:id/quotes')).toHaveLength(1);
-  });
-
-  it('скачивает файл по адресу ранее выпущенного предложения', async () => {
-    const user = userEvent.setup();
-    render(<App />);
-
-    await downloadQuote(user);
-    await user.click(screen.getByRole('button', { name: 'Скачать КП' }));
-
-    const link = screen.getByRole('link', { name: 'Открыть коммерческое предложение' });
-
-    expect(link.getAttribute('href')).toMatch(new RegExp(`${QUOTE_DOCUMENT_URL}$`, 'u'));
+    await waitFor(() => {
+      expect(screen.queryByRole('region', { name: 'Результаты' })).toBeNull();
+    });
   });
 });
 

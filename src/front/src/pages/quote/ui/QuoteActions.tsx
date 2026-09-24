@@ -15,7 +15,7 @@
  * @adr: ADR-0008
  */
 import { CALCULATOR_PATH, useNavigate } from '@/shared/lib/routing';
-import { QUOTE_LABELS, type QuoteView } from '../model/view';
+import { QUOTE_LABELS, calculationQuery, type QuoteView } from '../model/view';
 
 export function QuotePrimaryAction({
   view,
@@ -41,18 +41,24 @@ export function QuotePrimaryAction({
   );
 }
 
-export function QuoteSecondaryActions() {
+export function QuoteSecondaryActions({ calculationId }: { calculationId: string }) {
   const navigate = useNavigate();
+
+  // Расчёт называется в адресе перехода: экран расчёта восстанавливает набранные
+  // данные и выбранные полигоны из адреса, и переход без параметра открыл бы
+  // пустую форму вместо того расчёта, по которому смотрят предложение
+  // (AC-036g; `@/shared/lib/viewState`).
+  const toCalculation = () => navigate(CALCULATOR_PATH, calculationQuery(calculationId));
 
   // Оба перехода ведут на экран расчёта: карточка заявки на вывоз живёт там
   // же, под результатами (дизайн-договор, разд. 5, Э-08). Названы они
   // по-разному, потому что это разные намерения пользователя.
   return (
     <>
-      <button type="button" className="imolt-button imolt-button--secondary" onClick={() => navigate(CALCULATOR_PATH)}>
+      <button type="button" className="imolt-button imolt-button--secondary" onClick={toCalculation}>
         {QUOTE_LABELS.pickupRequest}
       </button>
-      <button type="button" className="imolt-button imolt-button--tertiary" onClick={() => navigate(CALCULATOR_PATH)}>
+      <button type="button" className="imolt-button imolt-button--tertiary" onClick={toCalculation}>
         {QUOTE_LABELS.backToCalculation}
       </button>
     </>

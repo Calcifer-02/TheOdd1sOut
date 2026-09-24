@@ -1,7 +1,7 @@
 /**
  * Предметная часть экрана расчёта: состояние формы, обращения к расчётной
- * части, выбор полигонов, распределение объёма, выпуск предложения и заявка
- * на вывоз.
+ * части, выбор полигонов, распределение объёма, переход к предложению и
+ * заявка на вывоз.
  *
  * Представлений у экрана два — карточки на телефоне и таблица сравнения на
  * рабочем месте, — но предметная часть одна. Копия этой логики во втором
@@ -22,7 +22,6 @@ import type {
   Calculation,
   PlacementOption,
   PlacementOptionPage,
-  Quote,
   RouteSummary,
   SelectionEntry,
   SelectionState,
@@ -41,10 +40,10 @@ import {
   setSelection,
   suggestAddresses,
 } from '@/shared/api/imolt';
-import { createPickupRequest, issueQuote, quoteDocumentHref } from '@/shared/api/deals';
+import { createPickupRequest } from '@/shared/api/deals';
 import type { Unit } from '@/shared/lib/formatting';
 import { formatMoney, formatQuantity } from '@/shared/lib/formatting';
-import { CALCULATOR_PATH, hashOf, replaceRoute } from '@/shared/lib/routing';
+import { CALCULATOR_PATH, navigate, replaceRoute } from '@/shared/lib/routing';
 import type { SortField, ViewState } from '@/shared/lib/viewState';
 import { DEFAULT_VIEW_STATE, parseViewState, viewStateToHash } from '@/shared/lib/viewState';
 import type { WasteLine } from './wasteLine';
@@ -102,7 +101,6 @@ export function useCalculator() {
   const [allocationProblem, setAllocationProblem] = useState<ApiProblem | null>(null);
   const [allocationMismatch, setAllocationMismatch] = useState<string | null>(null);
 
-  const [quote, setQuote] = useState<Quote | null>(null);
   const [route, setRoute] = useState<OpenRoute | null>(null);
   const [pickup, setPickup] = useState<PickupDraft | null>(null);
   const [pickupError, setPickupError] = useState<string | undefined>(undefined);
@@ -326,7 +324,6 @@ export function useCalculator() {
 
       setCalculation(result);
       setSelectionState(null);
-      setQuote(null);
       setAllocationTotal(null);
       setAllocationDraft({});
       setOptions(result.results.find(tab => tab.wasteGroupId === group)?.options ?? null);
@@ -473,20 +470,24 @@ export function useCalculator() {
     );
   }
 
-  async function download() {
-    if (!calculation || quote) {
-      // Повторное скачивание не выпускает второе предложение: номер и цены
-      // закреплены на момент выпуска (R-036).
+  /**
+   * Переход на экран предложения по этому расчёту.
+   *
+   * Экран расчёта предложение не выпускает: у коммерческого предложения есть
+   * номер и срок действия, и закреплять их одним нажатием, не показав
+   * документ, нельзя. Выпуск — отдельное действие на экране предпросмотра
+   * (R-036, AC-036f; решение заказчика от 24.09.2026).
+   *
+   * Расчёт передаётся тем же параметром адреса, которым он восстанавливается
+   * при открытии расчёта по ссылке (`parseViewState`), и которым его читает
+   * экран предложения: второго имени у параметра нет.
+   */
+  function openQuote() {
+    if (!calculation) {
       return;
     }
 
-    try {
-      setQuote(await issueQuote(calculation.id));
-    } catch (error: unknown) {
-      if (error instanceof ApiProblem) {
-        setFailure(error);
-      }
-    }
+    navigate('/quote', new URLSearchParams({ calc: calculation.id }));
   }
 
   async function openRoute(option: PlacementOption) {
@@ -605,10 +606,6 @@ export function useCalculator() {
     allocationTotal,
     allocationProblem,
     allocationMismatch,
-    quote,
-    quoteDocumentHref: quote ? quoteDocumentHref(quote) : undefined,
-    /** Ссылка на экран предложения по этому расчёту (карта пути, этап 5). */
-    quoteScreenHref: calculation ? hashOf('/quote', new URLSearchParams({ calc: calculation.id })) : undefined,
     route,
     pickup,
     pickupError,
@@ -638,7 +635,7 @@ export function useCalculator() {
     loadMore,
     toggleLandfill,
     changeAllocationShare,
-    download,
+    openQuote,
     openRoute,
     closeRoute,
     openPickup,

@@ -262,16 +262,6 @@ export function CalculatorMobile({ model }: { model: CalculatorModel }) {
             />
           )}
 
-          {model.quote && (
-            <Notice kind="done">
-              <strong>КП сохранено</strong>
-              <a href={model.quoteDocumentHref} download>
-                Открыть коммерческое предложение
-              </a>
-              <a href={model.quoteScreenHref}>Открыть экран предложения</a>
-            </Notice>
-          )}
-
           {model.pickupDone && (
             <Notice kind="done">
               <strong>Заявка принята</strong>
@@ -282,11 +272,14 @@ export function CalculatorMobile({ model }: { model: CalculatorModel }) {
       )}
 
       {selection && selection.selectedLandfills > 0 && (
+        // Та же кнопка, что в боковой колонке рабочего места: нижняя панель
+        // ведёт на предпросмотр предложения, а не выпускает его (R-036,
+        // AC-036f).
         <SummaryBar
           selectedCount={selection.selectedLandfills}
           total={model.allocationTotal ?? formatMoney(selection.total)}
-          downloadLabel="Скачать КП"
-          onDownload={() => void model.download()}
+          quoteLabel="Сформировать предложение"
+          onOpenQuote={model.openQuote}
           onPickup={model.openPickup}
         />
       )}
