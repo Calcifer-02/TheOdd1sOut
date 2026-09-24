@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-label="ИМОЛТ — расчёт вывоза и утилизации отходов">
+  <rect width="1200" height="630" fill="#EFEEF1"/>
+  <rect x="64" y="64" width="1072" height="502" rx="32" fill="#FFFFFF"/>
+  <rect x="112" y="112" width="64" height="64" rx="16" fill="#FF4719"/>
+  <path d="M129 158V118h10.5l12.5 21 12.5-21H175v40h-10v-22l-10 16.5h-3L142 136v22h-13Z" fill="#FFFFFF"/>
+  <text x="112" y="286" font-family="Arial, Helvetica, sans-serif" font-size="64" font-weight="700" fill="#111111">Вывоз и утилизация отходов</text>
+  <text x="112" y="356" font-family="Arial, Helvetica, sans-serif" font-size="64" font-weight="700" fill="#111111">строительства и сноса</text>
+  <text x="112" y="428" font-family="Arial, Helvetica, sans-serif" font-size="34" fill="#6B6B6B">Москва и Московская область. Перевозка и утилизация — отдельно</text>
+  <text x="112" y="476" font-family="Arial, Helvetica, sans-serif" font-size="34" fill="#6B6B6B">по каждому полигону, расстояние — по дорожной сети</text>
+  <rect x="112" y="510" width="232" height="8" rx="4" fill="#DDEB2E"/>
+</svg>

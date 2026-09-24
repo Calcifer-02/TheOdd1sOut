@@ -1,12 +1,32 @@
 import { fileURLToPath, URL } from 'node:url';
-import { defineConfig } from 'vite';
+import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
+import { SITE_ORIGIN, robotsTxt, sitemapXml } from './site';
+
+/**
+ * Адрес сервиса подставляется в разметку при сборке, а карта сайта и правила
+ * обхода собираются из него же. Второй рукописный адрес разошёлся бы с первым
+ * на первом переезде (см. «site.ts»).
+ */
+function siteAddress(): Plugin {
+  return {
+    name: 'imolt-site-address',
+    transformIndexHtml: {
+      order: 'pre',
+      handler: html => html.replaceAll('%SITE_ORIGIN%', SITE_ORIGIN),
+    },
+    generateBundle() {
+      this.emitFile({ type: 'asset', fileName: 'sitemap.xml', source: sitemapXml() });
+      this.emitFile({ type: 'asset', fileName: 'robots.txt', source: robotsTxt() });
+    },
+  };
+}
 
 // Мини-приложение MAX отдаётся статикой; обращения к расчётной части идут
 // по относительному пути /api, который в контейнере проксирует nginx,
 // а при локальной разработке — этот прокси.
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), siteAddress()],
   // Один алиас на корень исходников: слой видно прямо в пути подключения
   // («@/entities/landfill»), и счёт «../» при переносе слайса больше не
   // меняется. Проверка направления подключений опирается на тот же вид
