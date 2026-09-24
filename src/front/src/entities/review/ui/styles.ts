@@ -9,15 +9,39 @@
  * @supports: R-031
  * @adr: ADR-0008
  */
-import { colors, fonts, radius, space } from '@/shared/ui/tokens';
+import { colors, fonts, layout, radius, space } from '@/shared/ui/tokens';
 
 export const REVIEW_CSS = `
+/* Круг оценки: величина целиком, а не начало строки. Размер берётся от цели
+   касания — круг меньше неё выглядел бы меткой, а не значением. */
 .imolt-review-rating {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: ${layout.touchTarget}px;
+  height: ${layout.touchTarget}px;
+  border-radius: 50%;
+  background: ${colors.bgSurfaceMuted};
   font-family: ${fonts.numeric};
-  font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: ${colors.textPrimary};
   white-space: nowrap;
+}
+
+.imolt-review-rating-value {
+  font-size: 16px;
+  line-height: 18px;
+  font-weight: 600;
+}
+
+/* Шкала мельче числа, но остаётся видимой: без неё «4» читается и как число
+   отзывов (R-031). */
+.imolt-review-rating-scale {
+  font-size: 10px;
+  line-height: 12px;
+  color: ${colors.textSecondary};
 }
 
 .imolt-review-summary {
@@ -62,7 +86,7 @@ export const REVIEW_CSS = `
 
 .imolt-review-item-head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: ${space.s}px;
 }

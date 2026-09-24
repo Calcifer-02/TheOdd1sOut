@@ -27,7 +27,8 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { LandfillsPage } from '@/pages/landfills';
-import { layout, stroke } from '@/shared/ui/tokens';
+import { LANDFILLS_CSS } from '@/pages/landfills/ui/styles';
+import { layout, radius, stroke } from '@/shared/ui/tokens';
 import { DESKTOP_WIDTH, setViewportWidth } from './viewport';
 import { installThemeStyles, leftInset } from './layout';
 import { installReferencesStub, type ReferencesStub } from './stubs/references';
@@ -274,5 +275,32 @@ describe('таблица справочника полигонов', () => {
     expect(Number.parseFloat(getComputedStyle(строки[0]).borderBottomWidth)).toBe(stroke.hairline);
     // Линия под последней парой читалась бы разделителем строки таблицы.
     expect(Number.parseFloat(getComputedStyle(последняя).borderBottomWidth)).toBe(0);
+  });
+});
+
+describe('название полигона в таблице', () => {
+  // Общий слой рисует третьестепенную кнопку таблеткой в 999 точек. У названия
+  // в две строки и без бокового поля буквы упирались в закруглённые торцы, а
+  // заливка наведения обрезала первую и последнюю.
+  it('не рисует название таблеткой общего слоя', () => {
+    render(<LandfillsPage />);
+
+    const правило = LANDFILLS_CSS.slice(LANDFILLS_CSS.indexOf('.imolt-landfill-name > .imolt-button,')).slice(0, 400);
+
+    expect(правило, 'скругление названия не переобъявлено').toContain('border-radius:');
+    expect(правило, 'скругление объявлено таблеткой').not.toContain(`${radius.pill}px`);
+  });
+
+  it('отвечает на наведение подчёркиванием, а не заливкой', () => {
+    render(<LandfillsPage />);
+
+    const at = LANDFILLS_CSS.indexOf('.imolt-landfill-name > .imolt-button:hover');
+
+    expect(at, 'отклик названия на наведение не объявлен').toBeGreaterThan(-1);
+
+    const правило = LANDFILLS_CSS.slice(at, at + 300);
+
+    expect(правило).toContain('background: none;');
+    expect(правило).toContain('text-decoration-thickness:');
   });
 });

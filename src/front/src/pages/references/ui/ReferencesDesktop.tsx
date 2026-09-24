@@ -16,7 +16,6 @@
  * @adr: ADR-0008
  */
 import { useState } from 'react';
-import { STATUS_WORD } from '@/entities/landfill';
 import { Button, DataTable, DateStamp, Field, Notice, Popover, Skeleton, Tabs, Toolbar, useStyles } from '@/shared/ui';
 import { StatusBadge } from '@/entities/landfill';
 import { ImportPanel } from '@/features/reference-import';
@@ -34,7 +33,7 @@ import type { ReferencesViewProps } from './props';
 /** Столбцы, общие для обеих вкладок: имя записи слева, дата справа. */
 const NAME_COLUMN = { key: 'name', title: 'Полигон и юридическое лицо' };
 
-const STATUS_COLUMN = { key: 'status', title: 'Статус полигона' };
+const STATUS_COLUMN = { key: 'status', title: 'Статус полигона', width: '260px' };
 
 /**
  * В ячейке стоит дата, на которую известны цены полигона, а не признак
@@ -255,7 +254,7 @@ function landfillCell(
 
   if (column === 'status') {
     return (
-      <div className="imolt-references-status">
+      <div className="imolt-references-status-cell">
         <StatusBadge status={landfill.status} statusUpdatedAt={landfill.statusUpdatedAt} />
         {landfill.status === 'unconfirmed' && (
           <Button
@@ -265,7 +264,7 @@ function landfillCell(
             onClick={() => void editor.saveStatus(landfill.id, 'active')}
             ariaLabel={`Подтвердить приём: ${landfill.name}`}
           >
-            {STATUS_WORD.active}
+            Подтвердить приём
           </Button>
         )}
       </div>

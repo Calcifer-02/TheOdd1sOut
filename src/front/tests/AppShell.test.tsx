@@ -23,6 +23,8 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { AppShell } from '@/widgets/app-shell';
+import { SHELL_CSS } from '@/widgets/app-shell/ui/shellStyles';
+import { layout, space } from '@/shared/ui/tokens';
 import { DESKTOP_WIDTH, setViewportWidth } from './viewport';
 
 /** Открывает адрес экрана до отрисовки: маршрут читается из хеша страницы. */
@@ -140,5 +142,37 @@ describe('оболочка на любой ширине', () => {
     await user.click(screen.getByRole('button', { name: 'Перейти к содержимому' }));
 
     expect(screen.getByRole('main')).toHaveFocus();
+  });
+});
+
+describe('левая вертикаль оболочки', () => {
+  /** Боковое поле правила оболочки: первое значение после вертикального. */
+  function бокСтроки(селектор: string): number {
+    const заголовок = `
+${селектор} {`;
+    const от = SHELL_CSS.indexOf(заголовок);
+
+    expect(от, `правило «${селектор}» объявлено оболочкой`).toBeGreaterThan(-1);
+
+    const тело = SHELL_CSS.slice(от, SHELL_CSS.indexOf('}', от));
+    const поле = /padding:\s*([^;]+);/u.exec(тело);
+
+    expect(поле, `у правила «${селектор}» объявлено поле`).not.toBeNull();
+
+    const части = (поле?.[1] ?? '').trim().split(/\s+/u);
+
+    return Number.parseFloat(части[1] ?? части[0] ?? '');
+  }
+
+  // Экраны отбивают свои блоки на ширину бокового поля ячейки таблицы, чтобы
+  // заголовок экрана и подпись таблицы стояли на одной вертикали. Без той же
+  // отбивки марка в шапке вставала левее всего остального: на телефоне текст
+  // шёл от 28 точек, а марка от 16, и экран читался как несобранный.
+  it('ставит марку в шапке на вертикаль содержимого рабочего места', () => {
+    expect(бокСтроки('.imolt-shell-head-line')).toBe(layout.gutterWide + space.s);
+  });
+
+  it('ставит марку в шапке на вертикаль содержимого телефона', () => {
+    expect(бокСтроки('.imolt-shell--narrow .imolt-shell-head-line')).toBe(layout.gutter + space.s);
   });
 });

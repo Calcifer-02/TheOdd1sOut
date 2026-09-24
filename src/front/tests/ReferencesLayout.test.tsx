@@ -27,6 +27,7 @@ import userEvent from '@testing-library/user-event';
 import { ReferencesPage } from '@/pages/references';
 import { DESKTOP_WIDTH, setViewportWidth } from './viewport';
 import { installThemeStyles, leftInset } from './layout';
+import { stroke } from '@/shared/ui/tokens';
 import { installMaintenanceStub, type MaintenanceStub } from './stubs/maintenance';
 
 const ТАРИФ_ИКША = 'Тариф утилизации, Площадка «Икша», Лом бетона и железобетона';
@@ -120,7 +121,9 @@ describe('левая вертикаль редактора цен', () => {
 
     expect({
       заголовок: leftInset(screen.getByRole('heading', { level: 1 }), корень),
-      вкладки: leftInset(screen.getByRole('tablist', { name: 'Справочник' }), корень),
+      // У вкладки меряется подпись: таблетка стоит на вертикали плашек, и её
+      // подпись отстоит от вертикали текста на толщину собственной рамки.
+      вкладки: leftInset(screen.getAllByRole('tab')[0] as HTMLElement, корень) - stroke.hairline,
       // У поля меряется подпись: собственное поле ввода — часть управления,
       // а на вертикали экрана стоит блок поля целиком.
       поиск: leftInset(узел('label[for="references-query-mobile"]'), корень),

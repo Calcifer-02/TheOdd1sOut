@@ -20,6 +20,7 @@ export {
   runRefusalReason,
   READING_OPEN,
   IDENTITY_FROM_MAX,
+  PRICE_EDITING_CLOSED,
   RIGHT_FROM_OWNER,
 } from './model/access';
 export { SubscriptionBadge } from './ui/SubscriptionBadge';
