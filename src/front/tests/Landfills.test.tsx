@@ -105,15 +105,16 @@ describe('справочник полигонов, широкий экран', (
 });
 
 describe('отбор справочника по группе отходов', () => {
+  // На широком экране группа выбирается чипом, на телефоне — закрытым
+  // списком (R-085). Предметное поведение одно, и проверяется оно для обоих.
   it('выбор группы попадает в адрес и оставляет только принимающие её полигоны', async () => {
     const пользователь = userEvent.setup();
     render(<LandfillsPage />);
 
-    const чип = await screen.findByRole('button', {
-      name: 'Древесина от разборки',
-      pressed: false,
-    });
-    await пользователь.click(чип);
+    // На телефоне группа выбирается закрытым списком: длинные названия
+    // чипами вставали столбиком разной длины (R-085).
+    const список = await screen.findByLabelText('Группа отходов');
+    await пользователь.selectOptions(список, 'drevesina');
 
     expect(window.location.hash).toContain('group=drevesina');
     expect(служба.lastTo('GET /v1/landfills').query.get('wasteGroupId')).toBe('drevesina');
@@ -125,7 +126,9 @@ describe('отбор справочника по группе отходов', (
   });
 
   it('адрес с выбранной группой восстанавливает ту же выборку при открытии экрана', async () => {
+    setViewportWidth(DESKTOP_WIDTH);
     открыть('#/landfills?group=drevesina');
+
     render(<LandfillsPage />);
 
     await screen.findByRole('button', { name: 'Древесина от разборки', pressed: true });
