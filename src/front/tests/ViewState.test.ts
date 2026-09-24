@@ -57,9 +57,7 @@ describe('значения выборки по умолчанию', () => {
   it('остаётся простыми данными и переживает сериализацию', () => {
     // Состояние попадает в адрес и в сохранения: никаких Map, Set и классов
     // внутри (правила проекта, «JSON-сериализуемость состояния»).
-    expect(JSON.parse(JSON.stringify(DEFAULT_VIEW_STATE)) as ViewState).toEqual(
-      DEFAULT_VIEW_STATE,
-    );
+    expect(JSON.parse(JSON.stringify(DEFAULT_VIEW_STATE)) as ViewState).toEqual(DEFAULT_VIEW_STATE);
   });
 });
 

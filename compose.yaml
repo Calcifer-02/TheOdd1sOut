@@ -68,11 +68,17 @@ services:
       # из локального .env (условия трека, разд. 4 п. 9).
       MAX_BOT_TOKEN: ${MAX_BOT_TOKEN}
       API_BASE_URL: http://api:8080
+      # Состояние переписки — карточка расчёта и свои сообщения — живёт в базе,
+      # а не в памяти службы: перезапуск чат-бота не должен терять переписку
+      # (R-080). Строка та же, что у расчётной части: база одна.
+      DATABASE_URL: "Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
     ports:
       - "127.0.0.1:${BOT_PORT}:8080"
     depends_on:
       api:
         condition: service_started
+      db:
+        condition: service_healthy
     restart: unless-stopped
 
   web:

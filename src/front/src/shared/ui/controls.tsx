@@ -11,13 +11,7 @@
  */
 import type { ReactNode } from 'react';
 
-export function Notice({
-  kind,
-  children,
-}: {
-  kind: 'error' | 'warning' | 'empty' | 'done';
-  children: ReactNode;
-}) {
+export function Notice({ kind, children }: { kind: 'error' | 'warning' | 'empty' | 'done'; children: ReactNode }) {
   return (
     <div className="imolt-notice" data-kind={kind} role={kind === 'error' ? 'alert' : 'status'}>
       {children}
@@ -35,6 +29,7 @@ export function Field({
   inputMode,
   placeholder,
   id,
+  className,
 }: {
   label: string;
   value: string;
@@ -44,9 +39,11 @@ export function Field({
   inputMode?: 'text' | 'decimal' | 'tel';
   placeholder?: string;
   id: string;
+  /** Дополнительный класс обёртки: ширина поля — дело строки, а не поля. */
+  className?: string;
 }) {
   return (
-    <div className="imolt-grow">
+    <div className={className ? `imolt-grow ${className}` : 'imolt-grow'}>
       <label className="imolt-label" htmlFor={id}>
         {label}
       </label>
@@ -58,7 +55,7 @@ export function Field({
         inputMode={inputMode}
         aria-invalid={error ? 'true' : undefined}
         aria-describedby={error ? `${id}-error` : hint ? `${id}-hint` : undefined}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={event => onChange(event.target.value)}
       />
       {error && (
         <p className="imolt-error" id={`${id}-error`} role="alert">
@@ -115,15 +112,7 @@ export function SuggestList<T>({
  */
 
 /** Выдвижная панель вместо модального окна: маршрут и заявка (PRACT-020). */
-export function Sheet({
-  title,
-  onClose,
-  children,
-}: {
-  title: string;
-  onClose: () => void;
-  children: ReactNode;
-}) {
+export function Sheet({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
   return (
     <div className="imolt-sheet" role="dialog" aria-label={title}>
       <div className="imolt-bar-line">
@@ -159,7 +148,7 @@ export function RadioPills<T extends string>({
 }) {
   return (
     <div className={className} role="radiogroup" aria-label={label}>
-      {options.map((option) => (
+      {options.map(option => (
         <label key={option.value} className="imolt-pill" data-checked={option.value === value}>
           <input
             type="radio"

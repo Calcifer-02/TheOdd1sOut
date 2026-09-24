@@ -285,9 +285,9 @@ describe('обращения экрана наружу', () => {
     await user.click(screen.getByRole('button', { name: 'Рассчитать' }));
     await waitForResults();
 
-    const foreign = stub.requests.filter((request) => !request.url.startsWith('/api/'));
+    const foreign = stub.requests.filter(request => !request.url.startsWith('/api/'));
 
-    expect(foreign.map((request) => request.url)).toEqual([]);
+    expect(foreign.map(request => request.url)).toEqual([]);
   });
 });
 

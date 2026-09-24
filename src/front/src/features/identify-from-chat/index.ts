@@ -5,3 +5,4 @@
  * @adr: ADR-0009
  */
 export { ChatIdentity } from './ui/ChatIdentity';
+export { SignInPrompt } from './ui/SignInPrompt';

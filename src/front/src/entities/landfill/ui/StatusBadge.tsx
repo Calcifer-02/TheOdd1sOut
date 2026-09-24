@@ -9,6 +9,7 @@
  */
 import type { LandfillStatus, PlacementOption } from '@/shared/api/contracts';
 import { formatShortDate } from '@/shared/lib/formatting';
+import { isStale } from '../model/staleness';
 
 /** Значок статуса. Сам по себе смысла не несёт — рядом всегда слово. */
 function StatusIcon({ status }: { status: BadgeStatus }) {
@@ -57,7 +58,12 @@ function StatusIcon({ status }: { status: BadgeStatus }) {
 
 export type BadgeStatus = LandfillStatus | 'stale';
 
-const STATUS_WORD: Record<BadgeStatus, string> = {
+/**
+ * Состояние полигона словом. Объявлено наружу, потому что те же слова нужны
+ * выбору статуса в редакторе справочников: вторая копия продуктового текста
+ * расходится с первой молча.
+ */
+export const STATUS_WORD: Record<BadgeStatus, string> = {
   active: 'Активен',
   blocked: 'Заблокирован',
   unconfirmed: 'Не подтверждён',
@@ -76,18 +82,24 @@ export function StatusBadge({ status, statusUpdatedAt }: { status: BadgeStatus; 
         <StatusIcon status={status} />
         {STATUS_WORD[status]}
       </span>
-      <span className="imolt-freshness">данные от {formatShortDate(statusUpdatedAt)}</span>
+      {/* Точный момент размечен `time`: короткая подпись «данные от 17.09» его
+          не заменяет, а вспомогательная технология обязана прочесть дату
+          целиком (карточка практики PRACT-027). */}
+      <time className="imolt-freshness" dateTime={statusUpdatedAt}>
+        данные от {formatShortDate(statusUpdatedAt)}
+      </time>
     </>
   );
 }
 
 /**
  * Состояние полигона с учётом свежести данных: полигон принимает отходы, но
- * подтверждение старше последнего обновления справочника. Правило
- * показа, а не расчёта: обе даты приходят от службы (R-048).
+ * подтверждение отстало от справочника больше порога. Правило показа, а не
+ * расчёта: обе даты приходят от службы, а сам порог объявлен один раз в
+ * модели сущности и общий со справочником полигонов (R-048).
  */
 export function badgeStatus(option: PlacementOption, statusesUpdatedAt: string): BadgeStatus {
-  if (option.status === 'active' && option.statusUpdatedAt < statusesUpdatedAt) {
+  if (option.status === 'active' && isStale(option.statusUpdatedAt, statusesUpdatedAt)) {
     return 'stale';
   }
 

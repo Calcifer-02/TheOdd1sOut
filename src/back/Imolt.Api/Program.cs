@@ -136,21 +136,21 @@ builder.Services.AddScoped<IParticipantPermissions, ParticipantPermissionStore>(
 builder.Services.AddScoped<IDocumentServiceOrderStore, DocumentServiceOrderStore>();
 builder.Services.AddSingleton<IAccessTokens>(services =>
 {
-    var configuration = services.GetRequiredService<IConfiguration>();
+  var configuration = services.GetRequiredService<IConfiguration>();
 
-    return new AccessTokens(
-        configuration["IMOLT_SESSION_SECRET"],
-        configuration.GetValue("IMOLT_SESSION_TTL_SECONDS", 86400));
+  return new AccessTokens(
+      configuration["IMOLT_SESSION_SECRET"],
+      configuration.GetValue("IMOLT_SESSION_TTL_SECONDS", 86400));
 });
 builder.Services.AddScoped(services =>
 {
-    var configuration = services.GetRequiredService<IConfiguration>();
+  var configuration = services.GetRequiredService<IConfiguration>();
 
-    return new MaxIdentitySettings(
-        configuration["MAX_BOT_TOKEN"] ?? string.Empty,
-        TimeSpan.FromSeconds(configuration.GetValue(
-            "MAX_INIT_DATA_TTL_SECONDS",
-            (int)MaxIdentitySettings.DemonstrationLifetime.TotalSeconds)));
+  return new MaxIdentitySettings(
+      configuration["MAX_BOT_TOKEN"] ?? string.Empty,
+      TimeSpan.FromSeconds(configuration.GetValue(
+          "MAX_INIT_DATA_TTL_SECONDS",
+          (int)MaxIdentitySettings.DemonstrationLifetime.TotalSeconds)));
 });
 // Состав обладателей права вести справочники называет развёртывание:
 // владельца данных заказчик не назначал (Q-013, ADR-0007). Незаданная

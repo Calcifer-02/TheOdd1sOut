@@ -1,0 +1,179 @@
+{
+  "projectId": "imolt",
+  "repositoryPath": "/project",
+  "dataPath": ".trip/bug-loop",
+  "reportDocumentPath": "docs/ПАКЕТ_АНАЛИТИКИ/РЕЕСТР_ДЕФЕКТОВ.md",
+  "traceScanReportPath": ".trip/trace/check.json",
+  "listenUrl": "http://127.0.0.1:7789",
+  "defaultStage": "Demo",
+  "defaultReleaseId": "unassigned",
+  "apiKey": null,
+  "maxScreenshotBytes": 5242880,
+  "maxReports": 1000,
+  "repeatThreshold": 3,
+  "allowedOrigins": [
+    "http://localhost:15173",
+    "http://127.0.0.1:15173",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173"
+  ],
+  "redactionPatterns": [
+    "(?i)(authorization|api[-_]?key|token|password|secret)\\s*[:=]\\s*[^\\s,;]+",
+    "(?i)bearer\\s+[a-z0-9._~+/-]+",
+    "(?i)MAX_BOT_TOKEN\\s*[:=]\\s*[^\\s,;]+"
+  ],
+  "omniParser": {
+    "enabled": false,
+    "endpoint": "http://127.0.0.1:8000",
+    "model": "microsoft/OmniParser-v2.0",
+    "timeoutSeconds": 180,
+    "probeTimeoutSeconds": 5,
+    "maxImageLongSidePixels": 1600,
+    "expectedBoxThreshold": 0.15,
+    "maxElements": 250
+  },
+  "uiBenchmark": {
+    "enabled": true,
+    "minimumTargetSizeCssPixels": 44
+  },
+  "uiPages": [
+    {
+      "id": "calculator",
+      "name": "Расчёт вывоза отходов",
+      "routes": ["/", "/#/"],
+      "sourcePaths": ["src/front/src/pages/calculator/**"],
+      "traceRefs": [
+        { "kind": "UseCase", "id": "UC-001" },
+        { "kind": "Requirement", "id": "R-058" },
+        { "kind": "Requirement", "id": "R-085" },
+        { "kind": "AcceptanceCriterion", "id": "AC-085a" }
+      ],
+      "testTarget": "src/front/tests/CalculatorScreen.test.tsx",
+      "requirementRegistryPath": "docs/ПАКЕТ_АНАЛИТИКИ/РЕЕСТР_ТРЕБОВАНИЙ.md"
+    },
+    {
+      "id": "landfills",
+      "name": "Справочник цен полигонов",
+      "routes": ["/#/landfills"],
+      "sourcePaths": ["src/front/src/pages/landfills/**"],
+      "traceRefs": [
+        { "kind": "UseCase", "id": "UC-009" },
+        { "kind": "Requirement", "id": "R-039" },
+        { "kind": "Requirement", "id": "R-040" }
+      ],
+      "testTarget": "src/front/tests/LandfillsScreen.test.tsx",
+      "requirementRegistryPath": "docs/ПАКЕТ_АНАЛИТИКИ/РЕЕСТР_ТРЕБОВАНИЙ.md"
+    },
+    {
+      "id": "quote",
+      "name": "Коммерческое предложение",
+      "routes": ["/#/quote"],
+      "sourcePaths": ["src/front/src/pages/quote/**"],
+      "traceRefs": [
+        { "kind": "UseCase", "id": "UC-002" },
+        { "kind": "Requirement", "id": "R-036" }
+      ],
+      "testTarget": "src/front/tests/QuoteScreen.test.tsx",
+      "requirementRegistryPath": "docs/ПАКЕТ_АНАЛИТИКИ/РЕЕСТР_ТРЕБОВАНИЙ.md"
+    },
+    {
+      "id": "cabinet",
+      "name": "Кабинет участника",
+      "routes": ["/#/cabinet"],
+      "sourcePaths": ["src/front/src/pages/cabinet/**"],
+      "traceRefs": [
+        { "kind": "Requirement", "id": "R-049" },
+        { "kind": "Requirement", "id": "R-050" }
+      ],
+      "testTarget": "src/front/tests/CabinetScreen.test.tsx",
+      "requirementRegistryPath": "docs/ПАКЕТ_АНАЛИТИКИ/РЕЕСТР_ТРЕБОВАНИЙ.md"
+    },
+    {
+      "id": "references",
+      "name": "Редактор цен",
+      "routes": ["/#/references"],
+      "sourcePaths": ["src/front/src/pages/references/**"],
+      "traceRefs": [
+        { "kind": "Requirement", "id": "R-042" },
+        { "kind": "Requirement", "id": "R-050" }
+      ],
+      "testTarget": "src/front/tests/ReferencesScreen.test.tsx",
+      "requirementRegistryPath": "docs/ПАКЕТ_АНАЛИТИКИ/РЕЕСТР_ТРЕБОВАНИЙ.md"
+    }
+  ],
+  "modules": [
+    {
+      "id": "requirements",
+      "name": "Требования и решения",
+      "paths": ["docs/ПАКЕТ_АНАЛИТИКИ/**", "docs/архитектурные_решения/**"],
+      "routes": [],
+      "requirementPrefixes": ["R-", "AC-", "UC-", "TC-", "US-"],
+      "verificationCommands": ["node tests/traceability/качество-требований.mjs"],
+      "directions": ["Analytics"],
+      "traceNodeType": "Requirement"
+    },
+    {
+      "id": "product-code",
+      "name": "Код продукта",
+      "paths": ["src/back/**", "src/front/src/**"],
+      "routes": ["/"],
+      "requirementPrefixes": ["R-", "UC-"],
+      "verificationCommands": [
+        "dotnet test src/back/Imolt.slnx",
+        "npm --prefix src/front test"
+      ],
+      "directions": ["Development"],
+      "traceNodeType": "CodeAnchor"
+    },
+    {
+      "id": "data-and-infrastructure",
+      "name": "Данные и развёртывание",
+      "paths": ["src/back/Imolt.Database/**", "devops/**", "compose.yaml"],
+      "routes": [],
+      "requirementPrefixes": ["R-"],
+      "verificationCommands": ["sh tests/devops/проверка-запуска.sh"],
+      "directions": ["Development"],
+      "traceNodeType": "CodeAnchor"
+    },
+    {
+      "id": "contracts",
+      "name": "Договор API",
+      "paths": ["src/back/Imolt.Api/contracts/**"],
+      "routes": [],
+      "requirementPrefixes": ["R-"],
+      "verificationCommands": ["dotnet test src/back/tests/Imolt.Contracts.Tests"],
+      "directions": ["Analytics", "Development"],
+      "traceNodeType": "DocSection"
+    },
+    {
+      "id": "verification",
+      "name": "Проверки и приёмка",
+      "paths": ["tests/**", "src/front/tests/**"],
+      "routes": [],
+      "requirementPrefixes": ["AC-", "TC-"],
+      "verificationCommands": ["npm --prefix src/front test"],
+      "directions": ["QualityAssurance"],
+      "traceNodeType": "TestCase"
+    },
+    {
+      "id": "ux-assets",
+      "name": "Эстетика и дизайн-договор",
+      "paths": ["ux/**"],
+      "routes": [],
+      "requirementPrefixes": ["R-"],
+      "verificationCommands": ["npm --prefix src/front test -- Showcase"],
+      "directions": ["UserExperience"],
+      "traceNodeType": "DocSection"
+    },
+    {
+      "id": "client-evidence",
+      "name": "Материалы заказчика",
+      "paths": ["client/**"],
+      "routes": [],
+      "requirementPrefixes": ["R-", "UC-"],
+      "verificationCommands": ["node ИНСТРУМЕНТЫ/скрипты/проверить-скелет.mjs"],
+      "directions": ["Client"],
+      "traceNodeType": "Evidence"
+    }
+  ]
+}

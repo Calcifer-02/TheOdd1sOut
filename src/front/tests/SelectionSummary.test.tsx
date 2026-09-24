@@ -15,14 +15,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { App } from '@/app/App';
 import type { ApiStub } from './apiStub';
-import {
-  CONCRETE_GROUP,
-  EXTERNAL_MAP_URL,
-  IKSHA,
-  QUOTE_DOCUMENT_URL,
-  VOSTOK,
-  installApiStub,
-} from './apiStub';
+import { CONCRETE_GROUP, EXTERNAL_MAP_URL, IKSHA, QUOTE_DOCUMENT_URL, VOSTOK, installApiStub } from './apiStub';
 import { calculateConcrete, landfillCard, landfillCheckbox } from './flows';
 
 /** Неразрывный пробел U+00A0 — разделитель разрядов и отбивка знака рубля. */
@@ -39,10 +32,7 @@ afterEach(() => {
 });
 
 /** Отмечает полигоны по названиям и ждёт, пока сводка назовёт их число. */
-async function selectLandfills(
-  user: ReturnType<typeof userEvent.setup>,
-  names: string[],
-): Promise<void> {
+async function selectLandfills(user: ReturnType<typeof userEvent.setup>, names: string[]): Promise<void> {
   for (const name of names) {
     await user.click(landfillCheckbox(name));
   }
@@ -52,14 +42,12 @@ async function selectLandfills(
 
 /** Доли распределения по каждому выбранному полигону. */
 function allocationShares(): number[] {
-  return stub
-    .sentTo('PUT /v1/calculations/:id/allocation')
-    .flatMap((request) => {
-      const entries = ((request.body as Record<string, unknown>)?.['entries'] ?? []) as {
-        quantity: { value: number };
-      }[];
-      return entries.map((entry) => entry.quantity.value);
-    });
+  return stub.sentTo('PUT /v1/calculations/:id/allocation').flatMap(request => {
+    const entries = ((request.body as Record<string, unknown>)?.['entries'] ?? []) as {
+      quantity: { value: number };
+    }[];
+    return entries.map(entry => entry.quantity.value);
+  });
 }
 
 /** @ac: AC-032c */
@@ -105,10 +93,7 @@ describe('панель сводки выбора', () => {
       landfillId: string;
     }[];
 
-    expect(entries.map((entry) => entry.landfillId)).toEqual([
-      VOSTOK.landfillId,
-      IKSHA.landfillId,
-    ]);
+    expect(entries.map(entry => entry.landfillId)).toEqual([VOSTOK.landfillId, IKSHA.landfillId]);
   });
 });
 
@@ -236,10 +221,7 @@ describe('распределение объёма между выбранным�
 
     await selectBothAndShare(user, '12', '5');
 
-    expect(
-      allocationShares(),
-      'несошедшееся распределение не применяется целиком (R-030)',
-    ).not.toContain(5);
+    expect(allocationShares(), 'несошедшееся распределение не применяется целиком (R-030)').not.toContain(5);
   });
 
   it('объясняет несовпадение числом объёма группы', async () => {
@@ -257,9 +239,7 @@ describe('ссылка на внешние карты', () => {
   async function openRoute(user: ReturnType<typeof userEvent.setup>): Promise<HTMLAnchorElement> {
     await calculateConcrete(user);
     await selectLandfills(user, [VOSTOK.landfillName]);
-    await user.click(
-      within(landfillCard(VOSTOK.landfillName)).getByRole('button', { name: 'Маршрут' }),
-    );
+    await user.click(within(landfillCard(VOSTOK.landfillName)).getByRole('button', { name: 'Маршрут' }));
 
     return (await screen.findByRole('link', {
       name: 'Открыть в Яндекс.Картах',
@@ -317,9 +297,7 @@ describe('детали маршрута без подписки', () => {
     await calculateConcrete(user);
     await selectLandfills(user, [VOSTOK.landfillName]);
 
-    await user.click(
-      within(landfillCard(VOSTOK.landfillName)).getByRole('button', { name: 'Маршрут' }),
-    );
+    await user.click(within(landfillCard(VOSTOK.landfillName)).getByRole('button', { name: 'Маршрут' }));
 
     expect(await screen.findByText('Детали маршрута – по подписке')).toBeInTheDocument();
   });
@@ -330,9 +308,7 @@ describe('детали маршрута без подписки', () => {
     await calculateConcrete(user);
     await selectLandfills(user, [VOSTOK.landfillName]);
 
-    await user.click(
-      within(landfillCard(VOSTOK.landfillName)).getByRole('button', { name: 'Маршрут' }),
-    );
+    await user.click(within(landfillCard(VOSTOK.landfillName)).getByRole('button', { name: 'Маршрут' }));
     await screen.findByText('Детали маршрута – по подписке');
 
     expect(screen.queryByRole('link', { name: 'Открыть в Яндекс.Картах' })).toBeNull();
@@ -393,9 +369,7 @@ describe('скачивание коммерческого предложения
 
 /** @ac: AC-053c */
 describe('заявка на вывоз без согласия на обработку персональных данных', () => {
-  async function fillRequestWithoutConsent(
-    user: ReturnType<typeof userEvent.setup>,
-  ): Promise<void> {
+  async function fillRequestWithoutConsent(user: ReturnType<typeof userEvent.setup>): Promise<void> {
     await calculateConcrete(user);
     await selectLandfills(user, [VOSTOK.landfillName]);
     await user.click(screen.getByRole('button', { name: 'Заявка на вывоз' }));
@@ -411,10 +385,7 @@ describe('заявка на вывоз без согласия на обрабо
 
     await fillRequestWithoutConsent(user);
 
-    expect(
-      stub.sentTo('POST /v1/pickup-requests'),
-      'без явного согласия заявка не создаётся (R-054)',
-    ).toHaveLength(0);
+    expect(stub.sentTo('POST /v1/pickup-requests'), 'без явного согласия заявка не создаётся (R-054)').toHaveLength(0);
   });
 
   it('объясняет, что согласие обязательно', async () => {
@@ -436,9 +407,7 @@ describe('заявка на вывоз с согласием на обработ
 
     await user.type(await screen.findByLabelText('Имя'), 'Иван');
     await user.type(screen.getByLabelText('Телефон'), '+79161234567');
-    await user.click(
-      screen.getByRole('checkbox', { name: /Согласен на обработку персональных данных/u }),
-    );
+    await user.click(screen.getByRole('checkbox', { name: /Согласен на обработку персональных данных/u }));
     await user.click(screen.getByRole('button', { name: 'Отправить заявку' }));
   }
 

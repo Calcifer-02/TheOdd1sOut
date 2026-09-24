@@ -47,19 +47,15 @@ function operations(): Map<string, Operation> {
 describe('договор API', () => {
   it('объявляет все операции главного пути расчёта', () => {
     const declared = operations();
-    const missing = MAIN_PATH_OPERATIONS.filter((id) => !declared.has(id));
+    const missing = MAIN_PATH_OPERATIONS.filter(id => !declared.has(id));
 
     expect(missing, 'интерфейс опирается на операции, объявленные договором').toEqual([]);
   });
 
   it('называет операции главного пути реализованными', () => {
     const declared = operations();
-    const notServed = MAIN_PATH_OPERATIONS.filter(
-      (id) => declared.get(id)?.['x-состояние'] !== 'реализовано',
-    );
+    const notServed = MAIN_PATH_OPERATIONS.filter(id => declared.get(id)?.['x-состояние'] !== 'реализовано');
 
-    expect(notServed, 'интерфейс не строится поверх объявленной, но не работающей операции').toEqual(
-      [],
-    );
+    expect(notServed, 'интерфейс не строится поверх объявленной, но не работающей операции').toEqual([]);
   });
 });

@@ -9,7 +9,8 @@
  * @shared: imolt-miniapp
  * @adr: ADR-0008
  */
-import { colors, fonts, layout, radius, space } from './tokens';
+import { BREAKPOINTS } from '@/shared/lib/viewport';
+import { colors, fonts, layout, radius, space, stroke, zIndex } from './tokens';
 
 export const THEME_CSS = `
 *, *::before, *::after { box-sizing: border-box; }
@@ -25,8 +26,8 @@ body {
 }
 
 :focus-visible {
-  outline: 2px solid ${colors.link};
-  outline-offset: 2px;
+  outline: ${stroke.emphasis}px solid ${colors.link};
+  outline-offset: ${stroke.emphasis}px;
 }
 
 .imolt-page {
@@ -38,13 +39,41 @@ body {
   gap: ${space.m}px;
 }
 
+/* Широкий экран — рабочее место, и колонка макета телефона на нём выглядит
+   ошибкой вёрстки: предельная ширина содержимого объявлена дизайн-договором
+   (разд. 4.3). Поля берёт на себя оболочка, поэтому внутри неё страница их
+   не повторяет. */
+@media (min-width: ${BREAKPOINTS.cards}px) {
+  .imolt-page { max-width: ${BREAKPOINTS.container}px; gap: ${space.l}px; }
+}
+
+.imolt-shell .imolt-page {
+  max-width: none;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* Подпись только для вспомогательной технологии: смысл, которого на экране
+   не видно, но который нельзя потерять (состояние загрузки, имя столбца). */
+.imolt-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
 .imolt-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: ${space.s}px;
   height: ${layout.fieldHeight}px;
-  border-bottom: 1px solid ${colors.borderDefault};
+  border-bottom: ${stroke.hairline}px solid ${colors.borderDefault};
 }
 
 .imolt-brand {
@@ -58,6 +87,34 @@ body {
 h1.imolt-title { font-size: 26px; line-height: 32px; font-weight: 700; margin: ${space.xs}px 0 0; }
 p.imolt-lead { margin: 0; color: ${colors.textSecondary}; font-size: 14px; line-height: 20px; }
 h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin: ${space.xs}px 0 0; }
+
+/*
+ * Ссылка общего слоя. Синий здесь — роль «link» из договора (разд. 4.1), а не
+ * умолчание браузера: собственный цвет ссылки живёт в токенах вместе с кольцом
+ * фокуса, и оранжевый действием не бывает (разд. 4.6). Подчёркивание рисуется
+ * линией заданной толщины с отступом от базовой линии — сплошная браузерная
+ * черта режет выносные элементы кириллицы (разд. 4.2). Наведение и фокус
+ * утолщают линию, поэтому состояние читается и без различения цветов
+ * (разд. 4.4). Третичная кнопка по договору — «текст с подчёркиванием, цвет
+ * link», поэтому подчёркивание у неё то же: второе описание разошлось бы.
+ */
+.imolt-link, .imolt-button--tertiary {
+  text-decoration-line: underline;
+  text-decoration-thickness: ${stroke.hairline}px;
+  text-underline-offset: ${space.xxs}px;
+}
+
+.imolt-link {
+  color: ${colors.link};
+  border-radius: ${radius.badge}px;
+  transition: text-decoration-thickness 150ms ease-out;
+}
+
+.imolt-link:focus-visible {
+  outline: ${stroke.emphasis}px solid ${colors.link};
+  outline-offset: ${stroke.emphasis}px;
+  text-decoration-thickness: ${stroke.emphasis}px;
+}
 
 .imolt-card {
   background: ${colors.bgSurface};
@@ -80,7 +137,7 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
   width: 100%;
   height: ${layout.fieldHeight}px;
   padding: 0 ${space.s}px;
-  border: 1px solid ${colors.borderDefault};
+  border: ${stroke.hairline}px solid ${colors.borderDefault};
   border-radius: ${radius.field}px;
   background: ${colors.bgSurface};
   font-family: ${fonts.ui};
@@ -95,7 +152,7 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
 .imolt-input:focus-visible {
   outline: none;
   border-color: ${colors.link};
-  box-shadow: inset 0 0 0 1px ${colors.link};
+  box-shadow: inset 0 0 0 ${stroke.hairline}px ${colors.link};
 }
 .imolt-input[aria-invalid='true'] { border-color: ${colors.statusBlockedText}; }
 
@@ -106,7 +163,7 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
   list-style: none;
   margin: ${space.xxs}px 0 0;
   padding: ${space.xxs}px;
-  border: 1px solid ${colors.borderDefault};
+  border: ${stroke.hairline}px solid ${colors.borderDefault};
   border-radius: ${radius.field}px;
   background: ${colors.bgSurface};
   box-shadow: ${layout.shadow};
@@ -129,24 +186,28 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
   cursor: pointer;
 }
 
-.imolt-suggest button:hover { background: ${colors.accentRowHover}; }
-
+/* Количество и мера стоят в одной строке. Поле количества узкое намеренно:
+   в него вводят две-три цифры, и растянутое на всю колонку оно обещает
+   ввод, которого не будет. Остаток строки занимает переключатель меры. */
 .imolt-row { display: flex; gap: ${space.xs}px; align-items: flex-end; }
+.imolt-row > .imolt-field--amount { flex: 0 0 ${layout.amountWidth}px; }
 .imolt-row > * { min-width: 0; }
 .imolt-grow { flex: 1; }
 
 .imolt-units { display: flex; gap: ${space.xxs}px; }
 
 /* Переключатель: нативный radio скрыт визуально, но остаётся в потоке фокуса
-   и объявляется вспомогательной технологии. */
+   и объявляется вспомогательной технологии. Собственная система координат
+   нужна здесь же: скрытый radio растянут по «таблетке» абсолютно. */
 .imolt-pill {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-width: ${layout.touchTarget}px;
-  min-height: 36px;
+  min-height: ${layout.controlHeightCompact}px;
   padding: 0 ${space.s}px;
-  border: 1px solid ${colors.borderDefault};
+  border: ${stroke.hairline}px solid ${colors.borderDefault};
   border-radius: ${radius.pill}px;
   background: ${colors.bgSurface};
   font-family: ${fonts.ui};
@@ -171,8 +232,6 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
   cursor: pointer;
 }
 
-.imolt-pill { position: relative; }
-
 .imolt-pill[data-checked='true'] {
   background: ${colors.accentDark};
   border-color: ${colors.accentDark};
@@ -180,11 +239,17 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
 }
 
 .imolt-pill:has(input:focus-visible) {
-  outline: 2px solid ${colors.link};
-  outline-offset: 2px;
+  outline: ${stroke.emphasis}px solid ${colors.link};
+  outline-offset: ${stroke.emphasis}px;
 }
 
+/* Кнопка: базовый вид — главное действие. Вид называется ролью, поэтому
+   «лаймовая кнопка на экране одна» проверяется по разметке (разд. 4.6). */
 .imolt-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: ${space.xs}px;
   min-height: ${layout.fieldHeight}px;
   padding: 0 ${space.l}px;
   border: 0;
@@ -194,31 +259,73 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
   font-family: ${fonts.ui};
   font-size: 16px;
   font-weight: 700;
+  line-height: 20px;
   cursor: pointer;
+  transition: background-color 150ms ease-out, border-color 150ms ease-out;
 }
 
-.imolt-button:hover { background: ${colors.accentPrimaryHover}; }
+.imolt-button:active { transform: translateY(${stroke.hairline}px); }
 .imolt-button:disabled { background: ${colors.accentPrimaryDisabled}; color: ${colors.disabledText}; cursor: default; }
+.imolt-button:disabled:active { transform: none; }
+.imolt-button--primary { background: ${colors.accentPrimary}; color: ${colors.textPrimary}; }
 
+/* Малый размер остаётся целью касания: 44 px — нижняя граница (разд. 4.5). */
+.imolt-button--s { min-height: ${layout.touchTarget}px; padding: 0 ${space.m}px; font-size: 14px; }
+
+/* Вторичная кнопка — та же высота управления, что у поля и главной кнопки
+   (разд. 4.4): соседние управления разной высоты читаются как сбой вёрстки. */
 .imolt-button--secondary {
-  min-height: ${layout.touchTarget + 4}px;
+  min-height: ${layout.fieldHeight}px;
   background: ${colors.accentDark};
   color: ${colors.onAccentDark};
   font-weight: 500;
 }
 
-.imolt-button--secondary:hover { background: ${colors.accentDark}; opacity: 0.9; }
+.imolt-button--secondary:disabled { background: ${colors.bgSurfaceMuted}; color: ${colors.disabledText}; opacity: 1; }
 
 .imolt-button--tertiary {
   min-height: ${layout.touchTarget}px;
-  padding: 0;
+  padding: 0 ${space.xs}px;
   background: none;
   color: ${colors.link};
   font-weight: 500;
-  text-decoration: underline;
 }
 
-.imolt-button--tertiary:hover { background: none; }
+.imolt-button--tertiary:disabled { background: none; color: ${colors.disabledText}; text-decoration-line: none; }
+
+/* Опасное действие: цвет отказа, но не только цвет — подпись называет
+   последствие, а рамка отличает кнопку от обычной поверхности. */
+.imolt-button--danger {
+  background: ${colors.statusBlockedBg};
+  color: ${colors.statusBlockedText};
+  box-shadow: inset 0 0 0 ${stroke.hairline}px ${colors.statusBlockedText};
+  font-weight: 600;
+}
+
+.imolt-button--danger:disabled { background: ${colors.bgSurfaceMuted}; color: ${colors.disabledText}; box-shadow: none; }
+
+.imolt-button-label { white-space: nowrap; }
+
+/* Признак ожидания. При prefers-reduced-motion вращение выключается общим
+   правилом в конце файла, а сам кружок остаётся видимым. */
+.imolt-spinner {
+  width: ${space.m}px;
+  height: ${space.m}px;
+  flex: none;
+  border-radius: ${radius.pill}px;
+  border: ${stroke.emphasis}px solid currentColor;
+  border-top-color: transparent;
+  animation: imolt-spin 800ms linear infinite;
+}
+
+@keyframes imolt-spin { to { transform: rotate(360deg); } }
+
+.imolt-toolbar {
+  display: flex;
+  align-items: center;
+  gap: ${space.xs}px;
+  flex-wrap: wrap;
+}
 
 .imolt-sorts-line { display: flex; align-items: center; gap: ${space.xs}px; flex-wrap: wrap; }
 
@@ -231,9 +338,9 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
 
 .imolt-tab, .imolt-sort, .imolt-chip {
   flex: none;
-  min-height: 36px;
+  min-height: ${layout.controlHeightCompact}px;
   padding: 0 ${space.s}px;
-  border: 1px solid ${colors.borderDefault};
+  border: ${stroke.hairline}px solid ${colors.borderDefault};
   border-radius: ${radius.pill}px;
   background: ${colors.bgSurface};
   font-family: ${fonts.ui};
@@ -241,6 +348,7 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
   color: ${colors.textSecondary};
   cursor: pointer;
   white-space: nowrap;
+  transition: background-color 150ms ease-out, border-color 150ms ease-out;
 }
 
 .imolt-tab[aria-selected='true'], .imolt-sort[aria-pressed='true'], .imolt-chip[aria-pressed='true'] {
@@ -261,14 +369,14 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
 .imolt-option {
   background: ${colors.bgSurface};
   border-radius: ${radius.field}px;
-  border-left: 4px solid transparent;
+  border-left: ${space.xxs}px solid transparent;
   padding: ${space.s}px;
   display: flex;
   flex-direction: column;
   gap: ${space.xs}px;
+  transition: background-color 150ms ease-out;
 }
 
-.imolt-option:hover { background: ${colors.accentRowHover}; }
 .imolt-option[data-selected='true'] { border-left-color: ${colors.accentPrimary}; }
 .imolt-option[data-blocked='true'] .imolt-option-name { color: ${colors.textSecondary}; }
 
@@ -304,7 +412,13 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
   padding: ${space.m}px ${layout.gutter}px 0;
 }
 
-/* Строка согласия: флажок и подпись на одной оптической линии. */
+/*
+ * Строка согласия в подвале формы: квадрат флажка и подпись встают на одну
+ * оптическую линию, а сама строка остаётся целью касания не ниже 44 px
+ * (разд. 4.5) — собственные 24 px флажка до неё не дотягивают. Правило здесь
+ * одно: второе объявление того же класса ниже по файлу снимало и выравнивание,
+ * и высоту, отчего флажок с кнопкой рядом не сходились (BUG-005).
+ */
 .imolt-consent {
   display: flex;
   align-items: center;
@@ -316,8 +430,9 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
 }
 
 /* Флажок рисуется сам: базовый вид браузера не принадлежит дизайн-договору
-   и на разных платформах выглядит по-разному. Размер — та же цель касания,
-   галочка — повёрнутый угол рамки, поэтому прямых цветов здесь нет. */
+   и на разных платформах выглядит по-разному. Галочка — повёрнутый угол
+   рамки; меры самого знака ниже принадлежат рисунку, а не шкале отступов,
+   поэтому взяты прямо. */
 .imolt-check {
   appearance: none;
   -webkit-appearance: none;
@@ -327,7 +442,7 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
   margin: 0;
   display: inline-grid;
   place-content: center;
-  border: 2px solid ${colors.borderDefault};
+  border: ${stroke.emphasis}px solid ${colors.borderDefault};
   border-radius: ${radius.badge}px;
   background: ${colors.bgSurface};
   color: ${colors.accentDark};
@@ -339,13 +454,11 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
   content: '';
   width: 10px;
   height: 5px;
-  border-left: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
+  border-left: ${stroke.emphasis}px solid currentColor;
+  border-bottom: ${stroke.emphasis}px solid currentColor;
   transform: rotate(-45deg) translate(1px, -1px);
   opacity: 0;
 }
-
-.imolt-check:hover { border-color: ${colors.accentDark}; }
 
 .imolt-check:checked {
   background: ${colors.accentPrimary};
@@ -410,7 +523,7 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
 .imolt-bar-actions > * { flex: 1; }
 
 .imolt-skeleton {
-  height: 92px;
+  height: ${layout.skeletonHeight}px;
   border-radius: ${radius.field}px;
   background: ${colors.bgSurfaceMuted};
 }
@@ -432,7 +545,7 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
 }
 
 .imolt-map {
-  height: 120px;
+  height: ${layout.mapPreviewHeight}px;
   border-radius: ${radius.field}px;
   background: ${colors.bgSurfaceMuted};
   display: flex;
@@ -444,9 +557,296 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
 
 .imolt-allocation { display: flex; flex-direction: column; gap: ${space.xs}px; }
 .imolt-allocation-row { display: flex; align-items: center; gap: ${space.xs}px; }
-.imolt-allocation-row .imolt-input { width: 96px; height: ${layout.touchTarget}px; }
+.imolt-allocation-row .imolt-input { width: ${layout.shareWidth}px; height: ${layout.touchTarget}px; }
 
-.imolt-consent { display: flex; gap: ${space.xs}px; align-items: flex-start; font-size: 13px; line-height: 18px; }
+/* Подпись флажка кликабельна вместе с ним и сама держит высоту цели касания:
+   нажатие мимо квадрата в 24 px должно попадать в подпись (разд. 4.5). */
+.imolt-check-label {
+  display: inline-flex;
+  align-items: center;
+  min-height: ${layout.touchTarget}px;
+  cursor: pointer;
+}
+
+.imolt-check:disabled { background: ${colors.bgSurfaceMuted}; border-color: ${colors.borderDivider}; cursor: default; }
+.imolt-check:disabled + .imolt-check-label { color: ${colors.disabledText}; cursor: default; }
+
+/* Список выбора: та же высота и то же скругление, что у поля ввода, —
+   соседние управления разной геометрии читаются как сбой вёрстки. */
+.imolt-select {
+  width: 100%;
+  height: ${layout.fieldHeight}px;
+  padding: 0 ${space.s}px;
+  border: ${stroke.hairline}px solid ${colors.borderDefault};
+  border-radius: ${radius.field}px;
+  background: ${colors.bgSurface};
+  font-family: ${fonts.ui};
+  font-size: 16px;
+  color: ${colors.textPrimary};
+  cursor: pointer;
+}
+
+.imolt-select:disabled { background: ${colors.bgSurfaceMuted}; color: ${colors.disabledText}; cursor: default; }
+.imolt-select[aria-invalid='true'] { border-color: ${colors.statusBlockedText}; }
+
+.imolt-tab-badge {
+  margin-left: ${space.xxs}px;
+  font-family: ${fonts.numeric};
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Состояние ожидания: полосы на месте будущих строк. */
+.imolt-skeleton-list { display: flex; flex-direction: column; gap: ${space.xs}px; }
+
+.imolt-skeleton-bar {
+  display: block;
+  height: ${space.m}px;
+  border-radius: ${radius.badge}px;
+  background: ${colors.bgSurfaceMuted};
+}
+
+.imolt-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: ${space.xs}px;
+  padding: ${space.l}px ${space.m}px;
+  border-radius: ${radius.field}px;
+  background: ${colors.bgSurfaceMuted};
+  text-align: left;
+}
+
+.imolt-empty-title { margin: 0; font-size: 16px; line-height: 22px; font-weight: 600; }
+.imolt-empty-hint { margin: 0; font-size: 14px; line-height: 20px; color: ${colors.textSecondary}; }
+.imolt-empty-action { margin-top: ${space.xxs}px; }
+
+/* Точка привязки всплывающего окна: окно встаёт под вызвавшим его
+   управлением, а не в углу страницы. */
+.imolt-anchor { position: relative; display: inline-flex; }
+
+/* Всплывающее окно: тень отделяет его от страницы, но страница за ним
+   остаётся видимой и доступной — это не модальное окно (разд. 4.6). */
+.imolt-popover {
+  position: absolute;
+  z-index: ${zIndex.popover};
+  min-width: ${layout.sideColumnWidth}px;
+  max-width: calc(100vw - ${layout.gutter * 2}px);
+  padding: ${space.m}px;
+  border: ${stroke.hairline}px solid ${colors.borderDefault};
+  border-radius: ${radius.field}px;
+  background: ${colors.bgSurface};
+  box-shadow: ${layout.shadow};
+  display: flex;
+  flex-direction: column;
+  gap: ${space.s}px;
+}
+
+.imolt-popover-head { display: flex; align-items: center; justify-content: space-between; gap: ${space.s}px; }
+.imolt-popover-title { margin: 0; font-size: 16px; line-height: 22px; font-weight: 700; }
+
+.imolt-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: ${space.s}px; }
+.imolt-card-title { margin: 0; font-size: 18px; line-height: 24px; font-weight: 700; }
+.imolt-card-actions { display: flex; align-items: center; gap: ${space.xs}px; }
+
+/* Число с подписью: значение набрано табличными цифрами, чтобы столбец
+   сводки выравнивался по разрядам (разд. 4.2). */
+.imolt-stat { margin: 0; display: flex; flex-direction: column; gap: ${space.xxs}px; }
+.imolt-stat-label { font-size: 12px; line-height: 16px; color: ${colors.textSecondary}; }
+
+.imolt-stat-value {
+  margin: 0;
+  font-family: ${fonts.numeric};
+  font-variant-numeric: tabular-nums;
+  font-size: 20px;
+  line-height: 26px;
+  font-weight: 700;
+}
+
+.imolt-stat-hint { margin: 0; font-size: 12px; line-height: 16px; color: ${colors.textSecondary}; }
+
+.imolt-datestamp { font-size: 12px; line-height: 16px; color: ${colors.textSecondary}; }
+.imolt-datestamp-age { color: ${colors.textPlaceholder}; }
+
+/* Таблица сравнения. Прокрутка горизонтальная: столбцов много, и сжимать их
+   до нечитаемого уже, чем дать увести таблицу вбок. */
+.imolt-table-scroll {
+  position: relative;
+  overflow: auto;
+  max-height: 70vh;
+  border-radius: ${radius.card}px;
+  background: ${colors.bgSurface};
+}
+
+/* Границы ячеек не схлопываются. У схлопнутых границ линия под шапкой
+   принадлежит таблице, а не ячейке: при прокрутке она остаётся на месте, и
+   первая строка уезжает под липкую шапку без разделителя (BUG-001).
+   Разделённые границы с нулевым зазором дают тот же вид сетки. */
+.imolt-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+/* Подпись — часть карточки таблицы, и её левый край совпадает с левым краем
+   первой колонки шапки: боковое поле у подписи, ячейки шапки и ячейки данных
+   одно. Экран выравнивается по этой вертикали, поэтому её смена сдвигает
+   заголовок и полосы над таблицей (BUG-003, BUG-011). */
+.imolt-table-caption {
+  padding: ${space.s}px ${space.s}px ${space.xs}px;
+  text-align: left;
+  font-size: 12px;
+  line-height: 16px;
+  color: ${colors.textSecondary};
+}
+
+/* Шапка остаётся видимой при прокрутке: без неё колонка чисел через десять
+   строк перестаёт быть названной. Разделитель нарисован внутренней тенью, а
+   не границей: у липкой ячейки граница отрисовывается по исходному месту
+   таблицы и на прокрутке отстаёт от самой шапки. */
+.imolt-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: ${zIndex.stickyHead};
+  padding: ${space.xs}px ${space.s}px;
+  background: ${colors.bgSurfaceMuted};
+  box-shadow: inset 0 -${stroke.hairline}px 0 ${colors.borderDivider};
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  color: ${colors.textSecondary};
+  text-align: left;
+  white-space: nowrap;
+}
+
+.imolt-table th[data-align='end'], .imolt-table td[data-align='end'] { text-align: right; }
+
+/* Числовой столбец набран табличными цифрами: суммы сравнивают по разрядам. */
+.imolt-table td[data-align='end'] {
+  font-family: ${fonts.numeric};
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.imolt-table th[data-align='end'] .imolt-table-sort { justify-content: flex-end; width: 100%; }
+
+.imolt-table-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: ${space.xxs}px;
+  min-height: ${layout.touchTarget}px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: ${fonts.ui};
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  color: ${colors.textSecondary};
+  cursor: pointer;
+}
+
+.imolt-table th[aria-sort='ascending'] .imolt-table-sort,
+.imolt-table th[aria-sort='descending'] .imolt-table-sort { color: ${colors.textPrimary}; }
+.imolt-table-sort-mark { flex: none; }
+
+/* Высота строки объявлена наименьшей, а не мерой: в ячейке полигона стоят
+   название, адрес и перечень тарифов, и жёсткие 72 px заставляли содержимое
+   наезжать на соседнюю строку (BUG-001). Вертикальное поле взято из шкалы
+   отступов и равно боковому — одиночная строка при этом остаётся высотой в
+   строку сравнения (разд. 4.4). */
+.imolt-table tbody td {
+  min-height: ${layout.rowHeight}px;
+  padding: ${space.s}px;
+  border-bottom: ${stroke.hairline}px solid ${colors.borderDivider};
+  vertical-align: middle;
+}
+
+/* Выбранная строка: полоса слева и отмеченный флажок. Один цвет строку
+   выбранной не объявляет (разд. 4.6). */
+.imolt-table tbody tr[data-selected='true'] td:first-child { box-shadow: inset ${space.xxs}px 0 0 ${colors.accentPrimary}; }
+
+.imolt-table-pick { width: ${layout.touchTarget}px; text-align: center; }
+.imolt-table-empty { padding: ${space.m}px; background: ${colors.bgSurface}; }
+
+.imolt-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: ${space.s}px;
+  flex-wrap: wrap;
+  padding: ${space.s}px 0;
+}
+
+.imolt-pager-count {
+  margin: 0;
+  font-family: ${fonts.numeric};
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  line-height: 18px;
+  color: ${colors.textSecondary};
+}
+
+/*
+ * Наведение — единственным местом на весь общий слой.
+ *
+ * Отклик обязателен у каждого нажимаемого элемента (разд. 4.4): без него чип,
+ * вкладка и переключатель сортировки выглядят надписью, а не управлением
+ * (BUG-008). Отклик единообразен: приглушённая поверхность и потемневшая
+ * рамка, длительность — те же 150 мс (разд. 4.3).
+ *
+ * Условие «hover: hover» обязательно. На сенсорном экране правило наведения
+ * остаётся на элементе после касания и залипает, а у выбранного чипа это
+ * читается как второе выбранное. Выбранное состояние при этом по-прежнему
+ * держат цвет и состояние aria, наведение его не подменяет и не отменяет.
+ */
+@media (hover: hover) {
+  .imolt-button:hover:not(:disabled) { background: ${colors.accentPrimaryHover}; }
+  .imolt-button--secondary:hover:not(:disabled) { background: ${colors.accentDark}; opacity: 0.9; }
+  .imolt-button--danger:hover:not(:disabled) { background: ${colors.statusBlockedBg}; opacity: 0.9; }
+
+  /* Третичная кнопка — текст: поверхность у неё появляется только под
+     указателем, а подчёркивание становится плотнее. */
+  .imolt-button--tertiary:hover:not(:disabled) {
+    background: ${colors.bgSurfaceMuted};
+    text-decoration-thickness: ${stroke.emphasis}px;
+  }
+
+  .imolt-link:hover { text-decoration-thickness: ${stroke.emphasis}px; }
+
+  .imolt-chip:hover:not(:disabled),
+  .imolt-tab:hover:not(:disabled),
+  .imolt-sort:hover:not(:disabled),
+  .imolt-pill:hover {
+    background: ${colors.bgSurfaceMuted};
+    border-color: ${colors.accentDark};
+  }
+
+  /* Выбранное остаётся выбранным: под указателем оно только приглушается,
+     цвет выбора не подменяется цветом наведения (разд. 4.6). */
+  .imolt-tab[aria-selected='true']:hover,
+  .imolt-sort[aria-pressed='true']:hover,
+  .imolt-chip[aria-pressed='true']:hover,
+  .imolt-pill[data-checked='true']:hover {
+    background: ${colors.accentDark};
+    border-color: ${colors.accentDark};
+    color: ${colors.onAccentDark};
+    opacity: 0.9;
+  }
+
+  .imolt-suggest button:hover { background: ${colors.accentRowHover}; }
+  .imolt-option:hover { background: ${colors.accentRowHover}; }
+  .imolt-check:hover:not(:disabled) { border-color: ${colors.accentDark}; }
+  .imolt-select:hover:not(:disabled) { border-color: ${colors.accentDark}; }
+  .imolt-table-sort:hover { color: ${colors.textPrimary}; }
+  .imolt-table tbody tr:hover td { background: ${colors.accentRowHover}; }
+
+  /* Пустой результат строкой данных не является: подсвечивать в нём нечего. */
+  .imolt-table tbody tr:hover td.imolt-table-empty { background: ${colors.bgSurface}; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }

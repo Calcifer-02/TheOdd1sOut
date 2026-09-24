@@ -8,6 +8,7 @@
  * @shared: imolt-miniapp
  * @adr: ADR-0008
  */
+import { ApiProblem, request } from './http';
 import type {
   AddressSuggestion,
   AllocationEntry,
@@ -17,11 +18,8 @@ import type {
   CalculationRequest,
   DistanceMode,
   Page,
-  PickupRequest,
-  PickupRequestInput,
   PlacementOptionPage,
   Quantity,
-  Quote,
   RouteSummary,
   SelectionEntry,
   SelectionState,
@@ -32,56 +30,7 @@ import type {
   WasteGroup,
 } from './contracts';
 
-const BASE = '/api';
-
-/**
- * Отказ расчётной части в виде документа об ошибке (RFC 9457). Интерфейс
- * ветвится по коду причины, а не по тексту заголовка, и показывает заголовок,
- * а не код: код — внутреннее имя (ADR-0008, инвариант 4).
- */
-export class ApiProblem extends Error {
-  constructor(
-    readonly type: string,
-    readonly title: string,
-    readonly status: number,
-    readonly detail?: string,
-  ) {
-    super(title);
-    this.name = 'ApiProblem';
-  }
-}
-
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  let response: Response;
-
-  try {
-    response = await fetch(`${BASE}${path}`, {
-      ...init,
-      headers: init?.body ? { 'Content-Type': 'application/json', ...init?.headers } : init?.headers,
-    });
-  } catch {
-    // Сеть не ответила вовсе: у отказа нет ни кода, ни документа, и выдавать
-    // его за ответ службы нельзя.
-    throw new ApiProblem('urn:imolt:problem:unreachable', 'Служба не отвечает', 0);
-  }
-
-  if (!response.ok) {
-    const problem = (await response.json().catch(() => null)) as {
-      type?: string;
-      title?: string;
-      detail?: string;
-    } | null;
-
-    throw new ApiProblem(
-      problem?.type ?? 'urn:imolt:problem:unknown',
-      problem?.title ?? 'Запрос не выполнен',
-      response.status,
-      problem?.detail,
-    );
-  }
-
-  return (await response.json()) as T;
-}
+export { ApiProblem };
 
 /**
  * Обмен стартовых параметров платформы на маркер доступа (R-049, R-071).
@@ -112,9 +61,7 @@ export function searchWasteGroups(query: string): Promise<Page<WasteGroup>> {
 
 /** @supports: R-012 */
 export function suggestAddresses(query: string): Promise<Page<AddressSuggestion>> {
-  return request<Page<AddressSuggestion>>(
-    `/v1/address-suggestions?${new URLSearchParams({ query, limit: '6' })}`,
-  );
+  return request<Page<AddressSuggestion>>(`/v1/address-suggestions?${new URLSearchParams({ query, limit: '6' })}`);
 }
 
 /**
@@ -170,10 +117,7 @@ export function listPlacementOptions(
 }
 
 /** @supports: R-027 */
-export function setSelection(
-  calculationId: string,
-  entries: SelectionEntry[],
-): Promise<SelectionState> {
+export function setSelection(calculationId: string, entries: SelectionEntry[]): Promise<SelectionState> {
   return request<SelectionState>(`/v1/calculations/${calculationId}/selection`, {
     method: 'PUT',
     body: JSON.stringify({ entries }),
@@ -181,10 +125,7 @@ export function setSelection(
 }
 
 /** @supports: R-030 */
-export function setAllocation(
-  calculationId: string,
-  entries: AllocationEntry[],
-): Promise<AllocationState> {
+export function setAllocation(calculationId: string, entries: AllocationEntry[]): Promise<AllocationState> {
   return request<AllocationState>(`/v1/calculations/${calculationId}/allocation`, {
     method: 'PUT',
     body: JSON.stringify({ entries }),
@@ -194,25 +135,4 @@ export function setAllocation(
 /** @supports: R-032, R-034 */
 export function getRoute(calculationId: string): Promise<RouteSummary> {
   return request<RouteSummary>(`/v1/calculations/${calculationId}/route`);
-}
-
-/** @supports: R-036 */
-export function createQuote(calculationId: string): Promise<Quote> {
-  return request<Quote>(`/v1/calculations/${calculationId}/quotes`, {
-    method: 'POST',
-    body: JSON.stringify({}),
-  });
-}
-
-/** @supports: R-053 */
-export function createPickupRequest(body: PickupRequestInput): Promise<PickupRequest> {
-  return request<PickupRequest>('/v1/pickup-requests', {
-    method: 'POST',
-    body: JSON.stringify(body),
-  });
-}
-
-/** Адрес файла предложения: договор отдаёт путь без приставки службы. */
-export function documentHref(quote: Quote): string {
-  return `${BASE}${quote.documentUrl}`;
 }

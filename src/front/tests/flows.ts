@@ -33,14 +33,15 @@ export function landfillCheckbox(landfillName: string): HTMLInputElement {
   }) as HTMLInputElement;
 }
 
-/** Карточка полигона целиком — строка списка или самостоятельная карточка. */
+/**
+ * Полигон целиком: карточка на телефоне или строка таблицы на рабочем месте.
+ * Оправа у двух представлений разная, предмет — один, поэтому шаг общий.
+ */
 export function landfillCard(landfillName: string): HTMLElement {
-  const card = landfillCheckbox(landfillName).closest('li, article');
+  const card = landfillCheckbox(landfillName).closest('li, article, tr');
 
   if (card === null) {
-    throw new Error(
-      `Карточка полигона «${landfillName}» не оформлена строкой списка или карточкой`,
-    );
+    throw new Error(`Полигон «${landfillName}» не оформлен строкой списка, карточкой или строкой таблицы`);
   }
 
   return card as HTMLElement;
@@ -68,11 +69,7 @@ export async function chooseWasteGroup(
 }
 
 /** Вводит объём и, если мера названа, переключает её. */
-export async function enterQuantity(
-  user: UserEvent,
-  value: string,
-  unit: 'т' | 'м³' = 'т',
-): Promise<void> {
+export async function enterQuantity(user: UserEvent, value: string, unit: 'т' | 'м³' = 'т'): Promise<void> {
   const field = screen.getByLabelText('Объём');
 
   await user.clear(field);
@@ -83,9 +80,15 @@ export async function enterQuantity(
   }
 }
 
-/** Ждёт результат расчёта: над списком стоит подпись свежести данных. */
+/**
+ * Ждёт результат расчёта: на экране появился раздел результатов.
+ *
+ * Признак выбран общий для обоих представлений: подпись свежести данных на
+ * телефоне и на рабочем месте набрана разными словами, а раздел результатов
+ * один и тот же и появляется ровно тогда, когда расчёт получен.
+ */
 export async function waitForResults(): Promise<void> {
-  await screen.findByText(/Цены и статусы на/);
+  await screen.findByRole('region', { name: 'Результаты' });
 }
 
 /**

@@ -51,7 +51,7 @@ export function formatNumber(value: number): string {
   return sign + groupDigits(whole) + (fraction ? `,${fraction}` : '');
 }
 
-/** Дата договора «2026-09-17» в вид экрана «17.09.2026». */
+/** Дата договора из формы ГГГГ-ММ-ДД в вид экрана «17.09.2026». */
 export function formatDate(isoDate: string): string {
   const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(isoDate);
   if (!match) {

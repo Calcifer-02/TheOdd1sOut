@@ -5,7 +5,6 @@
  * @shared: imolt-miniapp
  * @adr: ADR-0008
  */
-import { formatMoney } from '@/shared/lib/formatting';
 
 /** Нижняя панель: сколько выбрано, на какую сумму и что с этим делать. */
 export function SummaryBar({

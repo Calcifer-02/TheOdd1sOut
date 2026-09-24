@@ -16,14 +16,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { App } from '@/app/App';
 import type { ApiStub } from './apiStub';
-import {
-  ALEKSIN_BLOCKED,
-  IKSHA,
-  LESNAYA_STALE,
-  VOSTOK,
-  installApiStub,
-  placementOptionSeries,
-} from './apiStub';
+import { ALEKSIN_BLOCKED, IKSHA, LESNAYA_STALE, VOSTOK, installApiStub, placementOptionSeries } from './apiStub';
 import {
   calculateConcrete,
   chooseAddress,
@@ -50,8 +43,8 @@ afterEach(() => {
 function shownAmounts(element: HTMLElement): number[] {
   const text = element.textContent ?? '';
 
-  return [...text.matchAll(/(-?[\d   ]+(?:,\d+)?)[ \s]?₽/gu)].map((match) =>
-    Number((match[1] ?? '').replace(/[  \s]/gu, '').replace(',', '.')),
+  return [...text.matchAll(/(-?[\d\u00a0\u202f ]+(?:,\d+)?)[\u00a0\s]?₽/gu)].map(match =>
+    Number((match[1] ?? '').replace(/[\u00a0\u202f\s]/gu, '').replace(',', '.')),
   );
 }
 
@@ -62,9 +55,7 @@ describe('карточка полигона', () => {
     render(<App />);
     await calculateConcrete(user);
 
-    expect(
-      within(landfillCard(VOSTOK.landfillName)).getByText(/перевозка/u),
-    ).toBeInTheDocument();
+    expect(within(landfillCard(VOSTOK.landfillName)).getByText(/перевозка/u)).toBeInTheDocument();
   });
 
   it('называет утилизацию словом', async () => {
@@ -72,9 +63,7 @@ describe('карточка полигона', () => {
     render(<App />);
     await calculateConcrete(user);
 
-    expect(
-      within(landfillCard(VOSTOK.landfillName)).getByText(/утилизация/u),
-    ).toBeInTheDocument();
+    expect(within(landfillCard(VOSTOK.landfillName)).getByText(/утилизация/u)).toBeInTheDocument();
   });
 
   it('показывает итог рядом с перевозкой и утилизацией', async () => {
@@ -94,7 +83,7 @@ describe('карточка полигона', () => {
 
     const amounts = shownAmounts(landfillCard(VOSTOK.landfillName));
     const total = Math.max(...amounts);
-    const parts = amounts.filter((amount) => amount !== total);
+    const parts = amounts.filter(amount => amount !== total);
 
     expect(parts).toHaveLength(2);
     expect(parts.reduce((sum, amount) => sum + amount, 0)).toBe(total);
@@ -117,9 +106,7 @@ describe('переключатель сортировки', () => {
   beforeEach(() => {
     // Порядок задаёт расчётная часть: интерфейс показывает пришедший список,
     // а не пересортировывает его у себя (ADR-0008, инвариант 2).
-    stub.setOptions((request) =>
-      request.query.get('sort') === 'distance' ? [IKSHA, VOSTOK] : [VOSTOK, IKSHA],
-    );
+    stub.setOptions(request => (request.query.get('sort') === 'distance' ? [IKSHA, VOSTOK] : [VOSTOK, IKSHA]));
   });
 
   it('называет все четыре поля сортировки словами', async () => {
@@ -153,9 +140,7 @@ describe('переключатель сортировки', () => {
     await user.click(screen.getByRole('radio', { name: 'Расстояние' }));
 
     await waitFor(() => {
-      expect(
-        precedes(landfillCheckbox(IKSHA.landfillName), landfillCheckbox(VOSTOK.landfillName)),
-      ).toBe(true);
+      expect(precedes(landfillCheckbox(IKSHA.landfillName), landfillCheckbox(VOSTOK.landfillName))).toBe(true);
     });
   });
 });
@@ -214,22 +199,16 @@ describe('чип предела расстояния', () => {
 /** @ac: AC-027b */
 describe('выбранный полигон при смене сортировки', () => {
   beforeEach(() => {
-    stub.setOptions((request) =>
-      request.query.get('sort') === 'distance' ? [IKSHA, VOSTOK] : [VOSTOK, IKSHA],
-    );
+    stub.setOptions(request => (request.query.get('sort') === 'distance' ? [IKSHA, VOSTOK] : [VOSTOK, IKSHA]));
   });
 
-  async function selectIkshaAndSortByDistance(
-    user: ReturnType<typeof userEvent.setup>,
-  ): Promise<void> {
+  async function selectIkshaAndSortByDistance(user: ReturnType<typeof userEvent.setup>): Promise<void> {
     await calculateConcrete(user);
     await user.click(landfillCheckbox(IKSHA.landfillName));
     await screen.findByText(/Выбрано\s1/u);
     await user.click(screen.getByRole('radio', { name: 'Расстояние' }));
     await waitFor(() => {
-      expect(
-        precedes(landfillCheckbox(IKSHA.landfillName), landfillCheckbox(VOSTOK.landfillName)),
-      ).toBe(true);
+      expect(precedes(landfillCheckbox(IKSHA.landfillName), landfillCheckbox(VOSTOK.landfillName))).toBe(true);
     });
   }
 
@@ -272,7 +251,7 @@ describe('выбранный полигон при смене сортировк
       landfillId: string;
     }[];
 
-    expect(entries.map((entry) => entry.landfillId)).toEqual([IKSHA.landfillId]);
+    expect(entries.map(entry => entry.landfillId)).toEqual([IKSHA.landfillId]);
   });
 });
 
@@ -322,9 +301,7 @@ describe('статус полигона в карточке', () => {
     render(<App />);
     await calculateConcrete(user);
 
-    expect(
-      within(landfillCard(ALEKSIN_BLOCKED.landfillName)).getByText('Заблокирован'),
-    ).toBeInTheDocument();
+    expect(within(landfillCard(ALEKSIN_BLOCKED.landfillName)).getByText('Заблокирован')).toBeInTheDocument();
   });
 
   it('называет приём отходов словом у работающего полигона', async () => {
@@ -341,9 +318,7 @@ describe('статус полигона в карточке', () => {
     render(<App />);
     await calculateConcrete(user);
 
-    expect(
-      within(landfillCard(ALEKSIN_BLOCKED.landfillName)).getByText(/данные от 17\.09/u),
-    ).toBeInTheDocument();
+    expect(within(landfillCard(ALEKSIN_BLOCKED.landfillName)).getByText(/данные от 17\.09/u)).toBeInTheDocument();
   });
 
   it('показывает собственную дату у полигона с данными старше остальных', async () => {
@@ -355,9 +330,7 @@ describe('статус полигона в карточке', () => {
     render(<App />);
     await calculateConcrete(user);
 
-    expect(
-      within(landfillCard(LESNAYA_STALE.landfillName)).getByText(/данные от 03\.09/u),
-    ).toBeInTheDocument();
+    expect(within(landfillCard(LESNAYA_STALE.landfillName)).getByText(/данные от 03\.09/u)).toBeInTheDocument();
   });
 });
 
@@ -374,9 +347,7 @@ describe('выбор заблокированного полигона', () => {
 
     await user.click(landfillCheckbox(ALEKSIN_BLOCKED.landfillName));
 
-    expect(
-      await screen.findByText('Полигон заблокирован. Он остаётся в выборе, решение за вами.'),
-    ).toBeInTheDocument();
+    expect(await screen.findByText('Полигон заблокирован. Он остаётся в выборе, решение за вами.')).toBeInTheDocument();
   });
 
   it('не снимает отметку с предупреждённого полигона', async () => {
@@ -402,7 +373,7 @@ describe('выбор заблокированного полигона', () => {
       landfillId: string;
     }[];
 
-    expect(entries.map((entry) => entry.landfillId)).toContain(ALEKSIN_BLOCKED.landfillId);
+    expect(entries.map(entry => entry.landfillId)).toContain(ALEKSIN_BLOCKED.landfillId);
   });
 });
 
@@ -477,9 +448,7 @@ describe('пустой список полигонов', () => {
     render(<App />);
     await chooseEmptyResult(user);
 
-    expect(
-      screen.getByText('Снимите фильтр расстояния или выберите другой тип отходов.'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('Снимите фильтр расстояния или выберите другой тип отходов.')).toBeInTheDocument();
   });
 
   it('предлагает снять фильтр отдельным действием', async () => {

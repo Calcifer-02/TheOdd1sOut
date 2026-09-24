@@ -1,0 +1,21 @@
+{
+  "schema": "trip.lint-baseline/v1",
+  "entries": [
+    {
+      "producer": "trip-lint:deps/unknown-package",
+      "path": "src/front/package.json",
+      "message": "пакет «@trip/eslint-config» не найден в реестре npm: имя не существует либо опечатано",
+      "debtId": "BUG-013",
+      "owner": "Ведущий",
+      "until": "2026-12-31"
+    },
+    {
+      "producer": "trip-lint:deps/unknown-package",
+      "path": "src/front/package.json",
+      "message": "пакет «@trip/prettier-config» не найден в реестре npm: имя не существует либо опечатано",
+      "debtId": "BUG-013",
+      "owner": "Ведущий",
+      "until": "2026-12-31"
+    }
+  ]
+}
