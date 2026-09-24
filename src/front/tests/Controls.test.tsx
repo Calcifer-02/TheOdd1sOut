@@ -11,7 +11,8 @@
  * обработку стрелок у вкладок и полосы управлений, перестаньте закрывать
  * всплывающее окно по Escape или возвращать из него фокус, разорвите связь
  * отказа с полем выбора, оставьте кнопку «Показать ещё» при показанном
- * целиком списке, уберите часовой пояс из отметки актуальности — они упадут.
+ * целиком списке, уберите часовой пояс из отметки актуальности, снимите
+ * `aria-hidden` с резервной подписи кнопки — они упадут.
  *
  *   npx vitest run tests/Controls.test.tsx
  *
@@ -25,7 +26,7 @@ import { useState } from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { Button, Checkbox, Chip, DateStamp, Pager, Popover, Select, Tabs, Toolbar } from '@/shared/ui';
+import { Button, Checkbox, Chip, DateStamp, Field, Pager, Popover, Select, Tabs, Toolbar } from '@/shared/ui';
 import { SharedSection } from '@/pages/showcase/sections/shared';
 
 /** Флажок с собственным состоянием: без него нажатие не меняет вид. */
@@ -109,6 +110,35 @@ describe('кнопка', () => {
 
     await user.click(button);
     expect(onClick).not.toHaveBeenCalled();
+  });
+
+  /**
+   * Переключатель порядка сортировки меняет подпись вместе с состоянием, и
+   * вместе с подписью менялась бы ширина кнопки: соседи по полосе управления
+   * сдвигались бы на каждое нажатие (второй пакет замечаний заказчика по
+   * живому стенду, R-024).
+   */
+  it('кнопка с резервом держит место под вторую подпись, но названа текущей', () => {
+    render(
+      <Button kind="tertiary" reserve="По возрастанию" onClick={() => undefined}>
+        По убыванию
+      </Button>,
+    );
+
+    const кнопка = screen.getByRole('button', { name: 'По убыванию' });
+    const резерв = кнопка.querySelector('.imolt-button-reserve');
+
+    expect(резерв?.textContent, 'резерв держит самую длинную подпись переключателя').toBe('По возрастанию');
+    expect(резерв, 'резерв не читается вспомогательной технологией').toHaveAttribute('aria-hidden', 'true');
+    // Резервная подпись в доступном имени превратила бы его в «По убыванию
+    // По возрастанию» — имя кнопки перестало бы называть текущее состояние.
+    expect(screen.queryByRole('button', { name: /По возрастанию/u })).toBeNull();
+  });
+
+  it('кнопка без резерва не заводит скрытой подписи', () => {
+    render(<Button onClick={() => undefined}>Рассчитать</Button>);
+
+    expect(screen.getByRole('button', { name: 'Рассчитать' }).querySelector('.imolt-button-reserve')).toBeNull();
   });
 });
 
@@ -326,6 +356,28 @@ describe('полоса управлений', () => {
     await user.keyboard('{ArrowRight}');
 
     expect(screen.getByRole('button', { name: 'Снять выбор' })).toHaveFocus();
+  });
+
+  // Полоса перехватывала стрелки у всего, что внутри неё, и текст в поле
+  // поиска редактора цен нельзя было править кареткой: стрелка уводила фокус
+  // на соседнюю вкладку. Стрелки принадлежат полю ввода, а не полосе.
+  it('стрелка внутри поля ввода двигает каретку, а не фокус полосы', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <Toolbar ariaLabel="Отбор записей справочника">
+        <Field id="toolbar-query" label="Поиск по полигону" value="бетон" onChange={() => undefined} />
+        <Button size="s" kind="tertiary" onClick={() => undefined}>
+          Сбросить отбор
+        </Button>
+      </Toolbar>,
+    );
+
+    const поле = screen.getByRole('textbox', { name: 'Поиск по полигону' });
+    поле.focus();
+    await user.keyboard('{ArrowLeft}');
+
+    expect(поле, 'полоса увела фокус из поля ввода').toHaveFocus();
   });
 });
 

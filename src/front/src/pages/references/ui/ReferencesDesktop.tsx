@@ -6,7 +6,13 @@
  * строки предметный (карточка практики PRACT-021). Ячейка с ценой — форма,
  * а не текст: правка идёт через `EditableCell`.
  *
+ * Заголовок столбца называет то, что стоит в ячейке, вместе с мерой: имя
+ * группы отходов не сообщало, что под ним цена за тонну, а «Цены актуальны»
+ * не называло дату (второй пакет замечаний заказчика, 24.09.2026). Меру
+ * читает человек, а не угадывает по виду значения.
+ *
  * @req: R-039, R-040, R-042, R-043, R-048
+ * @supports: R-058
  * @adr: ADR-0008
  */
 import { useState } from 'react';
@@ -17,7 +23,7 @@ import { ImportPanel } from '@/features/reference-import';
 import type { Landfill } from '@/shared/api/references';
 import type { WasteGroup } from '@/shared/api/contracts';
 import { formatDate, formatMoney, formatNumber } from '@/shared/lib/formatting';
-import { latestTariffDate, tariffCellKey, tariffOf, transportCellKey } from '../model/editor';
+import { latestTariffDate, selectionCaption, tariffCellKey, tariffOf, transportCellKey } from '../model/editor';
 import { AccessNotice } from './AccessNotice';
 import { EditableCell } from './EditableCell';
 import { ManualStatusForm } from './ManualStatusForm';
@@ -28,16 +34,25 @@ import type { ReferencesViewProps } from './props';
 /** Столбцы, общие для обеих вкладок: имя записи слева, дата справа. */
 const NAME_COLUMN = { key: 'name', title: 'Полигон и юридическое лицо' };
 
-const STATUS_COLUMN = { key: 'status', title: 'Статус' };
+const STATUS_COLUMN = { key: 'status', title: 'Статус полигона' };
 
-const DATE_COLUMN = { key: 'updatedAt', title: 'Цены актуальны', align: 'end' as const };
+/**
+ * В ячейке стоит дата, на которую известны цены полигона, а не признак
+ * «актуальны или нет»: заголовок называет именно дату (термин глоссария
+ * «дата актуальности данных»).
+ */
+const DATE_COLUMN = { key: 'updatedAt', title: 'Дата актуальности цен', align: 'end' as const };
+
+/** Мера тарифа утилизации в заголовке столбца группы отходов: рубли за тонну. */
+const TARIFF_UNIT = '₽/т';
 
 const WASTE_GROUP_COLUMNS = [
   { key: 'name', title: 'Группа отходов' },
-  { key: 'transportPricePerTonKm', title: 'Цена перевозки за тонна-километр', align: 'end' as const },
+  // Сокращение «т-км» — из глоссария проекта, оно же стоит в справочнике.
+  { key: 'transportPricePerTonKm', title: 'Цена перевозки, ₽/т-км', align: 'end' as const },
   { key: 'densityTonPerCubicMeter', title: 'Коэффициент плотности, т/м³', align: 'end' as const },
   { key: 'fkkoCodes', title: 'Коды каталога отходов' },
-  { key: 'updatedAt', title: 'Актуально', align: 'end' as const },
+  { key: 'updatedAt', title: 'Дата актуальности цены', align: 'end' as const },
 ];
 
 export function ReferencesDesktop({ editor, route, importing }: ReferencesViewProps) {
@@ -138,7 +153,10 @@ export function ReferencesDesktop({ editor, route, importing }: ReferencesViewPr
         />
       )}
 
-      <Toolbar ariaLabel="Отбор записей справочника">
+      {/* Вкладки, счётчик и поиск стоят строками, а не одной линией: три
+          управления разной природы и разной высоты читались как три решения
+          подряд (второй пакет замечаний заказчика, 24.09.2026). */}
+      <Toolbar ariaLabel="Отбор записей справочника" className="imolt-references-filters">
         <Tabs
           label="Справочник"
           value={route.tab}
@@ -148,17 +166,24 @@ export function ReferencesDesktop({ editor, route, importing }: ReferencesViewPr
           ]}
           onPick={route.pickTab}
         />
-        <Field
-          id="references-query"
-          label={route.tab === 'landfills' ? 'Поиск по полигону или юрлицу' : 'Поиск по группе или коду каталога'}
-          value={query}
-          onChange={setQuery}
-        />
-        <span className="imolt-references-count">
-          {route.tab === 'landfills'
-            ? `Полигонов: ${landfills.length} из ${editor.landfillTotal}`
-            : `Групп отходов: ${wasteGroups.length} из ${editor.wasteGroupTotal}`}
-        </span>
+        {/* Счётчик принадлежит выборке, а не полю: он стоит над поиском и
+            называет показанное из найденного. Область сообщения нужна, чтобы
+            смена числа доходила и без взгляда на таблицу. */}
+        <div className="imolt-references-selection">
+          <p className="imolt-references-count" role="status">
+            {selectionCaption(
+              route.tab,
+              route.tab === 'landfills' ? landfills.length : wasteGroups.length,
+              route.tab === 'landfills' ? editor.landfillTotal : editor.wasteGroupTotal,
+            )}
+          </p>
+          <Field
+            id="references-query"
+            label={route.tab === 'landfills' ? 'Поиск по полигону или юрлицу' : 'Поиск по группе или коду каталога'}
+            value={query}
+            onChange={setQuery}
+          />
+        </div>
       </Toolbar>
 
       {editor.loading && <Skeleton rows={5} label="Справочник загружается" />}
@@ -171,9 +196,12 @@ export function ReferencesDesktop({ editor, route, importing }: ReferencesViewPr
           caption="Тарифы утилизации за тонну по полигонам и группам отходов"
           columns={[
             NAME_COLUMN,
+            // Под именем группы стоит тариф утилизации в рублях за тонну:
+            // одно имя группы этого не называло, и заголовок расходился с
+            // содержимым (второй пакет замечаний заказчика).
             ...editor.wasteGroups.map(group => ({
               key: `group:${group.id}`,
-              title: group.name,
+              title: `${group.name}, ${TARIFF_UNIT}`,
               align: 'end' as const,
             })),
             STATUS_COLUMN,

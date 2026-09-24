@@ -12,6 +12,14 @@
 import { BREAKPOINTS } from '@/shared/lib/viewport';
 import { colors, fonts, layout, radius, space, stroke, zIndex } from './tokens';
 
+/**
+ * Боковое поле ячейки таблицы. Объявлено один раз, потому что его держат три
+ * правила сразу — подпись таблицы, ячейка шапки и ячейка данных: разойдясь,
+ * они ставят заголовок столбца и значение под ним на разные вертикали
+ * (второй пакет замечаний заказчика по живому стенду, R-024, R-040).
+ */
+const TABLE_CELL_INSET = space.s;
+
 export const THEME_CSS = `
 *, *::before, *::after { box-sizing: border-box; }
 
@@ -72,7 +80,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: ${space.s}px;
-  height: ${layout.fieldHeight}px;
+  height: ${layout.controlHeight}px;
   border-bottom: ${stroke.hairline}px solid ${colors.borderDefault};
 }
 
@@ -135,7 +143,7 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
 
 .imolt-input {
   width: 100%;
-  height: ${layout.fieldHeight}px;
+  height: ${layout.controlHeight}px;
   padding: 0 ${space.s}px;
   border: ${stroke.hairline}px solid ${colors.borderDefault};
   border-radius: ${radius.field}px;
@@ -205,7 +213,7 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
   align-items: center;
   justify-content: center;
   min-width: ${layout.touchTarget}px;
-  min-height: ${layout.controlHeightCompact}px;
+  min-height: ${layout.controlHeight}px;
   padding: 0 ${space.s}px;
   border: ${stroke.hairline}px solid ${colors.borderDefault};
   border-radius: ${radius.pill}px;
@@ -218,9 +226,10 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
   flex: none;
 }
 
-/* Переключатель меры стоит рядом с полем количества и обязан быть той же
-   высоты: два соседних управления разной высоты читаются как сбой вёрстки. */
-.imolt-units .imolt-pill { border-radius: ${radius.field}px; min-height: ${layout.fieldHeight}px; }
+/* Переключатель меры стоит рядом с полем количества, и скругление у него то
+   же, что у поля: «таблетка» рядом с полем читается как другой род управления.
+   Высоту здесь повторять нечем — она общая у всех управлений полосы. */
+.imolt-units .imolt-pill { border-radius: ${radius.field}px; }
 
 .imolt-pill input {
   position: absolute;
@@ -250,7 +259,7 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
   align-items: center;
   justify-content: center;
   gap: ${space.xs}px;
-  min-height: ${layout.fieldHeight}px;
+  min-height: ${layout.controlHeight}px;
   padding: 0 ${space.l}px;
   border: 0;
   border-radius: ${radius.pill}px;
@@ -269,13 +278,15 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
 .imolt-button:disabled:active { transform: none; }
 .imolt-button--primary { background: ${colors.accentPrimary}; color: ${colors.textPrimary}; }
 
-/* Малый размер остаётся целью касания: 44 px — нижняя граница (разд. 4.5). */
-.imolt-button--s { min-height: ${layout.touchTarget}px; padding: 0 ${space.m}px; font-size: 14px; }
+/* Малый размер ужимает поле и кегль, но не высоту: малая кнопка стоит в той
+   же полосе, что поле поиска и чипы, и своя высота у неё разваливала бы
+   полосу на управления трёх мер (второй пакет замечаний заказчика, R-085). */
+.imolt-button--s { padding: 0 ${space.m}px; font-size: 14px; }
 
 /* Вторичная кнопка — та же высота управления, что у поля и главной кнопки
    (разд. 4.4): соседние управления разной высоты читаются как сбой вёрстки. */
 .imolt-button--secondary {
-  min-height: ${layout.fieldHeight}px;
+  min-height: ${layout.controlHeight}px;
   background: ${colors.accentDark};
   color: ${colors.onAccentDark};
   font-weight: 500;
@@ -284,7 +295,7 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
 .imolt-button--secondary:disabled { background: ${colors.bgSurfaceMuted}; color: ${colors.disabledText}; opacity: 1; }
 
 .imolt-button--tertiary {
-  min-height: ${layout.touchTarget}px;
+  min-height: ${layout.controlHeight}px;
   padding: 0 ${space.xs}px;
   background: none;
   color: ${colors.link};
@@ -305,6 +316,27 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
 .imolt-button--danger:disabled { background: ${colors.bgSurfaceMuted}; color: ${colors.disabledText}; box-shadow: none; }
 
 .imolt-button-label { white-space: nowrap; }
+
+/*
+ * Кнопка-переключатель меняет подпись вместе с состоянием («По возрастанию» —
+ * «По убыванию»), и вместе с подписью менялась бы её ширина: соседи по полосе
+ * управления сдвигались бы на каждое нажатие (второй пакет замечаний
+ * заказчика по живому стенду, R-024, R-085).
+ *
+ * Место резервируется по самой длинной подписи: обе подписи лежат в одной
+ * ячейке сетки, видна текущая, скрытая держит ширину. Скрытая убрана из
+ * дерева доступности разметкой, поэтому доступным именем кнопки остаётся
+ * ровно текущая подпись, а «visibility» исключает её и из порядка обхода.
+ */
+.imolt-button-label--reserve {
+  display: inline-grid;
+  grid-template-areas: 'imolt-label';
+  justify-items: center;
+  align-items: center;
+}
+
+.imolt-button-label--reserve > * { grid-area: imolt-label; }
+.imolt-button-reserve { visibility: hidden; }
 
 /* Признак ожидания. При prefers-reduced-motion вращение выключается общим
    правилом в конце файла, а сам кружок остаётся видимым. */
@@ -336,9 +368,15 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
   padding-bottom: ${space.xxs}px;
 }
 
+/* Чип, вкладка и переключатель порядка стоят в одной полосе с полем поиска и
+   кнопкой, поэтому высота у них общая: замер живого стенда дал поле 48, кнопку
+   48 и чип 36, и полоса читалась как набор разнородных управлений (второй
+   пакет замечаний заказчика, R-040, R-085). Прежние 36 px разд. 4.4 не
+   дотягивали и до цели касания 44 px разд. 4.5 — расхождение названо в
+   отчёте. */
 .imolt-tab, .imolt-sort, .imolt-chip {
   flex: none;
-  min-height: ${layout.controlHeightCompact}px;
+  min-height: ${layout.controlHeight}px;
   padding: 0 ${space.s}px;
   border: ${stroke.hairline}px solid ${colors.borderDefault};
   border-radius: ${radius.pill}px;
@@ -471,6 +509,25 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
    карточки: название — первая строка блока. */
 .imolt-option-head > .imolt-check { align-self: flex-start; margin-top: 2px; }
 
+/*
+ * Состояние полигона и дата, на которую оно известно, — две разные записи, и
+ * в потоке текста ячейки они сходились в «Активенданные от 17.09» (второй
+ * пакет замечаний заказчика по живому стенду, R-028, R-048). Зазор объявлен
+ * правилом, а не пробелом в разметке: пробел пропадает на переносе и в
+ * пересказе содержимого ячейки.
+ *
+ * Перенос разрешён намеренно: в узком столбце дата уходит на свою строку, а
+ * не наезжает на значок и не обрезается краем ячейки.
+ */
+.imolt-status {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: ${space.xxs}px ${space.xs}px;
+  min-width: 0;
+  max-width: 100%;
+}
+
 .imolt-badge {
   display: inline-flex;
   align-items: center;
@@ -480,7 +537,13 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
   font-size: 12px;
   line-height: 16px;
   font-weight: 600;
+  max-width: 100%;
 }
+
+/* Значок статуса не сжимается вместе с подписью: сплющенный знак перестаёт
+   отличаться от соседних состояний, а состояние обязано читаться не одним
+   цветом (разд. 4.6). */
+.imolt-badge > svg { flex: none; }
 
 .imolt-badge[data-status='active'] { background: ${colors.statusActiveBg}; color: ${colors.statusActiveText}; }
 .imolt-badge[data-status='blocked'] { background: ${colors.statusBlockedBg}; color: ${colors.statusBlockedText}; }
@@ -557,7 +620,9 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
 
 .imolt-allocation { display: flex; flex-direction: column; gap: ${space.xs}px; }
 .imolt-allocation-row { display: flex; align-items: center; gap: ${space.xs}px; }
-.imolt-allocation-row .imolt-input { width: ${layout.shareWidth}px; height: ${layout.touchTarget}px; }
+/* В строке распределения задаётся только ширина: высота поля общая у всех
+   управлений, и второе её объявление вернуло бы разнобой высот (R-085). */
+.imolt-allocation-row .imolt-input { width: ${layout.shareWidth}px; }
 
 /* Подпись флажка кликабельна вместе с ним и сама держит высоту цели касания:
    нажатие мимо квадрата в 24 px должно попадать в подпись (разд. 4.5). */
@@ -575,7 +640,7 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
    соседние управления разной геометрии читаются как сбой вёрстки. */
 .imolt-select {
   width: 100%;
-  height: ${layout.fieldHeight}px;
+  height: ${layout.controlHeight}px;
   padding: 0 ${space.s}px;
   border: ${stroke.hairline}px solid ${colors.borderDefault};
   border-radius: ${radius.field}px;
@@ -696,7 +761,7 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
    одно. Экран выравнивается по этой вертикали, поэтому её смена сдвигает
    заголовок и полосы над таблицей (BUG-003, BUG-011). */
 .imolt-table-caption {
-  padding: ${space.s}px ${space.s}px ${space.xs}px;
+  padding: ${space.s}px ${TABLE_CELL_INSET}px ${space.xs}px;
   text-align: left;
   font-size: 12px;
   line-height: 16px;
@@ -711,7 +776,7 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
   position: sticky;
   top: 0;
   z-index: ${zIndex.stickyHead};
-  padding: ${space.xs}px ${space.s}px;
+  padding: ${space.xs}px ${TABLE_CELL_INSET}px;
   background: ${colors.bgSurfaceMuted};
   box-shadow: inset 0 -${stroke.hairline}px 0 ${colors.borderDivider};
   font-size: 12px;
@@ -755,12 +820,12 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
 
 /* Высота строки объявлена наименьшей, а не мерой: в ячейке полигона стоят
    название, адрес и перечень тарифов, и жёсткие 72 px заставляли содержимое
-   наезжать на соседнюю строку (BUG-001). Вертикальное поле взято из шкалы
-   отступов и равно боковому — одиночная строка при этом остаётся высотой в
-   строку сравнения (разд. 4.4). */
+   наезжать на соседнюю строку (BUG-001). Боковое поле — общее поле ячейки:
+   заголовок столбца и значение под ним стоят на одной вертикали только
+   тогда, когда обе ячейки берут его из одного места (R-024). */
 .imolt-table tbody td {
   min-height: ${layout.rowHeight}px;
-  padding: ${space.s}px;
+  padding: ${space.s}px ${TABLE_CELL_INSET}px;
   border-bottom: ${stroke.hairline}px solid ${colors.borderDivider};
   vertical-align: middle;
 }

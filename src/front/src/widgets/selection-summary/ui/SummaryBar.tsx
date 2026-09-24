@@ -2,6 +2,10 @@
  * Сводка выбора: сколько полигонов отмечено, на какую сумму и что с этим
  * делать дальше (R-027, R-032).
  *
+ * Панель объявлена группой: имя, приписанное безымянному узлу, вспомогательная
+ * технология не читает, и число выбранных полигонов терялось бы у того, кто
+ * идёт по странице областями (разд. 4.5).
+ *
  * @shared: imolt-miniapp
  * @adr: ADR-0008
  */
@@ -21,7 +25,7 @@ export function SummaryBar({
   downloadLabel: string;
 }) {
   return (
-    <div className="imolt-bar" aria-label={`Выбрано полигонов: ${selectedCount}`}>
+    <div className="imolt-bar" role="group" aria-label={`Выбрано полигонов: ${selectedCount}`}>
       <div className="imolt-bar-line">
         <span>Выбрано {selectedCount}</span>
         <span className="imolt-total">{total}</span>

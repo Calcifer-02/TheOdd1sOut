@@ -1,25 +1,29 @@
 /**
- * Раскладка редактора цен и справочников: одна левая вертикаль в обоих
- * представлениях (BUG-003, BUG-011).
+ * Раскладка редактора цен и справочников: одна левая вертикаль и полоса
+ * отбора в обоих представлениях (BUG-003, BUG-011).
  *
  * Жалоба та же, что на справочнике полигонов: подпись таблицы отбита внутрь
  * плашки, а заголовок экрана, пояснение и полоса отбора начинаются от края —
  * вертикали не совпадают. На телефоне место таблицы занимают карточки, и
- * вертикаль обязана совпадать с ними.
+ * вертикаль обязана совпадать с ними. Вторым пакетом замечаний добавлено
+ * чтение полосы отбора: вкладки, поле поиска и счётчик стояли в одной
+ * строке, и счётчик читался частью поля, хотя относится к выборке.
  *
  * Проверки фальсифицируемы: снимите поле у заголовочного блока, верните
- * карточку вокруг таблицы или отбейте панель обновления на другое
- * расстояние — упадёт именно та проверка, которая об этом говорит.
+ * карточку вокруг таблицы, отбейте панель обновления на другое расстояние,
+ * поставьте счётчик сбоку от поля или посчитайте им длину строки поиска —
+ * упадёт именно та проверка, которая об этом говорит.
  *
  *   npx vitest run tests/ReferencesLayout.test.tsx
  *
  * Критерия приёмки на раскладку редактора в пакете аналитики нет, поэтому
  * ссылка на требования.
  *
- * @supports: R-042, R-085
+ * @supports: R-042, R-058, R-085
  */
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { ReferencesPage } from '@/pages/references';
 import { DESKTOP_WIDTH, setViewportWidth } from './viewport';
 import { installThemeStyles, leftInset } from './layout';
@@ -127,5 +131,54 @@ describe('левая вертикаль редактора цен', () => {
       поиск: вертикаль,
       обновление: вертикаль,
     });
+  });
+});
+
+describe('полоса отбора редактора цен', () => {
+  it('на рабочем месте ставит счётчик выборки над полем поиска, а не сбоку', async () => {
+    setViewportWidth(DESKTOP_WIDTH);
+    render(<ReferencesPage />);
+
+    await screen.findByRole('button', { name: new RegExp(`^${ТАРИФ_ИКША}:`) });
+
+    const поле = screen.getByRole('textbox', { name: 'Поиск по полигону или юрлицу' });
+    const выборка = поле.closest('.imolt-references-selection');
+    expect(выборка).not.toBeNull();
+
+    // Счётчик — первый в блоке выборки, поле идёт за ним. Сбоку от поля он
+    // читался его частью, хотя считает показанные записи.
+    expect((выборка as Element).firstElementChild).toBe(узел('.imolt-references-count'));
+    expect(getComputedStyle(выборка as Element).display).toBe('grid');
+
+    // Сама полоса тоже идёт строками: вкладки, счётчик и поле разной высоты
+    // в одной строке читались как три решения подряд.
+    expect(getComputedStyle(screen.getByRole('toolbar', { name: 'Отбор записей справочника' })).display).toBe('grid');
+  });
+
+  it('на телефоне ставит счётчик выборки над тем же полем поиска', async () => {
+    render(<ReferencesPage />);
+
+    await screen.findByRole('button', { name: 'Править полигон: Площадка «Икша»' });
+
+    const выборка = узел('.imolt-references-selection');
+
+    expect(выборка.firstElementChild).toBe(узел('.imolt-references-count'));
+    expect(выборка.querySelector('label[for="references-query-mobile"]')).not.toBeNull();
+  });
+
+  it('счётчик считает показанные записи из найденных, а не длину строки поиска', async () => {
+    setViewportWidth(DESKTOP_WIDTH);
+    const пользователь = userEvent.setup();
+    render(<ReferencesPage />);
+
+    await screen.findByRole('button', { name: new RegExp(`^${ТАРИФ_ИКША}:`) });
+
+    expect(узел('.imolt-references-count').textContent).toBe('Показано полигонов: 2 из 2');
+
+    await пользователь.type(screen.getByRole('textbox', { name: 'Поиск по полигону или юрлицу' }), 'Икша');
+
+    // Показано стало меньше, найдено службой — столько же: счётчик описывает
+    // выборку, а не содержимое поля.
+    await waitFor(() => expect(узел('.imolt-references-count').textContent).toBe('Показано полигонов: 1 из 2'));
   });
 });

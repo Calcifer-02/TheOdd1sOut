@@ -347,7 +347,16 @@ export function CalculatorDesktop({ model }: { model: CalculatorModel }) {
 
               <div className="imolt-desk-filter">
                 <Toolbar ariaLabel="Порядок и отбор по расстоянию">
-                  <Button kind="tertiary" size="s" onClick={model.toggleOrder}>
+                  {/* Подпись переключателя меняется вместе с порядком, и без
+                      резерва под вторую подпись кнопка меняла бы ширину, двигая
+                      соседей полосы управления. Резерв держит место, доступным
+                      именем остаётся текущая подпись (R-024). */}
+                  <Button
+                    kind="tertiary"
+                    size="s"
+                    reserve={view.order === 'asc' ? 'По убыванию' : 'По возрастанию'}
+                    onClick={model.toggleOrder}
+                  >
                     {view.order === 'asc' ? 'По возрастанию' : 'По убыванию'}
                   </Button>
                   <Chip

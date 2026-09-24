@@ -22,7 +22,8 @@ import { useCabinetSection, useCalculations, useDocumentServices, useProfile, us
 import { CabinetDesktop } from './CabinetDesktop';
 import { CabinetMobile } from './CabinetMobile';
 import type { CabinetView } from './CabinetSections';
-import { SignInPanel } from './SignInPanel';
+import { SignInDesktop } from './SignInDesktop';
+import { SignInMobile } from './SignInMobile';
 import { CABINET_CSS } from './styles';
 
 export function CabinetPage() {
@@ -40,8 +41,11 @@ export function CabinetPage() {
   const services = useDocumentServices(identified && section === 'services');
   const order = useServiceOrder();
 
+  // Вход показывается тем же правилом, что и сам кабинет: у состояния «участник
+  // не опознан» два представления, и на широком окне это рабочее место, а не
+  // колонка телефона (R-085, AC-085a).
   if (!identified) {
-    return <SignInPanel />;
+    return wide ? <SignInDesktop /> : <SignInMobile />;
   }
 
   if (profileState.failure !== null) {

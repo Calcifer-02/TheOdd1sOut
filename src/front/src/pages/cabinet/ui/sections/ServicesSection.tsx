@@ -12,6 +12,7 @@
  */
 import { EmptyState, Notice, Skeleton } from '@/shared/ui';
 import type { ServiceOrderState, ServicesState } from '../../model/cabinet';
+import { benefitDetail } from '../../model/entry';
 import { ServiceCard } from './ServiceCard';
 
 export function ServicesSection({
@@ -31,9 +32,9 @@ export function ServicesSection({
         <h1 className="imolt-title" id="imolt-cabinet-services">
           Услуги по документации
         </h1>
-        <p className="imolt-lead">
-          Цена указана от минимального объёма работ – точную назовёт менеджер после уточнения объекта.
-        </p>
+        {/* Подпись раздела и обещание на входе — один текст: вход не должен
+            называть возможность иначе, чем сам раздел. */}
+        <p className="imolt-lead">{benefitDetail('services')}</p>
       </div>
 
       {state.failure !== null && <Notice kind="error">{state.failure}</Notice>}

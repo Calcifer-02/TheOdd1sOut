@@ -137,7 +137,46 @@ export const CABINET_CSS = `
   border-radius: ${radius.card}px;
   background: ${colors.bgSurface};
 }
-.imolt-cabinet-signin { display: grid; gap: ${space.m}px; max-width: 520px; }
+
+/* Вход в кабинет. Раскладка объявлена обоим представлениям, а не одному:
+   класс без правила — мёртвый крючок, по которому нельзя отличить, что
+   представление действительно разведено (R-085, AC-085a). */
+.imolt-cabinet-entry { display: grid; gap: ${space.l}px; }
+.imolt-cabinet-entry--narrow { grid-template-columns: minmax(0, 1fr); }
+
+/* Рабочее место: объяснение занимает основную колонку, перечень возможностей —
+   боковую той же ширины, что и сводка выбора на экране расчёта (разд. 4.4).
+   Одна карточка в половину окна читается как обрезанная колонка телефона —
+   это и было замечанием заказчика по стенду. */
+.imolt-cabinet-entry--wide {
+  grid-template-columns: minmax(0, 1fr) ${layout.sideColumnWidth}px;
+}
+
+/* Вес селектора взят вместе с «imolt-card» не для красоты: общее оформление
+   подключается корнем приложения, а правила экрана — самим экраном, и лист
+   общего слоя ложится в страницу последним. При равном весе он побеждает, и
+   одиночное правило карточки входа теряло свой зазор молча. */
+.imolt-card.imolt-cabinet-signin { display: grid; gap: ${space.m}px; align-content: start; }
+
+/* Мера строки: во всю ширину основной колонки строка уходит за сотню знаков и
+   перестаёт читаться (разд. 4.2). Предел — у текста, а не у карточки: белая
+   поверхность держит ширину колонки. */
+.imolt-cabinet-entry--wide .imolt-cabinet-signin > .imolt-lead,
+.imolt-cabinet-entry--wide .imolt-cabinet-signin > .imolt-notice {
+  max-width: 640px;
+}
+
+.imolt-card.imolt-cabinet-benefits { display: grid; gap: ${space.m}px; align-content: start; }
+.imolt-cabinet-benefit-list { display: grid; gap: ${space.s}px; margin: 0; }
+.imolt-cabinet-benefit { display: grid; gap: ${space.xxs}px; }
+.imolt-cabinet-benefit-name { font-size: 15px; line-height: 21px; font-weight: 600; }
+.imolt-cabinet-benefit-detail {
+  margin: 0;
+  font-size: 13px;
+  line-height: 18px;
+  color: ${colors.textSecondary};
+}
+
 .imolt-cabinet-state { display: flex; align-items: center; gap: ${space.xs}px; flex-wrap: wrap; }
 
 /* Только раскладка и размер: цвет, подчёркивание и видимый фокус ссылки
