@@ -9,7 +9,8 @@
  * @shared: imolt-miniapp
  * @adr: ADR-0008
  */
-import { colors, fonts, layout, radius, space } from './tokens';
+import { BREAKPOINTS } from '@/shared/lib/viewport';
+import { colors, fonts, layout, radius, space, zIndex } from './tokens';
 
 export const THEME_CSS = `
 *, *::before, *::after { box-sizing: border-box; }
@@ -36,6 +37,34 @@ body {
   display: flex;
   flex-direction: column;
   gap: ${space.m}px;
+}
+
+/* Широкий экран — рабочее место, и колонка макета телефона на нём выглядит
+   ошибкой вёрстки: предельная ширина содержимого объявлена дизайн-договором
+   (разд. 4.3). Поля берёт на себя оболочка, поэтому внутри неё страница их
+   не повторяет. */
+@media (min-width: ${BREAKPOINTS.cards}px) {
+  .imolt-page { max-width: ${BREAKPOINTS.container}px; gap: ${space.l}px; }
+}
+
+.imolt-shell .imolt-page {
+  max-width: none;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* Подпись только для вспомогательной технологии: смысл, которого на экране
+   не видно, но который нельзя потерять (состояние загрузки, имя столбца). */
+.imolt-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 .imolt-header {
@@ -188,7 +217,13 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
   outline-offset: 2px;
 }
 
+/* Кнопка: базовый вид — главное действие. Вид называется ролью, поэтому
+   «лаймовая кнопка на экране одна» проверяется по разметке (разд. 4.6). */
 .imolt-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: ${space.xs}px;
   min-height: ${layout.fieldHeight}px;
   padding: 0 ${space.l}px;
   border: 0;
@@ -198,11 +233,19 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
   font-family: ${fonts.ui};
   font-size: 16px;
   font-weight: 700;
+  line-height: 20px;
   cursor: pointer;
+  transition: background-color 150ms ease-out, border-color 150ms ease-out;
 }
 
 .imolt-button:hover { background: ${colors.accentPrimaryHover}; }
+.imolt-button:active { transform: translateY(1px); }
 .imolt-button:disabled { background: ${colors.accentPrimaryDisabled}; color: ${colors.disabledText}; cursor: default; }
+.imolt-button:disabled:active { transform: none; }
+.imolt-button--primary { background: ${colors.accentPrimary}; color: ${colors.textPrimary}; }
+
+/* Малый размер остаётся целью касания: 44 px — нижняя граница (разд. 4.5). */
+.imolt-button--s { min-height: ${layout.touchTarget}px; padding: 0 ${space.m}px; font-size: 14px; }
 
 .imolt-button--secondary {
   min-height: ${layout.touchTarget + 4}px;
@@ -212,10 +255,11 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
 }
 
 .imolt-button--secondary:hover { background: ${colors.accentDark}; opacity: 0.9; }
+.imolt-button--secondary:disabled { background: ${colors.bgSurfaceMuted}; color: ${colors.disabledText}; opacity: 1; }
 
 .imolt-button--tertiary {
   min-height: ${layout.touchTarget}px;
-  padding: 0;
+  padding: 0 ${space.xs}px;
   background: none;
   color: ${colors.link};
   font-weight: 500;
@@ -223,6 +267,42 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
 }
 
 .imolt-button--tertiary:hover { background: none; }
+.imolt-button--tertiary:disabled { background: none; color: ${colors.disabledText}; }
+
+/* Опасное действие: цвет отказа, но не только цвет — подпись называет
+   последствие, а рамка отличает кнопку от обычной поверхности. */
+.imolt-button--danger {
+  background: ${colors.statusBlockedBg};
+  color: ${colors.statusBlockedText};
+  box-shadow: inset 0 0 0 1px ${colors.statusBlockedText};
+  font-weight: 600;
+}
+
+.imolt-button--danger:hover { background: ${colors.statusBlockedBg}; opacity: 0.9; }
+.imolt-button--danger:disabled { background: ${colors.bgSurfaceMuted}; color: ${colors.disabledText}; box-shadow: none; }
+
+.imolt-button-label { white-space: nowrap; }
+
+/* Признак ожидания. При prefers-reduced-motion вращение выключается общим
+   правилом в конце файла, а сам кружок остаётся видимым. */
+.imolt-spinner {
+  width: ${space.m}px;
+  height: ${space.m}px;
+  flex: none;
+  border-radius: ${radius.pill}px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  animation: imolt-spin 800ms linear infinite;
+}
+
+@keyframes imolt-spin { to { transform: rotate(360deg); } }
+
+.imolt-toolbar {
+  display: flex;
+  align-items: center;
+  gap: ${space.xs}px;
+  flex-wrap: wrap;
+}
 
 .imolt-sorts-line { display: flex; align-items: center; gap: ${space.xs}px; flex-wrap: wrap; }
 
@@ -451,6 +531,215 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
 .imolt-allocation-row .imolt-input { width: 96px; height: ${layout.touchTarget}px; }
 
 .imolt-consent { display: flex; gap: ${space.xs}px; align-items: flex-start; font-size: 13px; line-height: 18px; }
+
+/* Подпись флажка кликабельна вместе с ним: цель касания складывается из
+   квадрата и подписи, а 24 px самого флажка до 44 px не дотягивают. */
+.imolt-check-label { cursor: pointer; }
+.imolt-check:disabled { background: ${colors.bgSurfaceMuted}; border-color: ${colors.borderDivider}; cursor: default; }
+.imolt-check:disabled + .imolt-check-label { color: ${colors.disabledText}; cursor: default; }
+
+/* Список выбора: та же высота и то же скругление, что у поля ввода, —
+   соседние управления разной геометрии читаются как сбой вёрстки. */
+.imolt-select {
+  width: 100%;
+  height: ${layout.fieldHeight}px;
+  padding: 0 ${space.s}px;
+  border: 1px solid ${colors.borderDefault};
+  border-radius: ${radius.field}px;
+  background: ${colors.bgSurface};
+  font-family: ${fonts.ui};
+  font-size: 16px;
+  color: ${colors.textPrimary};
+  cursor: pointer;
+}
+
+.imolt-select:hover { border-color: ${colors.accentDark}; }
+.imolt-select:disabled { background: ${colors.bgSurfaceMuted}; color: ${colors.disabledText}; cursor: default; }
+.imolt-select[aria-invalid='true'] { border-color: ${colors.statusBlockedText}; }
+
+.imolt-tab-badge {
+  margin-left: ${space.xxs}px;
+  font-family: ${fonts.numeric};
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Состояние ожидания: полосы на месте будущих строк. */
+.imolt-skeleton-list { display: flex; flex-direction: column; gap: ${space.xs}px; }
+
+.imolt-skeleton-bar {
+  display: block;
+  height: ${space.m}px;
+  border-radius: ${radius.badge}px;
+  background: ${colors.bgSurfaceMuted};
+}
+
+.imolt-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: ${space.xs}px;
+  padding: ${space.l}px ${space.m}px;
+  border-radius: ${radius.field}px;
+  background: ${colors.bgSurfaceMuted};
+  text-align: left;
+}
+
+.imolt-empty-title { margin: 0; font-size: 16px; line-height: 22px; font-weight: 600; }
+.imolt-empty-hint { margin: 0; font-size: 14px; line-height: 20px; color: ${colors.textSecondary}; }
+.imolt-empty-action { margin-top: ${space.xxs}px; }
+
+/* Точка привязки всплывающего окна: окно встаёт под вызвавшим его
+   управлением, а не в углу страницы. */
+.imolt-anchor { position: relative; display: inline-flex; }
+
+/* Всплывающее окно: тень отделяет его от страницы, но страница за ним
+   остаётся видимой и доступной — это не модальное окно (разд. 4.6). */
+.imolt-popover {
+  position: absolute;
+  z-index: ${zIndex.popover};
+  min-width: ${layout.sideColumnWidth}px;
+  max-width: calc(100vw - ${layout.gutter * 2}px);
+  padding: ${space.m}px;
+  border: 1px solid ${colors.borderDefault};
+  border-radius: ${radius.field}px;
+  background: ${colors.bgSurface};
+  box-shadow: ${layout.shadow};
+  display: flex;
+  flex-direction: column;
+  gap: ${space.s}px;
+}
+
+.imolt-popover-head { display: flex; align-items: center; justify-content: space-between; gap: ${space.s}px; }
+.imolt-popover-title { margin: 0; font-size: 16px; line-height: 22px; font-weight: 700; }
+
+.imolt-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: ${space.s}px; }
+.imolt-card-title { margin: 0; font-size: 18px; line-height: 24px; font-weight: 700; }
+.imolt-card-actions { display: flex; align-items: center; gap: ${space.xs}px; }
+
+/* Число с подписью: значение набрано табличными цифрами, чтобы столбец
+   сводки выравнивался по разрядам (разд. 4.2). */
+.imolt-stat { margin: 0; display: flex; flex-direction: column; gap: 2px; }
+.imolt-stat-label { font-size: 12px; line-height: 16px; color: ${colors.textSecondary}; }
+
+.imolt-stat-value {
+  margin: 0;
+  font-family: ${fonts.numeric};
+  font-variant-numeric: tabular-nums;
+  font-size: 20px;
+  line-height: 26px;
+  font-weight: 700;
+}
+
+.imolt-stat-hint { margin: 0; font-size: 12px; line-height: 16px; color: ${colors.textSecondary}; }
+
+.imolt-datestamp { font-size: 12px; line-height: 16px; color: ${colors.textSecondary}; }
+.imolt-datestamp-age { color: ${colors.textPlaceholder}; }
+
+/* Таблица сравнения. Прокрутка горизонтальная: столбцов много, и сжимать их
+   до нечитаемого уже, чем дать увести таблицу вбок. */
+.imolt-table-scroll {
+  position: relative;
+  overflow: auto;
+  max-height: 70vh;
+  border-radius: ${radius.card}px;
+  background: ${colors.bgSurface};
+}
+
+.imolt-table { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 20px; }
+
+.imolt-table-caption {
+  padding: ${space.m}px ${space.m}px ${space.xs}px;
+  text-align: left;
+  font-size: 12px;
+  line-height: 16px;
+  color: ${colors.textSecondary};
+}
+
+/* Шапка остаётся видимой при прокрутке: без неё колонка чисел через десять
+   строк перестаёт быть названной. */
+.imolt-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: ${zIndex.stickyHead};
+  padding: ${space.xs}px ${space.s}px;
+  background: ${colors.bgSurfaceMuted};
+  border-bottom: 1px solid ${colors.borderDivider};
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  color: ${colors.textSecondary};
+  text-align: left;
+  white-space: nowrap;
+}
+
+.imolt-table th[data-align='end'], .imolt-table td[data-align='end'] { text-align: right; }
+
+/* Числовой столбец набран табличными цифрами: суммы сравнивают по разрядам. */
+.imolt-table td[data-align='end'] {
+  font-family: ${fonts.numeric};
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.imolt-table th[data-align='end'] .imolt-table-sort { justify-content: flex-end; width: 100%; }
+
+.imolt-table-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: ${space.xxs}px;
+  min-height: ${layout.touchTarget}px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: ${fonts.ui};
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  color: ${colors.textSecondary};
+  cursor: pointer;
+}
+
+.imolt-table-sort:hover { color: ${colors.textPrimary}; }
+.imolt-table th[aria-sort='ascending'] .imolt-table-sort,
+.imolt-table th[aria-sort='descending'] .imolt-table-sort { color: ${colors.textPrimary}; }
+.imolt-table-sort-mark { flex: none; }
+
+.imolt-table tbody td {
+  height: ${layout.rowHeight}px;
+  padding: ${space.xs}px ${space.s}px;
+  border-bottom: 1px solid ${colors.borderDivider};
+  vertical-align: middle;
+}
+
+.imolt-table tbody tr:hover td { background: ${colors.accentRowHover}; }
+
+/* Выбранная строка: полоса слева и отмеченный флажок. Один цвет строку
+   выбранной не объявляет (разд. 4.6). */
+.imolt-table tbody tr[data-selected='true'] td:first-child { box-shadow: inset 4px 0 0 ${colors.accentPrimary}; }
+
+.imolt-table-pick { width: ${layout.touchTarget}px; text-align: center; }
+.imolt-table-empty { padding: ${space.m}px; }
+.imolt-table-empty, .imolt-table-empty:hover { background: ${colors.bgSurface}; }
+
+.imolt-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: ${space.s}px;
+  flex-wrap: wrap;
+  padding: ${space.s}px 0;
+}
+
+.imolt-pager-count {
+  margin: 0;
+  font-family: ${fonts.numeric};
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  line-height: 18px;
+  color: ${colors.textSecondary};
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }

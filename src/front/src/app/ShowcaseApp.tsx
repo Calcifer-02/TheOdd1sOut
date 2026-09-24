@@ -9,7 +9,7 @@
  * @adr: ADR-0008
  */
 import { Showcase } from '@/pages/showcase';
-import { useThemeStyles } from './useThemeStyles';
+import { useThemeStyles } from '@/shared/ui';
 
 export function ShowcaseApp() {
   useThemeStyles();

@@ -5,5 +5,8 @@
  * @shared: imolt-miniapp
  * @adr: ADR-0008
  */
-export { StatusBadge, badgeStatus, type BadgeStatus } from './ui/StatusBadge';
+export { StatusBadge, badgeStatus, STATUS_WORD, type BadgeStatus } from './ui/StatusBadge';
+export { STALE_AFTER_DAYS, daysBehind, isStale } from './model/staleness';
 export { OptionCard } from './ui/OptionCard';
+export { OptionTable } from './ui/OptionTable';
+export { RouteDetails } from './ui/RouteDetails';

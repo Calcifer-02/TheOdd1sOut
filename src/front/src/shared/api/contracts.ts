@@ -184,6 +184,17 @@ export type AmountConversionItem = {
 
 export type SubscriptionState = 'none' | 'pending' | 'active';
 
+/**
+ * Состояние подписки, как его отдаёт договор: не строка, а запись с датой
+ * окончания. Зеркало договора держало здесь строку, и сравнение
+ * `profile.subscription === 'active'` молча давало ложь на любом участнике с
+ * действующей подпиской.
+ */
+export type SubscriptionStanding = {
+  state: SubscriptionState;
+  activeUntil?: string | null;
+};
+
 export type Profile = {
   id: string;
   maxUserId: string;
@@ -192,7 +203,7 @@ export type Profile = {
   companyName?: string | null;
   inn?: string | null;
   registeredInAisOssig?: boolean | null;
-  subscription: SubscriptionState;
+  subscription: SubscriptionStanding;
 };
 
 export type Session = { accessToken: string; expiresIn: number; profile: Profile };
