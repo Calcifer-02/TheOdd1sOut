@@ -34,6 +34,8 @@ import {
   type TableColumn,
   type TableSort,
 } from '@/shared/ui';
+import { Combobox } from '@/shared/ui/combobox';
+import { Illustration } from '@/shared/ui/illustrations';
 import { formatDistance, formatMoney } from '@/shared/lib/formatting';
 import { Section } from '../ui/Section';
 
@@ -99,6 +101,9 @@ function showCell(row: ShowcaseRow, columnKey: string) {
   return formatMoney({ amount: row.total, currency: 'RUB' });
 }
 
+/** Группы отходов раздела 7 дизайн-договора: выдуманных названий витрине нельзя. */
+const WASTE_GROUP_NAMES = ['Лом бетона и железобетона', 'Древесина от разборки', 'Лом кирпичной кладки'];
+
 export function SharedSection() {
   const [text, setText] = useState('');
   const [unit, setUnit] = useState<'t' | 'm3'>('t');
@@ -111,6 +116,10 @@ export function SharedSection() {
   const [agreed, setAgreed] = useState(true);
   const [sort, setSort] = useState<TableSort>({ key: 'total', direction: 'asc' });
   const [picked, setPicked] = useState<string[]>(['vostok']);
+  // Закрытый список с поиском: строка поиска и выбранная запись справочника —
+  // разные состояния, и витрина обязана показывать их порознь (R-013).
+  const [groupQuery, setGroupQuery] = useState('');
+  const [groupChoice, setGroupChoice] = useState<string | null>(null);
 
   const sorted = [...ROWS].sort((left, right) => {
     const order = sort.direction === 'asc' ? 1 : -1;
@@ -413,6 +422,34 @@ export function SharedSection() {
       <Section title="Загрузка и пустой результат">
         <Skeleton rows={3} label="Идёт загрузка полигонов" />
         <EmptyState title="Пока ничего не выбрано" hint="Отметьте полигон в таблице сравнения" />
+      </Section>
+
+      <Section title="Закрытый список с поиском">
+        <Combobox
+          id="showcase-waste"
+          label="Тип отходов"
+          listLabel="Подсказки типа отходов"
+          placeholder="Название или код"
+          items={WASTE_GROUP_NAMES.filter((name) =>
+            name.toLowerCase().includes(groupQuery.trim().toLowerCase()),
+          )}
+          query={groupQuery}
+          selected={groupChoice}
+          render={(item) => item}
+          onQuery={setGroupQuery}
+          onOpen={() => setGroupQuery('')}
+          onPick={(item) => {
+            setGroupChoice(item);
+            setGroupQuery(item);
+          }}
+          onDismiss={() => setGroupQuery(groupChoice ?? '')}
+        />
+      </Section>
+
+      <Section title="Рисунки объяснений">
+        <Illustration kind="transport" />
+        <Illustration kind="route" />
+        <Illustration kind="statuses" />
       </Section>
 
       <Section title="Подсказки">

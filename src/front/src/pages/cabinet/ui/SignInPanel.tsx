@@ -57,7 +57,7 @@ export function SignInPanel() {
             Напишите чат-боту ИМОЛТ и откройте мини-приложение кнопкой из переписки.
           </p>
           <a
-            className="imolt-cabinet-link"
+            className="imolt-link imolt-cabinet-link"
             href={CHAT_BOT_HREF}
             target="_blank"
             rel="noopener noreferrer"

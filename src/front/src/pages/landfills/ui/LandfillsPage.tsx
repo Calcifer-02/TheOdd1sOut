@@ -45,10 +45,15 @@ export function LandfillsPage() {
 
   return (
     <section className="imolt-landfills" aria-label="Справочник цен полигонов">
-      <h1 className="imolt-title">Справочник цен полигонов</h1>
-      <p className="imolt-lead">
-        Тарифы утилизации по полигонам и группам отходов – без ввода адреса вывоза.
-      </p>
+      {/* Заголовок и пояснение — один смысловой блок: между ними расстояние
+          меньше, чем между блоками экрана, иначе ритм раскладки читается как
+          случайный (BUG-011). */}
+      <header className="imolt-landfills-head">
+        <h1 className="imolt-title">Справочник цен полигонов</h1>
+        <p className="imolt-lead">
+          Тарифы утилизации по полигонам и группам отходов – без ввода адреса вывоза.
+        </p>
+      </header>
 
       <FreshnessBand freshness={screen.freshness} />
 

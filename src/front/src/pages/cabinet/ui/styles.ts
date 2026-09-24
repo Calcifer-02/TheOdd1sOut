@@ -140,8 +140,10 @@ export const CABINET_CSS = `
 .imolt-cabinet-signin { display: grid; gap: ${space.m}px; max-width: 520px; }
 .imolt-cabinet-state { display: flex; align-items: center; gap: ${space.xs}px; flex-wrap: wrap; }
 
+/* Только раскладка и размер: цвет, подчёркивание и видимый фокус ссылки
+   объявлены один раз общим классом .imolt-link (BUG-002). Второе объявление
+   тех же свойств разошлось бы с первым молча. */
 .imolt-cabinet-link {
-  color: ${colors.link};
   font-family: ${fonts.ui};
   font-size: 14px;
   line-height: 20px;

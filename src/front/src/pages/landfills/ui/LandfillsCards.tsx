@@ -41,7 +41,14 @@ export function LandfillsCards({
 
         return (
           <li key={landfill.id} className="imolt-landfill-card" data-status={status}>
-            <Button kind="tertiary" onClick={() => onOpen(landfill.id)}>
+            {/* Название полигона — вход в карточку и первая строка записи:
+                оно выстраивается по левому краю карточки вместе с адресом,
+                а длинное переносится, а не уходит за край (BUG-011). */}
+            <Button
+              kind="tertiary"
+              className="imolt-landfill-card-name"
+              onClick={() => onOpen(landfill.id)}
+            >
               {landfill.name}
             </Button>
             <span className="imolt-landfill-address">{landfill.address}</span>

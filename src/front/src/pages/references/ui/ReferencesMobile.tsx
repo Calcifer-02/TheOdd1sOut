@@ -33,6 +33,7 @@ import type { Landfill } from '@/shared/api/references';
 import type { WasteGroup } from '@/shared/api/contracts';
 import { formatDate, formatMoney, formatNumber } from '@/shared/lib/formatting';
 import { latestTariffDate, tariffCellKey, tariffOf, transportCellKey } from '../model/editor';
+import { AccessNotice } from './AccessNotice';
 import { EditableCell } from './EditableCell';
 import { ManualStatusForm } from './ManualStatusForm';
 import { SyncRunPanel } from './SyncRunPanel';
@@ -55,15 +56,13 @@ export function ReferencesMobile({ editor, route, importing }: ReferencesViewPro
 
   const refusals = (
     <>
+      {/* Объяснение закрытой правки — то же, что на рабочем месте: текст
+          один на оба представления, вторая копия разошлась бы (BUG-012). */}
       {editor.maintenanceRefusal !== null && (
-        <Notice kind="error">
-          {editor.maintenanceRefusal.title}
-          {editor.maintenanceRefusal.detail ? `. ${editor.maintenanceRefusal.detail}` : ''}
-          {' Справочник открыт для чтения: значения показаны, правка закрыта.'}
-          <Button kind="tertiary" size="s" onClick={() => void editor.retryMaintenance()}>
-            Проверить право заново
-          </Button>
-        </Notice>
+        <AccessNotice
+          refusal={editor.maintenanceRefusal}
+          onRetry={() => void editor.retryMaintenance()}
+        />
       )}
       {editor.loadRefusal !== null && (
         <Notice kind="error">

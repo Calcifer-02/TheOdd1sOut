@@ -13,7 +13,6 @@ import { useState } from 'react';
 import { STATUS_WORD } from '@/entities/landfill';
 import {
   Button,
-  Card,
   DataTable,
   DateStamp,
   Field,
@@ -35,6 +34,7 @@ import {
   tariffOf,
   transportCellKey,
 } from '../model/editor';
+import { AccessNotice } from './AccessNotice';
 import { EditableCell } from './EditableCell';
 import { ManualStatusForm } from './ManualStatusForm';
 import { SyncRunPanel } from './SyncRunPanel';
@@ -72,7 +72,7 @@ export function ReferencesDesktop({ editor, route, importing }: ReferencesViewPr
   return (
     <div className="imolt-references">
       <div className="imolt-references-head">
-        <div>
+        <div className="imolt-references-head-text">
           <h1 className="imolt-references-title">Цены и справочники</h1>
           <span className="imolt-references-subtitle">
             Менеджер данных ИМОЛТ – тарифы утилизации, цены перевозки и статусы приёма
@@ -104,14 +104,10 @@ export function ReferencesDesktop({ editor, route, importing }: ReferencesViewPr
       )}
 
       {editor.maintenanceRefusal !== null && (
-        <Notice kind="error">
-          {editor.maintenanceRefusal.title}
-          {editor.maintenanceRefusal.detail ? `. ${editor.maintenanceRefusal.detail}` : ''}
-          {' Справочник открыт для чтения: значения показаны, правка закрыта.'}
-          <Button kind="tertiary" size="s" onClick={() => void editor.retryMaintenance()}>
-            Проверить право заново
-          </Button>
-        </Notice>
+        <AccessNotice
+          refusal={editor.maintenanceRefusal}
+          onRetry={() => void editor.retryMaintenance()}
+        />
       )}
 
       {editor.loadRefusal !== null && (
@@ -188,47 +184,49 @@ export function ReferencesDesktop({ editor, route, importing }: ReferencesViewPr
 
       {editor.loading && <Skeleton rows={5} label="Справочник загружается" />}
 
+      {/* Таблица — сама плашка: у неё есть поверхность, скругление и поле
+          подписи. Карточка поверх неё давала вторую рамку и вторую отбивку,
+          и подпись таблицы уезжала вправо от заголовка экрана (BUG-003). */}
       {!editor.loading && route.tab === 'landfills' && (
-        <Card>
-          <DataTable
-            caption="Тарифы утилизации за тонну по полигонам и группам отходов"
-            columns={[
-              NAME_COLUMN,
-              ...editor.wasteGroups.map((group) => ({
-                key: `group:${group.id}`,
-                title: group.name,
-                align: 'end' as const,
-              })),
-              STATUS_COLUMN,
-              DATE_COLUMN,
-            ]}
-            rows={landfills}
-            rowKey={(landfill: Landfill) => landfill.id}
-            empty="Полигонов с таким названием или юрлицом нет"
-            cell={(landfill: Landfill, column: string) =>
-              landfillCell(landfill, column, editor, cellRefusalOf)
-            }
-          />
-        </Card>
+        <DataTable
+          caption="Тарифы утилизации за тонну по полигонам и группам отходов"
+          columns={[
+            NAME_COLUMN,
+            ...editor.wasteGroups.map((group) => ({
+              key: `group:${group.id}`,
+              title: group.name,
+              align: 'end' as const,
+            })),
+            STATUS_COLUMN,
+            DATE_COLUMN,
+          ]}
+          rows={landfills}
+          rowKey={(landfill: Landfill) => landfill.id}
+          empty="Полигонов с таким названием или юрлицом нет"
+          cell={(landfill: Landfill, column: string) =>
+            landfillCell(landfill, column, editor, cellRefusalOf)
+          }
+        />
       )}
 
       {!editor.loading && route.tab === 'wasteGroups' && (
-        <Card>
-          <DataTable
-            caption="Цены перевозки и коэффициенты плотности по группам отходов"
-            columns={WASTE_GROUP_COLUMNS}
-            rows={wasteGroups}
-            rowKey={(group: WasteGroup) => group.id}
-            empty="Групп отходов с таким названием или кодом нет"
-            cell={(group: WasteGroup, column: string) =>
-              wasteGroupCell(group, column, editor, cellRefusalOf)
-            }
-          />
-          <span className="imolt-references-subtitle">
-            Изменение цены перевозки применяется ко всем новым расчётам. Выпущенные коммерческие
-            предложения остаются с ценами на дату выпуска.
-          </span>
-        </Card>
+        <DataTable
+          caption="Цены перевозки и коэффициенты плотности по группам отходов"
+          columns={WASTE_GROUP_COLUMNS}
+          rows={wasteGroups}
+          rowKey={(group: WasteGroup) => group.id}
+          empty="Групп отходов с таким названием или кодом нет"
+          cell={(group: WasteGroup, column: string) =>
+            wasteGroupCell(group, column, editor, cellRefusalOf)
+          }
+        />
+      )}
+
+      {!editor.loading && route.tab === 'wasteGroups' && (
+        <span className="imolt-references-subtitle">
+          Изменение цены перевозки применяется ко всем новым расчётам. Выпущенные коммерческие
+          предложения остаются с ценами на дату выпуска.
+        </span>
       )}
     </div>
   );
@@ -242,13 +240,15 @@ function landfillCell(
   refusalOfCell: (key: string) => string | null,
 ) {
   if (column === 'name') {
+    // Название и юридическое лицо — две строки ячейки: подряд идущие span
+    // остались бы в одной строке и читались бы одним слитым названием.
     return (
-      <>
+      <span className="imolt-references-cell-name">
         <span className="imolt-references-card-name">{landfill.name}</span>
         <span className="imolt-references-card-entity">
           {landfill.legalEntity ?? 'юридическое лицо не указано'}
         </span>
-      </>
+      </span>
     );
   }
 

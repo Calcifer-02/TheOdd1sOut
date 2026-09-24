@@ -14,6 +14,7 @@ import { configure, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { CabinetPage } from '@/pages/cabinet';
+import { CABINET_CSS } from '@/pages/cabinet/ui/styles';
 import { forget, signIn } from '@/entities/participant';
 import {
   installCabinetStub,
@@ -149,5 +150,18 @@ describe('кабинет на телефоне', () => {
     const сообщение = await screen.findByRole('alert');
     expect(сообщение).toHaveTextContent('Служба расчёта временно недоступна');
     expect(сообщение.textContent, 'код причины вышел на экран').not.toContain('urn:imolt');
+  });
+
+  // Оформление ссылки объявлено один раз общим классом: у кабинета остаётся
+  // только раскладка. Второе объявление цвета и подчёркивания разошлось бы с
+  // первым молча, а браузерная черта по умолчанию и была замечанием (BUG-002).
+  it('ссылка кабинета оформлена общим классом, а не своим', async () => {
+    render(<CabinetPage />);
+
+    const ссылка = await screen.findByRole('link', { name: /чат-бот/i });
+    expect(ссылка.className, 'ссылка не подключена к общему оформлению').toContain('imolt-link');
+    expect(CABINET_CSS, 'кабинет объявляет цвет ссылки во второй раз').not.toMatch(
+      /\.imolt-cabinet-link\s*\{[^}]*color:/,
+    );
   });
 });

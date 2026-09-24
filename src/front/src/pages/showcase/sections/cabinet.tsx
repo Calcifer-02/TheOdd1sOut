@@ -12,7 +12,7 @@
  * @supports: R-084
  */
 import { useState } from 'react';
-import { ProfileCard, SubscriptionBadge } from '@/entities/participant';
+import { ParticipantSummary, ProfileCard, SubscriptionBadge } from '@/entities/participant';
 import { CabinetSideNav, CabinetTabs, type CabinetSection as SectionKey } from '@/widgets/cabinet-nav';
 import type { ParticipantProfile } from '@/shared/api/cabinet';
 import { Section } from '../ui/Section';
@@ -57,6 +57,12 @@ export function CabinetSection() {
         <div className="imolt-row">
           <SubscriptionBadge subscription={{ state: 'active', activeUntil: '2026-12-31' }} />
         </div>
+      </Section>
+
+      <Section title="Профиль в шапке: заглушка и опознанный участник">
+        <ParticipantSummary profile={null} />
+        <ParticipantSummary profile={CARRIER_PROFILE} />
+        <ParticipantSummary profile={CARRIER_PROFILE} compact />
       </Section>
 
       <Section title="Профиль участника">

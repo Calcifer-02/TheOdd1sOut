@@ -13,15 +13,19 @@
  * одному экрану не подключается. Иначе новый экран заставлял бы править
  * оболочку, а оболочка — знать порядок загрузки чужих данных.
  *
- * @supports: R-058
+ * Кроме переходов шапка держит профиль участника: на рабочем месте он и есть
+ * вход в кабинет (BUG-009), а до опознания — заглушка гостя (BUG-007).
+ *
+ * @supports: R-058, R-049
  * @adr: ADR-0008
  */
 import { useRef, type ReactNode } from 'react';
-import { participant, subscriptionLine } from '@/entities/participant';
+import { ParticipantSummary, useParticipant } from '@/entities/participant';
+import type { Profile } from '@/shared/api/contracts';
 import { hashOf, useRoute } from '@/shared/lib/routing';
 import { isWide, useViewport } from '@/shared/lib/viewport';
 import { useStyles } from '@/shared/ui';
-import { NAVIGATION_LABEL, SECTIONS } from '../model/navigation';
+import { CABINET_PATH, NAVIGATION_LABEL, SECTIONS, TOP_SECTIONS } from '../model/navigation';
 import { SHELL_CSS } from './shellStyles';
 
 /**
@@ -55,38 +59,48 @@ function navIcon(path: string): ReactNode {
 }
 
 /**
- * Состояние участника. Текст читается сам по себе: «Гость» рядом с именем
- * сервиса не объясняет, что именно гостевое (R-058).
+ * Профиль участника в шапке — вход в кабинет.
  *
- * Собственного входа у сервиса нет — личность даёт платформа (ADR-0006), —
- * поэтому неопознанный участник показывается как рабочее состояние, а не как
- * приглашение к входу, которого не будет.
+ * Профиль был абзацем, и попасть в кабинет нажатием на него было нельзя:
+ * единственный вход вёл через пункт перечня разделов (BUG-009). Ссылка, а не
+ * кнопка: это переход на экран, и он обязан работать адресом — открываться в
+ * новой вкладке и возвращаться кнопкой «назад» (ADR-0008, инвариант 5).
+ *
+ * Доступное имя собирается из содержимого, а не задаётся отдельной подписью:
+ * подпись поверх видимого текста расходится с ним и ломает голосовое
+ * управление. Скрытый зачин называет назначение ссылки, видимое имя участника
+ * остаётся частью доступного имени.
  */
-function participantText(narrow: boolean): string {
-  const session = participant();
-
-  if (session === null) {
-    return narrow ? 'Гость' : 'Участник не опознан';
-  }
-
-  const name = session.profile.displayName ?? 'Участник';
-
-  if (narrow) {
-    return name;
-  }
-
-  // Состояние подписки — запись `{ state, activeUntil }`, а не код строкой:
-  // сравнение самой записи с кодом молча давало ложь у любого участника с
-  // действующей подпиской. Слово берётся у сущности, чтобы шапка и кабинет не
-  // называли одно состояние по-разному.
-  return `${name} · ${subscriptionLine(session.profile.subscription.state)}`;
+function ProfileLink({
+  profile,
+  current,
+  compact,
+}: {
+  profile: Profile | null;
+  current: string;
+  compact: boolean;
+}) {
+  return (
+    <a
+      className="imolt-shell-profile"
+      href={hashOf(CABINET_PATH)}
+      aria-current={current === CABINET_PATH ? 'page' : undefined}
+    >
+      <span className="imolt-visually-hidden">Кабинет участника. </span>
+      <ParticipantSummary profile={profile} compact={compact} />
+    </a>
+  );
 }
 
-/** Горизонтальные переходы в шапке рабочего места. */
+/**
+ * Горизонтальные переходы в шапке рабочего места. Перечень тот же, что у
+ * нижней панели, за вычетом разделов со своим входом рядом: кабинет открывает
+ * профиль справа в шапке (BUG-009).
+ */
 function TopNav({ current }: { current: string }) {
   return (
     <nav className="imolt-shell-nav" aria-label={NAVIGATION_LABEL}>
-      {SECTIONS.map((section) => (
+      {TOP_SECTIONS.map((section) => (
         <a
           key={section.path}
           className="imolt-shell-link"
@@ -128,11 +142,11 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const narrow = !isWide(viewport);
 
-  // Сессия живёт в памяти модуля и о своей смене не извещает. Оболочка
-  // перечитывает её при каждой отрисовке, а отрисовка случается на смене
-  // адреса: участник опознаётся в кабинете, и возврат на любой экран
-  // показывает уже новое состояние.
-  const state = participantText(narrow);
+  // Сессия появляется уже после первой отрисовки: платформа отдаёт личность
+  // обменом стартовых параметров. Оболочка подписывается на её смену, а не
+  // перечитывает при случайной отрисовке, — иначе заглушка гостя осталась бы
+  // в шапке до следующего перехода (BUG-007).
+  const session = useParticipant();
 
   return (
     <div className={narrow ? 'imolt-shell imolt-shell--narrow' : 'imolt-shell'}>
@@ -144,10 +158,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="imolt-shell-head-line">
           <span className="imolt-shell-brand">ИМОЛТ</span>
           {!narrow && <TopNav current={route.path} />}
-          <p className="imolt-shell-participant">
-            <span className="imolt-visually-hidden">Состояние участника: </span>
-            {state}
-          </p>
+          <ProfileLink profile={session?.profile ?? null} current={route.path} compact={narrow} />
         </div>
       </header>
 

@@ -10,7 +10,7 @@
  * Разметка и только разметка: состояние, обращения к расчётной части и правила
  * выбора живут в модели экрана и общие с мобильным представлением.
  *
- * @req: R-019, R-023, R-024, R-025, R-027, R-029, R-048, R-058, R-060
+ * @req: R-013, R-019, R-023, R-024, R-025, R-027, R-029, R-048, R-058, R-060
  * @adr: ADR-0008
  */
 import {
@@ -25,19 +25,23 @@ import {
   Popover,
   RadioPills,
   Select,
-  SuggestList,
   Tabs,
   Toolbar,
   useStyles,
 } from '@/shared/ui';
+import { Combobox } from '@/shared/ui/combobox';
+import { Illustration } from '@/shared/ui/illustrations';
 import { OptionTable, RouteDetails } from '@/entities/landfill';
 import { AllocationPanel, SummaryPanel } from '@/widgets/selection-summary';
 import type { Unit } from '@/shared/lib/formatting';
 import { formatMoney, formatNumber, unitName } from '@/shared/lib/formatting';
 import { BREAKPOINTS } from '@/shared/lib/viewport';
-import { colors, radius, space } from '@/shared/ui/tokens';
+import { colors, layout, radius, space } from '@/shared/ui/tokens';
 import { SORTS, type CalculatorModel } from '../model/useCalculator';
 import { emptyResultTitle } from '../model/emptyResult';
+
+/** Колонка «Объём и мера»: узкое поле количества плюс переключатель меры. */
+const AMOUNT_COLUMN = 280;
 
 const DESKTOP_CSS = `
 /* Предельная ширина и поля содержимого принадлежат оболочке приложения
@@ -53,11 +57,16 @@ const DESKTOP_CSS = `
   flex-direction: column;
   gap: ${space.l}px;
 }
-.imolt-desk-address { max-width: 640px; position: relative; }
 .imolt-desk-lines { display: flex; flex-direction: column; gap: ${space.s}px; align-items: flex-start; }
+
+/* Одна вертикаль формы: адрес вывоза занимает ту же колонку, что и название
+   типа отходов, поэтому оба поля начинаются и заканчиваются на одной линии.
+   Разная ширина соседних строк читается как лесенка и сбивает с того, где у
+   формы край (BUG-011). */
+.imolt-desk-address,
 .imolt-desk-line {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px auto;
+  grid-template-columns: minmax(0, 1fr) ${AMOUNT_COLUMN}px auto;
   gap: ${space.s}px;
   align-items: flex-end;
   width: 100%;
@@ -71,10 +80,21 @@ const DESKTOP_CSS = `
   gap: ${space.l}px;
   flex-wrap: wrap;
 }
+
+/* Подвал формы ставит флажок утилизации и «Рассчитать» на одну линию, а для
+   этого обе цели нажатия обязаны быть одной высоты: общая строка согласия
+   рассчитана на нижнюю границу 44 px, а кнопка рядом выше, и разница видна
+   как съехавший флажок (BUG-005; разд. 4.5). Выравнивание внутри самой
+   строки — дело общего компонента, здесь только высота ряда. */
+.imolt-desk-form-foot > .imolt-consent { min-height: ${layout.fieldHeight}px; }
+
 .imolt-desk-benefits {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: ${space.s}px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 .imolt-desk-benefit {
   background: ${colors.bgSurface};
@@ -84,6 +104,10 @@ const DESKTOP_CSS = `
   flex-direction: column;
   gap: ${space.xs}px;
 }
+
+/* Рисунок карточки — второй план: цвет он берёт ролью из токенов, а первым
+   остаётся заголовок и объяснение словами (разд. 4.5). */
+.imolt-desk-benefit .imolt-illustration { color: ${colors.textSecondary}; flex: none; }
 .imolt-desk-results { display: flex; gap: ${space.l}px; align-items: flex-start; flex-wrap: wrap; }
 .imolt-desk-main { flex: 1 1 620px; min-width: 0; display: flex; flex-direction: column; gap: ${space.m}px; }
 .imolt-desk-side { flex: 1 1 360px; max-width: 360px; min-width: 0; position: sticky; top: ${space.l}px; }
@@ -119,6 +143,7 @@ const DESKTOP_CSS = `
   .imolt-desk-side { position: static; max-width: none; flex-basis: 100%; }
   .imolt-desk-benefits { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .imolt-desk-pickup-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .imolt-desk-address,
   .imolt-desk-line { grid-template-columns: minmax(0, 1fr); }
 }
 `;
@@ -152,18 +177,22 @@ export function CalculatorDesktop({ model }: { model: CalculatorModel }) {
 
       <section className="imolt-desk-form" aria-label="Исходные данные расчёта">
         <div className="imolt-desk-address">
-          <Field
+          {/* Адрес — единственное поле формы со свободным вводом: перечня
+              адресов не существует, и закрыть список здесь нельзя. Расчёт
+              всё равно опирается на координаты выбранной подсказки, а не на
+              набранную строку (R-012, AC-012d), поэтому обработчика возврата
+              у поля нет. */}
+          <Combobox
             id="address"
             label="Адрес вывоза"
-            value={model.addressQuery}
-            error={model.addressError}
+            listLabel="Подсказки адреса"
             placeholder="Начните вводить адрес"
-            onChange={model.changeAddress}
-          />
-          <SuggestList
+            error={model.addressError}
+            query={model.addressQuery}
+            selected={model.addressPicked}
             items={model.addressSuggestions}
-            label="Подсказки адреса"
             render={(item) => item.value}
+            onQuery={model.changeAddress}
             onPick={model.pickAddress}
           />
         </div>
@@ -171,21 +200,22 @@ export function CalculatorDesktop({ model }: { model: CalculatorModel }) {
         <div className="imolt-desk-lines">
           {model.lines.map((line, index) => (
             <div className="imolt-desk-line" key={line.key}>
-              <div>
-                <Field
-                  id={`waste-${index}`}
-                  label="Тип отходов"
-                  value={line.query}
-                  placeholder="Название или код"
-                  onChange={(value) => void model.searchGroup(line.key, value)}
-                />
-                <SuggestList
-                  items={line.suggestions}
-                  label="Подсказки типа отходов"
-                  render={(item) => item.name}
-                  onPick={(item) => model.pickGroup(line, item)}
-                />
-              </div>
+              {/* Тип отходов берётся только из справочника: набранная строка
+                  значением не становится (R-013, BUG-004). */}
+              <Combobox
+                id={`waste-${index}`}
+                label="Тип отходов"
+                listLabel="Типы отходов справочника"
+                placeholder="Название или код"
+                query={line.query}
+                selected={line.group ?? null}
+                items={line.suggestions}
+                render={(group) => group.name}
+                onQuery={(value) => void model.searchGroup(line.key, value)}
+                onOpen={() => void model.browseGroups(line)}
+                onDismiss={() => model.dismissGroup(line)}
+                onPick={(group) => model.pickGroup(line, group)}
+              />
 
               <div className="imolt-desk-line-amount">
                 <Field
@@ -251,28 +281,34 @@ export function CalculatorDesktop({ model }: { model: CalculatorModel }) {
       </section>
 
       {!calculation && !model.failure && (
-        <div className="imolt-desk-benefits">
-          <div className="imolt-desk-benefit">
+        // Три равноправных объяснения — это список, а не три случайных блока:
+        // так вспомогательная технология называет их число, а карточка
+        // получает рисунок вместо голого абзаца (BUG-006).
+        <ul className="imolt-desk-benefits" aria-label="Что даёт расчёт">
+          <li className="imolt-desk-benefit">
+            <Illustration kind="transport" />
             <strong>Цена видна сразу</strong>
             <span className="imolt-lead">
               Никаких «оставьте телефон». Перевозка и утилизация показаны отдельно по каждому
               полигону.
             </span>
-          </div>
-          <div className="imolt-desk-benefit">
+          </li>
+          <li className="imolt-desk-benefit">
+            <Illustration kind="route" />
             <strong>Расстояние по дорогам</strong>
             <span className="imolt-lead">
               Не по прямой: маршрут от вашего адреса до каждой площадки считается по дорожной
               сети.
             </span>
-          </div>
-          <div className="imolt-desk-benefit">
+          </li>
+          <li className="imolt-desk-benefit">
+            <Illustration kind="statuses" />
             <strong>Актуальные статусы</strong>
             <span className="imolt-lead">
               У каждого полигона статус приёма и дата, на которую подтверждены цена и допуск.
             </span>
-          </div>
-        </div>
+          </li>
+        </ul>
       )}
 
       {model.failure && (

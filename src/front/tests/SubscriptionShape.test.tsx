@@ -63,7 +63,12 @@ describe('состояние подписки в шапке сервиса', () 
       </AppShell>,
     );
 
-    expect(screen.getByText(/Пётр Кузнецов/)).toHaveTextContent('подписка действует');
+    // Имя и состояние подписки стоят в профиле шапки — входе в кабинет
+    // (BUG-009), поэтому состояние спрашивается у него целиком.
+    const профиль = screen.getByRole('link', { name: /Кабинет участника/u });
+
+    expect(профиль).toHaveTextContent('Пётр Кузнецов');
+    expect(профиль).toHaveTextContent('подписка действует');
 
     forget();
     delete window.WebApp;
@@ -78,7 +83,10 @@ describe('состояние подписки в шапке сервиса', () 
       </AppShell>,
     );
 
-    expect(screen.getByText(/Пётр Кузнецов/)).toHaveTextContent('подписки нет');
+    const профиль = screen.getByRole('link', { name: /Кабинет участника/u });
+
+    expect(профиль).toHaveTextContent('Пётр Кузнецов');
+    expect(профиль).toHaveTextContent('подписки нет');
 
     forget();
     delete window.WebApp;

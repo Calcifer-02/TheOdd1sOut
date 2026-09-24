@@ -28,7 +28,7 @@ export function CalculationsCards({ rows }: { rows: CalculationSummary[] }) {
               {row.quoteNumber ? ` · предложение ${row.quoteNumber}` : ' · предложение не выпущено'}
             </span>
             <a
-              className="imolt-cabinet-link"
+              className="imolt-link imolt-cabinet-link"
               href={calculationHref(row.id)}
               aria-label={`Открыть расчёт: ${row.pickupAddress}`}
             >

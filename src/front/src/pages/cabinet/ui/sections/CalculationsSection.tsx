@@ -26,7 +26,7 @@ export function CalculationsSection({ state, wide }: { state: CalculationsState;
           </h1>
           <p className="imolt-lead">Сохранённые расчёты и выпущенные коммерческие предложения</p>
         </div>
-        <a className="imolt-cabinet-link" href={hashOf(CALCULATOR_PATH)}>
+        <a className="imolt-link imolt-cabinet-link" href={hashOf(CALCULATOR_PATH)}>
           Новый расчёт
         </a>
       </div>

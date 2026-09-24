@@ -203,20 +203,44 @@ export function useCalculator() {
     setLines((current) => current.map((line) => (line.key === key ? { ...line, ...change } : line)));
   }
 
-  async function searchGroup(key: string, query: string) {
-    updateLine(key, { query, group: undefined, tons: undefined });
-
-    if (query.trim().length < 2) {
-      updateLine(key, { suggestions: [] });
-      return;
-    }
-
+  /** Записи справочника по строке поиска; пустая строка — весь справочник. */
+  async function loadGroups(key: string, query: string) {
     try {
-      const page = await searchWasteGroups(query.trim());
+      const page = await searchWasteGroups(query);
       updateLine(key, { suggestions: page.items });
     } catch {
       updateLine(key, { suggestions: [] });
     }
+  }
+
+  /**
+   * Набор строки поиска. Выбранная запись справочника при этом не снимается:
+   * тип отходов меняется только выбором из списка, и пользователь, начавший
+   * править строку и передумавший, обязан получить прежнее значение обратно
+   * (R-013, BUG-004).
+   */
+  async function searchGroup(key: string, query: string) {
+    updateLine(key, { query });
+    await loadGroups(key, query.trim());
+  }
+
+  /**
+   * Список открылся. Если запись уже выбрана, показывается весь справочник:
+   * человек открывает список, чтобы сменить выбор, и сужать его до одной
+   * строки бессмысленно. Иначе повторяется поиск по набранному, а пустая
+   * строка — это опять весь справочник (R-013).
+   */
+  async function browseGroups(line: WasteLine) {
+    await loadGroups(line.key, line.group ? '' : line.query.trim());
+  }
+
+  /**
+   * Пользователь ушёл из поля, ничего не выбрав: строка возвращается к
+   * выбранной записи справочника или пустеет. Произвольный текст типом
+   * отходов не становится (R-013, BUG-004).
+   */
+  function dismissGroup(line: WasteLine) {
+    updateLine(line.key, { query: line.group?.name ?? '', suggestions: [] });
   }
 
   // Пересчёт кубометров в тонны делает служба: коэффициент плотности живёт в
@@ -615,6 +639,8 @@ export function useCalculator() {
     changeAddress,
     pickAddress,
     searchGroup,
+    browseGroups,
+    dismissGroup,
     pickGroup,
     changeAmount,
     changeUnit,

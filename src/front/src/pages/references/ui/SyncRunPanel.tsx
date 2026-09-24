@@ -6,12 +6,19 @@
  * прогон, которого не было. Отказ по сессии показывается так же честно:
  * имитировать вход мини-приложение не вправе (ADR-0006).
  *
+ * Отказ, закрывающий правку, приходит и сюда, и в объяснение над панелью.
+ * Полные слова службы здесь повторяли бы это объяснение вторым абзацем, да
+ * ещё советом открыть мини-приложение, которое уже открыто (BUG-012):
+ * панель называет только своё ограничение.
+ *
  * @req: R-044
+ * @supports: R-050
  * @adr: ADR-0008
  */
 import { Button, Notice } from '@/shared/ui';
 import { formatDate } from '@/shared/lib/formatting';
-import type { Refusal, SyncRun } from '@/shared/api/maintenance';
+import { deniesMaintenance, type Refusal, type SyncRun } from '@/shared/api/maintenance';
+import { runRefusalReason } from '@/entities/participant';
 
 /** Откуда пришло обновление. Перечень источников — из договора. */
 const SOURCE_NAMES: Record<SyncRun['source'], string> = {
@@ -85,7 +92,11 @@ export function SyncRunPanel({ run, refusal, disabled = false, onManualStatus }:
         {run === null && refusal !== null && (
           <Notice kind="warning">
             {refusal.title}
-            {refusal.detail ? `. ${refusal.detail}` : ''}
+            {deniesMaintenance(refusal)
+              ? `. ${runRefusalReason(refusal)}`
+              : refusal.detail
+                ? `. ${refusal.detail}`
+                : ''}
           </Notice>
         )}
 

@@ -9,10 +9,11 @@
  * Разметка и только разметка: состояние, обращения к расчётной части и правила
  * выбора живут в модели экрана и общие с десктопным представлением.
  *
- * @req: R-019, R-023, R-048, R-058, R-061
+ * @req: R-013, R-019, R-023, R-048, R-058, R-061
  * @adr: ADR-0008
  */
-import { Field, Notice, RadioPills, Sheet, Skeleton, SuggestList } from '@/shared/ui';
+import { Field, Notice, RadioPills, Sheet, Skeleton } from '@/shared/ui';
+import { Combobox } from '@/shared/ui/combobox';
 import { OptionCard, RouteDetails, badgeStatus } from '@/entities/landfill';
 import { AllocationPanel, SummaryBar } from '@/widgets/selection-summary';
 import type { Unit } from '@/shared/lib/formatting';
@@ -31,35 +32,40 @@ export function CalculatorMobile({ model }: { model: CalculatorModel }) {
       </p>
 
       <section className="imolt-card" aria-label="Исходные данные расчёта">
-        <Field
+        {/* Адрес — единственное поле формы со свободным вводом: перечня
+            адресов не существует. Расчёт опирается на координаты выбранной
+            подсказки, а не на набранную строку (R-012, AC-012d). */}
+        <Combobox
           id="address"
           label="Адрес вывоза"
-          value={model.addressQuery}
-          error={model.addressError}
+          listLabel="Подсказки адреса"
           placeholder="Улица и дом"
-          onChange={model.changeAddress}
-        />
-        <SuggestList
+          error={model.addressError}
+          query={model.addressQuery}
+          selected={model.addressPicked}
           items={model.addressSuggestions}
-          label="Подсказки адреса"
           render={(item) => item.value}
+          onQuery={model.changeAddress}
           onPick={model.pickAddress}
         />
 
         {model.lines.map((line, index) => (
           <div key={line.key}>
-            <Field
+            {/* Тип отходов берётся только из справочника: набранная строка
+                значением не становится (R-013, BUG-004). */}
+            <Combobox
               id={`waste-${index}`}
               label="Тип отходов"
-              value={line.query}
+              listLabel="Типы отходов справочника"
               placeholder="Название или код"
-              onChange={(value) => void model.searchGroup(line.key, value)}
-            />
-            <SuggestList
+              query={line.query}
+              selected={line.group ?? null}
               items={line.suggestions}
-              label="Подсказки типа отходов"
-              render={(item) => item.name}
-              onPick={(item) => model.pickGroup(line, item)}
+              render={(group) => group.name}
+              onQuery={(value) => void model.searchGroup(line.key, value)}
+              onOpen={() => void model.browseGroups(line)}
+              onDismiss={() => model.dismissGroup(line)}
+              onPick={(group) => model.pickGroup(line, group)}
             />
 
             <div className="imolt-row">

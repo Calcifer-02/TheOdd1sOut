@@ -22,6 +22,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { LandfillsPage } from '@/pages/landfills';
+import { IDENTITY_FROM_MAX, READING_OPEN } from '@/entities/participant';
 import { DESKTOP_WIDTH, setViewportWidth } from './viewport';
 import {
   IKSHA,
@@ -268,7 +269,35 @@ describe('отзывы о полигоне', () => {
 
     const отказ = await screen.findByRole('alert');
 
-    expect(отказ).toHaveTextContent('Требуется вход через MAX');
+    expect(отказ).toHaveTextContent('Нужна сессия участника');
     expect(отказ.textContent).not.toContain('401');
+  });
+
+  // Один заголовок «Нужна сессия участника» ничего не объясняет: сервис
+  // открывается и в браузере, и в MAX, и человек не понимает, чего от него
+  // хотят. Причина называется теми же словами, что в редакторе цен, — текст
+  // живёт у сущности «участник» и в проекте один (BUG-012, ADR-0006).
+  it('отказ по сессии называет причину, а не только заголовок службы', async () => {
+    const пользователь = userEvent.setup();
+    служба.answerWith('POST /v1/landfills/:id/reviews', {
+      status: 401,
+      headers: PROBLEM_HEADERS,
+      body: SESSION_REQUIRED,
+    });
+    открыть(КАРТОЧКА_ВОСТОКА);
+    render(<LandfillsPage />);
+
+    await заголовокКарточки(VOSTOK.name);
+    await пользователь.click(screen.getByRole('radio', { name: '5' }));
+    await пользователь.click(screen.getByRole('button', { name: 'Отправить отзыв' }));
+
+    const отказ = await screen.findByRole('alert');
+
+    expect(отказ.textContent, 'причина отказа не названа').toContain(IDENTITY_FROM_MAX);
+    expect(отказ.textContent, 'не сказано, что чтение осталось открытым').toContain(READING_OPEN);
+    expect(
+      отказ.textContent,
+      'экран советует открыть мини-приложение, которое уже открыто',
+    ).not.toContain('откройте мини-приложение');
   });
 });

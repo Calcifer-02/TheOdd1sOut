@@ -72,12 +72,13 @@ export function LandfillsFilters({
         ))}
       </div>
 
+      {/* Сброс стоит в той же полосе, что поиск и группы: обёртка выносила
+          его отдельной строкой, и полоса отбора распадалась на три блока
+          (BUG-003). */}
       {filtered ? (
-        <div>
-          <Button kind="tertiary" onClick={onReset}>
-            Сбросить отбор
-          </Button>
-        </div>
+        <Button kind="tertiary" onClick={onReset}>
+          Сбросить отбор
+        </Button>
       ) : null}
     </div>
   );

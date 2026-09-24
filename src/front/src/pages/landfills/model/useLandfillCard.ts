@@ -17,6 +17,7 @@ import {
   type ReviewPage,
 } from '@/shared/api/references';
 import type { ReviewDraft } from '@/entities/review';
+import { accessRefusalLine } from '@/entities/participant';
 import { problemTitle } from './useLandfillsScreen';
 
 /** Сколько отзывов показывается в карточке сразу. */
@@ -119,7 +120,16 @@ export function useLandfillCard(landfillId: string): LandfillCardState {
           setReviews(page);
           setSent(true);
         } catch (error) {
-          setSendFailure(problemTitle(error));
+          // Отказ по личности или по праву без причины читается как
+          // противоречие: мини-приложение уже открыто, а экран советует его
+          // открыть. Причину называет сущность «участник» — она же объясняет
+          // это в редакторе цен, и второй редакции текста в проекте нет
+          // (BUG-012, ADR-0006).
+          const объяснение = accessRefusalLine(error);
+
+          setSendFailure(
+            объяснение === '' ? problemTitle(error) : `${problemTitle(error)}. ${объяснение}`,
+          );
         } finally {
           setSending(false);
         }

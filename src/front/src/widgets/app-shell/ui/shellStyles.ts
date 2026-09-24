@@ -90,14 +90,31 @@ export const SHELL_CSS = `
   border-bottom-color: ${colors.brand};
 }
 
-.imolt-shell-participant {
-  margin: 0 0 0 auto;
-  font-family: ${fonts.ui};
-  font-size: 13px;
-  line-height: 18px;
-  color: ${colors.textSecondary};
-  text-align: right;
-  flex: none;
+/* Профиль участника — вход в кабинет (BUG-009), поэтому он цель касания
+   полной высоты, а не строка текста. Видимый фокус даёт общее правило
+   :focus-visible темы: второе такое правило рано или поздно разошлось бы с
+   первым. Ужимается, а не выталкивает перечень разделов: длинное имя
+   участника обрезается многоточием внутри самого профиля. */
+.imolt-shell-profile {
+  margin-left: auto;
+  flex: 0 1 auto;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  min-height: ${layout.touchTarget}px;
+  padding: 0 ${space.xs}px;
+  border-radius: ${radius.pill}px;
+  text-decoration: none;
+  color: ${colors.textPrimary};
+}
+
+.imolt-shell-profile:hover { background: ${colors.bgSurfaceMuted}; }
+
+/* Открытый кабинет отмечен заливкой и обводкой: одной заливкой текущий раздел
+   не отличался бы от наведения (разд. 4.6). */
+.imolt-shell-profile[aria-current='page'] {
+  background: ${colors.bgSurfaceMuted};
+  box-shadow: inset 0 0 0 1px ${colors.borderDefault};
 }
 
 .imolt-shell-main { flex: 1; }

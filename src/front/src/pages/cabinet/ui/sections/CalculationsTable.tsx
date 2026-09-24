@@ -49,7 +49,7 @@ export function CalculationsTable({ rows }: { rows: CalculationSummary[] }) {
 
         return (
           <a
-            className="imolt-cabinet-link"
+            className="imolt-link imolt-cabinet-link"
             href={calculationHref(row.id)}
             aria-label={`Открыть расчёт: ${row.pickupAddress}`}
           >

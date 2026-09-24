@@ -9,7 +9,8 @@
 // Проверки фальсифицируемы: держите оба представления в странице сразу,
 // уберите `aria-current` у текущего раздела, снимите доступное имя у перечня
 // переходов, оберните содержимое во что угодно кроме основной области,
-// покажите на телефоне шапочные переходы вместо нижней панели — они упадут.
+// покажите на телефоне шапочные переходы вместо нижней панели, верните
+// кабинет в шапочный перечень или уберите его из нижней панели — они упадут.
 //
 //   npx vitest run tests/AppShell.test.tsx
 //
@@ -50,9 +51,24 @@ describe('оболочка на широком экране', () => {
     expect(screen.getAllByRole('navigation')).toHaveLength(1);
     expect(within(screen.getByRole('banner')).getByRole('navigation')).toBe(переходы);
 
-    for (const раздел of ['Расчёт', 'Полигоны', 'Предложение', 'Кабинет', 'Редактор цен']) {
+    for (const раздел of ['Расчёт', 'Полигоны', 'Предложение', 'Редактор цен']) {
       expect(within(переходы).getByRole('link', { name: раздел })).toBeInTheDocument();
     }
+  });
+
+  it('широкое окно ведёт в кабинет профилем, а не вторым пунктом перечня', () => {
+    setViewportWidth(DESKTOP_WIDTH);
+    отрисовать();
+
+    // Два входа в один экран в одной шапке — шум: на рабочем месте кабинет
+    // открывает профиль справа (BUG-009).
+    const переходы = screen.getByRole('navigation', { name: 'Разделы сервиса' });
+    expect(within(переходы).queryByRole('link', { name: 'Кабинет' })).toBeNull();
+
+    expect(screen.getByRole('link', { name: /Кабинет участника/u })).toHaveAttribute(
+      'href',
+      '#/cabinet',
+    );
   });
 
   it('переход ведёт на адрес своего экрана', () => {
@@ -67,11 +83,11 @@ describe('оболочка на широком экране', () => {
     expect(screen.getByRole('link', { name: 'Расчёт' })).toHaveAttribute('href', '#');
   });
 
-  it('неопознанный участник показан состоянием, а не приглашением к входу', () => {
+  it('неопознанный участник показан заглушкой профиля, а не приглашением к входу', () => {
     setViewportWidth(DESKTOP_WIDTH);
     отрисовать();
 
-    expect(screen.getByText('Участник не опознан')).toBeInTheDocument();
+    expect(screen.getByText('Гость')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Войти/u })).toBeNull();
   });
 });
@@ -86,6 +102,9 @@ describe('оболочка на телефоне', () => {
     expect(within(screen.getByRole('banner')).queryByRole('navigation')).toBeNull();
     expect(screen.getByRole('banner').contains(переходы)).toBe(false);
 
+    // Кабинет на телефоне остаётся в перечне: профиль стоит у верхней кромки,
+    // до которой большой палец не достаёт, — ровно та причина, по которой
+    // нижняя панель существует (BUG-009).
     for (const раздел of ['Расчёт', 'Полигоны', 'Предложение', 'Кабинет', 'Редактор цен']) {
       expect(within(переходы).getByRole('link', { name: раздел })).toBeInTheDocument();
     }

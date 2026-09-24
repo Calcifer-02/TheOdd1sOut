@@ -176,9 +176,14 @@ export const REGISTRY_UNAVAILABLE = problem(
   'Повторите попытку',
 );
 
+/*
+ * Код причины и заголовок — те же, что у службы (`Problems.AuthenticationRequired`,
+ * `ProblemResponses`). Заглушка, отвечающая своими словами, проверяет не службу,
+ * а саму себя: ветвление экрана по коду причины на ней не срабатывало.
+ */
 export const SESSION_REQUIRED = problem(
-  'urn:imolt:problem:unauthorized',
-  'Требуется вход через MAX',
+  'urn:imolt:problem:authentication-required',
+  'Нужна сессия участника',
   401,
 );
 
