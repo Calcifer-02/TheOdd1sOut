@@ -6,6 +6,9 @@
  * книзу: итог и главное действие обязаны оставаться на виду, сколько бы строк
  * ни было (дизайн-договор, разд. 4.5; макет `ux/КП мобильный.dc.html`).
  *
+ * Перечень ранее выпущенных предложений идёт карточками, а не таблицей: на
+ * ширине 390 столбцы не читаются (R-085, AC-085a; AC-036h).
+ *
  * @supports: R-036, R-037, R-059
  * @adr: ADR-0008
  */
@@ -19,16 +22,22 @@ import {
 } from '@/entities/quote';
 import { Notice } from '@/shared/ui';
 import { formatMoney } from '@/shared/lib/formatting';
+import type { QuoteHistoryState } from '../model/useQuoteHistory';
 import { QUOTE_LABELS, type QuoteView } from '../model/view';
 import { QuotePrimaryAction, QuoteSecondaryActions } from './QuoteActions';
+import { QuoteHistoryCards } from './QuoteHistory';
 
 export function QuoteMobile({
   view,
+  calculationId,
+  history,
   issuing,
   issueFailure,
   onIssue,
 }: {
   view: QuoteView;
+  calculationId: string;
+  history: QuoteHistoryState;
   issuing: boolean;
   issueFailure: { title: string; detail?: string } | null;
   onIssue: () => void;
@@ -69,6 +78,8 @@ export function QuoteMobile({
         <QuoteContacts />
       </section>
 
+      <QuoteHistoryCards history={history} />
+
       <div className="imolt-bar" role="group" aria-label={QUOTE_LABELS.actions}>
         <div className="imolt-bar-line">
           <span className="imolt-quote-sum-label">К оплате</span>
@@ -78,7 +89,7 @@ export function QuoteMobile({
           <QuotePrimaryAction view={view} issuing={issuing} onIssue={onIssue} />
         </div>
         <div className="imolt-bar-actions">
-          <QuoteSecondaryActions />
+          <QuoteSecondaryActions calculationId={calculationId} />
         </div>
       </div>
     </div>

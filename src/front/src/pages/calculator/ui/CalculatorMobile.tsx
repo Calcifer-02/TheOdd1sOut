@@ -12,7 +12,7 @@
  * @req: R-013, R-019, R-023, R-048, R-058, R-061
  * @adr: ADR-0008
  */
-import { Button, Field, Notice, RadioPills, Sheet, Skeleton } from '@/shared/ui';
+import { Button, Field, Notice, PhoneField, RadioPills, Sheet, Skeleton } from '@/shared/ui';
 import { Combobox } from '@/shared/ui/combobox';
 import { OptionCard, RouteDetails, badgeStatus } from '@/entities/landfill';
 import { AllocationPanel, SummaryBar } from '@/widgets/selection-summary';
@@ -262,16 +262,6 @@ export function CalculatorMobile({ model }: { model: CalculatorModel }) {
             />
           )}
 
-          {model.quote && (
-            <Notice kind="done">
-              <strong>КП сохранено</strong>
-              <a href={model.quoteDocumentHref} download>
-                Открыть коммерческое предложение
-              </a>
-              <a href={model.quoteScreenHref}>Открыть экран предложения</a>
-            </Notice>
-          )}
-
           {model.pickupDone && (
             <Notice kind="done">
               <strong>Заявка принята</strong>
@@ -282,18 +272,29 @@ export function CalculatorMobile({ model }: { model: CalculatorModel }) {
       )}
 
       {selection && selection.selectedLandfills > 0 && (
+        // Та же кнопка, что в боковой колонке рабочего места: нижняя панель
+        // ведёт на предпросмотр предложения, а не выпускает его (R-036,
+        // AC-036f).
         <SummaryBar
           selectedCount={selection.selectedLandfills}
           total={model.allocationTotal ?? formatMoney(selection.total)}
-          downloadLabel="Скачать КП"
-          onDownload={() => void model.download()}
+          quoteLabel="Сформировать предложение"
+          onOpenQuote={model.openQuote}
           onPickup={model.openPickup}
         />
       )}
 
       {model.route && (
+        // Сколько полигонов в сводке, решает не лист: их перечень пришёл
+        // вместе с вопросом — из карточки полигона спрашивают про один, из
+        // сводки выбора про весь выбор (R-032).
         <Sheet title="Маршрут" onClose={model.closeRoute}>
-          <RouteDetails option={model.route.option} summary={model.route.summary} />
+          <RouteDetails
+            option={model.route.options}
+            summary={model.route.summary}
+            scope={model.route.scope}
+            unavailable={model.route.unavailable}
+          />
         </Sheet>
       )}
 
@@ -305,31 +306,25 @@ export function CalculatorMobile({ model }: { model: CalculatorModel }) {
             value={model.pickup.name}
             onChange={value => model.changePickup({ name: value })}
           />
-          <Field
+          <PhoneField
             id="pickup-phone"
             label="Телефон"
             value={model.pickup.phone}
-            inputMode="tel"
-            placeholder="+7"
-            onChange={value => model.changePickup({ phone: value })}
+            error={model.pickupPhoneError}
+            onChange={phone => model.changePickup({ phone })}
           />
-          <div className="imolt-grow">
-            <label className="imolt-label" htmlFor="pickup-landfill">
-              Полигон
-            </label>
-            <select
-              id="pickup-landfill"
-              className="imolt-input"
-              value={model.pickup.landfillName}
-              onChange={event => model.changePickup({ landfillName: event.target.value })}
-            >
-              {(selection?.entries ?? []).map(entry => (
-                <option key={entry.landfillId} value={model.landfillNameById(entry.landfillId) ?? ''}>
-                  {model.landfillNameById(entry.landfillId)}
-                </option>
-              ))}
-            </select>
-          </div>
+          <Combobox
+            id="pickup-landfill"
+            label="Полигон"
+            listLabel="Выбранные полигоны"
+            query={model.pickupLandfillQuery}
+            selected={model.pickup.landfillName || null}
+            items={model.pickupLandfills}
+            render={name => name}
+            onQuery={model.setPickupLandfillQuery}
+            onDismiss={model.dismissPickupLandfill}
+            onPick={model.pickPickupLandfill}
+          />
           <label className="imolt-consent">
             <input
               type="checkbox"

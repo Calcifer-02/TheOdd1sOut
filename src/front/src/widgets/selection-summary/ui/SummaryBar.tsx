@@ -14,15 +14,18 @@
 export function SummaryBar({
   selectedCount,
   total,
-  onDownload,
+  onOpenQuote,
   onPickup,
-  downloadLabel,
+  quoteLabel,
 }: {
   selectedCount: number;
   total: string;
-  onDownload: () => void;
+  /** Главное действие сводки: переход на экран предложения (R-036, AC-036f). */
+  onOpenQuote: () => void;
   onPickup: () => void;
-  downloadLabel: string;
+  /** Подпись главного действия: её называет экран, а не панель. */
+  /** Подпись главного действия: переход к предложению, а не скачивание файла. */
+  quoteLabel: string;
 }) {
   return (
     <div className="imolt-bar" role="group" aria-label={`Выбрано полигонов: ${selectedCount}`}>
@@ -34,8 +37,8 @@ export function SummaryBar({
         <button type="button" className="imolt-button imolt-button--secondary" onClick={onPickup}>
           Заявка на вывоз
         </button>
-        <button type="button" className="imolt-button" onClick={onDownload}>
-          {downloadLabel}
+        <button type="button" className="imolt-button" onClick={onOpenQuote}>
+          {quoteLabel}
         </button>
       </div>
     </div>

@@ -38,12 +38,18 @@ export const REFERENCES_CSS = `
 .imolt-references > .imolt-references-actions,
 .imolt-references > .imolt-references-selection,
 .imolt-references > .imolt-toolbar,
-.imolt-references > .imolt-tabs,
 .imolt-references > .imolt-grow,
 .imolt-references > .imolt-notice,
 .imolt-references > .imolt-button {
   padding-left: ${INSET}px;
   padding-right: ${INSET}px;
+}
+
+/* Вкладка — таблетка со своим боковым полем: отбивка экрана сложилась бы с ним
+   дважды и увела подпись правее остального текста. */
+.imolt-references > .imolt-tabs {
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .imolt-references-head {
@@ -226,6 +232,15 @@ export const REFERENCES_CSS = `
 .imolt-references-form-row .imolt-references-cell-form input { width: ${layout.amountWidth}px; }
 
 .imolt-references-status { display: flex; gap: ${space.xs}px; align-items: center; flex-wrap: wrap; }
+
+/* Значок состояния с датой — одной строкой, действие под ним: вперемешку они
+   расползались по трём строкам ячейки. */
+.imolt-references-status-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: ${space.xs}px;
+}
 
 .imolt-references-count { margin: 0; font-size: 13px; line-height: 18px; color: ${colors.textSecondary}; }
 `;

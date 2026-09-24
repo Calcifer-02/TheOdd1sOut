@@ -22,9 +22,9 @@ import {
   Field,
   Notice,
   Pager,
+  PhoneField,
   Popover,
   RadioPills,
-  Select,
   Tabs,
   Toolbar,
   useStyles,
@@ -536,12 +536,11 @@ export function CalculatorDesktop({ model }: { model: CalculatorModel }) {
                   lines={summaryLines}
                   total={model.allocationTotal ?? (selection ? formatMoney(selection.total) : '')}
                   totalLabel={model.allocationTotal ? 'Итого по распределению' : 'Итого'}
-                  onRoute={() => {
-                    const first = (shown?.items ?? []).find(option => selectedIds.includes(option.landfillId));
-                    if (first) {
-                      void model.openRoute(first);
-                    }
-                  }}
+                  // Сводка спрашивает про весь выбор, а не про первый отмеченный
+                  // полигон: требование R-032 называет выбранные полигоны во
+                  // множественном числе. Кнопка в строке таблицы — другой
+                  // случай: там спрашивают про один полигон строки.
+                  onRoute={() => void model.openSelectionRoute()}
                   onOpenQuote={model.openQuote}
                   onPickup={model.openPickup}
                 />
@@ -581,23 +580,24 @@ export function CalculatorDesktop({ model }: { model: CalculatorModel }) {
                   placeholder="Как к вам обращаться"
                   onChange={value => model.changePickup({ name: value })}
                 />
-                <Field
+                <PhoneField
                   id="pickup-phone"
                   label="Телефон"
                   value={model.pickup.phone}
-                  inputMode="tel"
-                  placeholder="+7"
-                  onChange={value => model.changePickup({ phone: value })}
+                  error={model.pickupPhoneError}
+                  onChange={phone => model.changePickup({ phone })}
                 />
-                <Select
+                <Combobox
                   id="pickup-landfill"
                   label="Полигон"
-                  value={model.pickup.landfillName}
-                  options={(selection?.entries ?? []).map(entry => ({
-                    value: model.landfillNameById(entry.landfillId) ?? '',
-                    label: model.landfillNameById(entry.landfillId) ?? '',
-                  }))}
-                  onPick={landfillName => model.changePickup({ landfillName })}
+                  listLabel="Выбранные полигоны"
+                  query={model.pickupLandfillQuery}
+                  selected={model.pickup.landfillName || null}
+                  items={model.pickupLandfills}
+                  render={name => name}
+                  onQuery={model.setPickupLandfillQuery}
+                  onDismiss={model.dismissPickupLandfill}
+                  onPick={model.pickPickupLandfill}
                 />
               </div>
               <div className="imolt-desk-pickup-foot">
@@ -625,11 +625,14 @@ export function CalculatorDesktop({ model }: { model: CalculatorModel }) {
           отрисовывалось внутри ячейки и резалось областью прокрутки таблицы
           (решение заказчика от 24.09.2026, R-033). Открывают его и кнопка
           строки, и сводка выбора, а фокус после закрытия возвращается на то
-          управление, которое окно открыло. */}
+          управление, которое окно открыло. Сколько полигонов показать, решает
+          не окно: их перечень пришёл вместе с вопросом. */}
       {model.route && calculation && (
         <RouteModal
-          option={model.route.option}
+          option={model.route.options}
           summary={model.route.summary}
+          scope={model.route.scope}
+          unavailable={model.route.unavailable}
           pickup={calculation.pickupAddress}
           onClose={model.closeRoute}
         />

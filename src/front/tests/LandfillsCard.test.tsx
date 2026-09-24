@@ -174,9 +174,23 @@ describe('отзывы о полигоне', () => {
 
     await заголовокКарточки(VOSTOK.name);
 
-    expect(await screen.findByText('3 из 5')).toBeInTheDocument();
-    expect(screen.getByText('4 из 5')).toBeInTheDocument();
-    expect(screen.getByText('5 из 5')).toBeInTheDocument();
+    // Оценка собрана кругом: число и шкала внутри него — разные узлы, и
+    // спрашивать её надо доступным именем, а не сплошным текстом.
+    expect(await screen.findByRole('img', { name: 'Оценка 3 из 5' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Оценка 4 из 5' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Оценка 5 из 5' })).toBeInTheDocument();
+
+    // Набранная строкой, оценка прижималась к левому краю и терялась рядом с
+    // датой отзыва. Круг делает её единой величиной: число и шкала внутри
+    // стоят по центру, и выравнивание не зависит от того, куда его поставили.
+    const круг = screen.getByRole('img', { name: 'Оценка 4 из 5' });
+    const стиль = getComputedStyle(круг);
+
+    expect(стиль.borderRadius, 'оценка не собрана кругом').toBe('50%');
+    expect(стиль.alignItems, 'содержимое круга не по центру').toBe('center');
+    expect(стиль.justifyContent, 'содержимое круга не по центру').toBe('center');
+    // «4» без шкалы читается и как «четыре отзыва» (R-031).
+    expect(круг.textContent, 'шкала пропала из видимого текста').toContain('из 5');
   });
 
   it('у полигона без отзывов средняя оценка названа отсутствующей, а не нулём', async () => {
@@ -186,7 +200,7 @@ describe('отзывы о полигоне', () => {
     await заголовокКарточки(VOSTOK.name);
 
     expect(await screen.findByText('Оценок пока нет')).toBeInTheDocument();
-    expect(screen.queryByText('0 из 5')).toBeNull();
+    expect(screen.queryByRole('img', { name: 'Оценка 0 из 5' })).toBeNull();
     expect(screen.getByText('Отзывов пока нет')).toBeInTheDocument();
   });
 
@@ -217,7 +231,7 @@ describe('отзывы о полигоне', () => {
     expect(служба.bodyOf('POST /v1/landfills/:id/reviews')).toEqual({ rating: 4 });
     // Средняя перечитана у службы, а не досчитана на месте.
     expect(служба.sentTo('GET /v1/landfills/:id/reviews').length).toBeGreaterThan(прочитано);
-    expect(screen.getAllByText('4 из 5')).toHaveLength(2);
+    expect(screen.getAllByRole('img', { name: 'Оценка 4 из 5' })).toHaveLength(2);
   });
 
   it('пояснение отзыва уходит вместе с оценкой, когда оно написано', async () => {
@@ -282,7 +296,9 @@ describe('отзывы о полигоне', () => {
     const отказ = await screen.findByRole('alert');
 
     expect(отказ.textContent, 'причина отказа не названа').toContain(IDENTITY_FROM_MAX);
-    expect(отказ.textContent, 'не сказано, что чтение осталось открытым').toContain(READING_OPEN);
+    // Форма отзыва к ценам отношения не имеет: слова редактора цен здесь были
+    // бы не о том, и общий текст их больше не несёт.
+    expect(отказ.textContent, 'на форме отзыва говорится о ценах').not.toContain(READING_OPEN);
     expect(отказ.textContent, 'экран советует открыть мини-приложение, которое уже открыто').not.toContain(
       'откройте мини-приложение',
     );

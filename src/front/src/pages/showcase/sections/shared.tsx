@@ -21,6 +21,7 @@ import {
   EmptyState,
   Field,
   Notice,
+  PhoneField,
   Pager,
   Popover,
   RadioPills,
@@ -112,6 +113,7 @@ export function SharedSection() {
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [detachedOpen, setDetachedOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [phone, setPhone] = useState('');
   const [limitOpen, setLimitOpen] = useState(false);
   const [tab, setTab] = useState<'concrete' | 'wood'>('concrete');
   const [near, setNear] = useState(false);
@@ -444,6 +446,10 @@ export function SharedSection() {
           }}
           onDismiss={() => setGroupQuery(groupChoice ?? '')}
         />
+      </Section>
+
+      <Section title="Телефон">
+        <PhoneField id="showcase-phone" label="Телефон" value={phone} onChange={setPhone} />
       </Section>
 
       <Section title="Модальное окно">

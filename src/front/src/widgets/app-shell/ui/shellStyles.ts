@@ -11,6 +11,13 @@
 import { BREAKPOINTS } from '@/shared/lib/viewport';
 import { colors, fonts, layout, radius, space, zIndex } from '@/shared/ui/tokens';
 
+/**
+ * Внутренняя отбивка блоков экрана: та же величина, которой общий слой
+ * отбивает содержимое ячейки таблицы. Экраны выстраивают по ней свою левую
+ * вертикаль, и шапка обязана встать на ту же.
+ */
+const CONTENT_INSET = space.s;
+
 export const SHELL_CSS = `
 .imolt-shell { min-height: 100vh; display: flex; flex-direction: column; }
 
@@ -44,11 +51,16 @@ export const SHELL_CSS = `
   border-bottom: 1px solid ${colors.borderDefault};
 }
 
+/* Боковое поле шапки — поле содержимого плюс внутренняя отбивка экрана.
+   Экраны отбивают свои блоки на ширину бокового поля ячейки таблицы, чтобы
+   заголовок и подпись таблицы стояли на одной вертикали; без той же отбивки
+   марка в шапке вставала на 12 точек левее всего остального, и на экране
+   получались две вертикали вместо одной. */
 .imolt-shell-head-line {
   max-width: ${BREAKPOINTS.container}px;
   margin: 0 auto;
   min-height: ${layout.headerHeight}px;
-  padding: ${space.s}px ${layout.gutterWide}px;
+  padding: ${space.s}px ${layout.gutterWide + CONTENT_INSET}px;
   display: flex;
   align-items: center;
   gap: ${space.l}px;
@@ -130,7 +142,7 @@ export const SHELL_CSS = `
 /* Телефон: шапка ниже, содержимое во всю ширину, поля — 16 px (разд. 4.3). */
 .imolt-shell--narrow .imolt-shell-head-line {
   min-height: ${layout.headerHeightCompact}px;
-  padding: 0 ${layout.gutter}px;
+  padding: 0 ${layout.gutter + CONTENT_INSET}px;
   gap: ${space.s}px;
 }
 

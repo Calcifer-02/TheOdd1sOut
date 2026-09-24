@@ -8,13 +8,14 @@
  *
  * Проверки фальсифицируемы: выпустите предложение при открытии экрана,
  * сложите итог из строк вместо ответа службы, выпустите второе предложение
- * при повторном скачивании, покажите код отказа вместо заголовка, уберите
- * слово «предварительная» или оставьте пустой экран без расчёта в адресе —
- * они упадут.
+ * при повторном скачивании, покажите ссылку на файл до выпуска, уроните расчёт
+ * из адреса возврата, покажите код отказа вместо заголовка, уберите слово
+ * «предварительная» или оставьте пустой экран без расчёта в адресе — они
+ * упадут.
  *
  *   npx vitest run tests/QuoteScreen.test.tsx
  *
- * @ac: AC-036e
+ * @ac: AC-036e, AC-036g
  * @supports: R-036, R-037, R-038, R-059
  */
 import { render, screen, waitFor, within } from '@testing-library/react';
@@ -163,6 +164,16 @@ describe('выпуск предложения', () => {
   });
 
   /** @ac: AC-036e */
+  it('до выпуска скачивать нечего: ссылки на файл на экране нет', async () => {
+    await openQuote();
+
+    // Адрес файла даёт ответ о выпущенном предложении, и до выпуска его не
+    // существует: показанная заранее ссылка вела бы в никуда (R-036).
+    expect(screen.queryByRole('link', { name: 'Скачать файл' })).toBeNull();
+    expect(issuedQuotes()).toBe(0);
+  });
+
+  /** @ac: AC-036e */
   it('повторное скачивание не отправляет второго запроса на выпуск', async () => {
     const user = userEvent.setup();
     await openQuote();
@@ -238,6 +249,34 @@ describe('выпуск предложения', () => {
     expect(issueButton()).toBeEnabled();
     await user.click(issueButton());
     await waitFor(() => expect(issuedQuotes()).toBe(2));
+  });
+});
+
+describe('возврат к расчёту', () => {
+  /** @ac: AC-036g */
+  it('на телефоне открывает тот же расчёт, а не пустую форму', async () => {
+    const user = userEvent.setup();
+    await openQuote();
+
+    const bar = screen.getByRole('group', { name: 'Действия с предложением' });
+    await user.click(within(bar).getByRole('button', { name: 'Вернуться к расчёту' }));
+
+    // Экран расчёта восстанавливает набранные данные и выбранные полигоны из
+    // адреса (`@/shared/lib/viewState`): без расчёта в адресе он открылся бы
+    // пустым.
+    expect(window.location.hash).toBe(`#?calc=${CALCULATION_ID}`);
+  });
+
+  /** @ac: AC-036g */
+  it('на рабочем месте несёт расчёт и при переходе к заявке на вывоз', async () => {
+    const user = userEvent.setup();
+    setViewportWidth(DESKTOP_WIDTH);
+    await openQuote();
+
+    const aside = screen.getByRole('complementary', { name: 'Действия с предложением' });
+    await user.click(within(aside).getByRole('button', { name: 'Оформить заявку на вывоз' }));
+
+    expect(window.location.hash).toBe(`#?calc=${CALCULATION_ID}`);
   });
 });
 

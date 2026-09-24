@@ -24,6 +24,13 @@ import { useRoute } from '@/shared/lib/routing';
 export const CALCULATION_PARAMETER = 'calc';
 
 /**
+ * Путь экрана предложения. Объявлен здесь же, рядом с именем параметра:
+ * строка истории ведёт на этот же экран, и второе написание пути разошлось бы
+ * с первым молча.
+ */
+export const QUOTE_PATH = '/quote';
+
+/**
  * Отказ службы для экрана: заголовок, а не код. Код — внутреннее имя причины,
  * и показывать его пользователю нечего (ADR-0008, инвариант 4).
  */
@@ -46,6 +53,12 @@ export type QuoteScreenState =
 
 export type QuoteScreen = {
   state: QuoteScreenState;
+  /**
+   * Расчёт, названный адресом; пустая строка — расчёт не назван. Нужен
+   * действиям экрана: возврат обязан открыть расчёт с набранными данными, а не
+   * пустую форму (AC-036g).
+   */
+  calculationId: string;
   /** Выпустить предложение по расчёту. */
   issue: () => void;
   /** Повторить неудавшуюся загрузку расчёта. */
@@ -124,5 +137,5 @@ export function useQuoteScreen(): QuoteScreen {
 
   const retry = useCallback(() => setAttempt(value => value + 1), []);
 
-  return { state, issue, retry };
+  return { state, calculationId, issue, retry };
 }

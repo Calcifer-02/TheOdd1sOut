@@ -193,6 +193,20 @@ export const LANDFILLS_CSS = `
   padding-right: 0;
   justify-content: flex-start;
   text-align: left;
+  border-radius: ${radius.field}px;
+}
+
+/* Отклик на наведение у названия — подчёркивание, а не заливка: общий слой
+   рисует третьестепенную кнопку таблеткой в 999 точек, и заливка без бокового
+   поля обрезала первую и последнюю буквы перенесённой строки. Составной
+   селектор нужен потому, что лист общего слоя ложится в страницу последним и
+   одиночный он перебивает. */
+@media (hover: hover) {
+  .imolt-landfill-name > .imolt-button:hover:not(:disabled),
+  .imolt-landfill-card > .imolt-landfill-card-name:hover:not(:disabled) {
+    background: none;
+    text-decoration-thickness: ${stroke.emphasis}px;
+  }
 }
 
 .imolt-landfill-name .imolt-button-label,

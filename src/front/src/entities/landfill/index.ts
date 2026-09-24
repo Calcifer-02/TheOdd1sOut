@@ -11,3 +11,4 @@ export { OptionCard } from './ui/OptionCard';
 export { OptionTable } from './ui/OptionTable';
 export { RouteDetails } from './ui/RouteDetails';
 export { RouteModal } from './ui/RouteModal';
+export { routeRows, type RouteRow, type RouteScope } from './model/routeSummary';

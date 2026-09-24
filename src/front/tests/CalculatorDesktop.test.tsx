@@ -507,4 +507,64 @@ describe('заявка на вывоз на широком экране', () => 
     expect(stub.sentTo('POST /v1/pickup-requests'), 'без явного согласия заявка не создаётся (R-054)').toHaveLength(0);
     expect(await screen.findByRole('alert')).toHaveTextContent(/соглас/iu);
   });
+
+  it('номер не дописан — заявка не уходит, причина названа', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await calculateConcrete(user);
+
+    await user.click(landfillCheckbox(VOSTOK.landfillName));
+    await screen.findByText(/Выбрано\s1/u);
+    await user.click(screen.getByRole('button', { name: 'Оставить заявку на вывоз' }));
+    await user.type(await screen.findByLabelText('Имя'), 'Иван');
+    await user.type(screen.getByLabelText('Телефон'), '8916123');
+    await user.click(screen.getByRole('checkbox', { name: /персональных данных/u }));
+    await user.click(screen.getByRole('button', { name: 'Отправить заявку' }));
+
+    expect(stub.sentTo('POST /v1/pickup-requests'), 'по недобранному номеру перезвонить нельзя').toHaveLength(0);
+    expect(await screen.findByRole('alert')).toHaveTextContent(/десять цифр/u);
+  });
+
+  it('номер дописан — в заявку уходит запись договора, а не набранная строка', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await calculateConcrete(user);
+
+    await user.click(landfillCheckbox(VOSTOK.landfillName));
+    await screen.findByText(/Выбрано\s1/u);
+    await user.click(screen.getByRole('button', { name: 'Оставить заявку на вывоз' }));
+    await user.type(await screen.findByLabelText('Имя'), 'Иван');
+    await user.type(screen.getByLabelText('Телефон'), '89161234567');
+
+    expect(screen.getByLabelText('Телефон'), 'разделители расставляет поле').toHaveValue('+7 916 123 45 67');
+
+    await user.click(screen.getByRole('checkbox', { name: /персональных данных/u }));
+    await user.click(screen.getByRole('button', { name: 'Отправить заявку' }));
+
+    const [заявка] = stub.sentTo('POST /v1/pickup-requests');
+
+    expect(заявка?.body, 'договор допускает «+7» и десять цифр без пробелов').toMatchObject({
+      phone: '+79161234567',
+    });
+  });
+
+  it('полигон выбирается закрытым списком, а не выпадающим списком браузера', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await calculateConcrete(user);
+
+    await user.click(landfillCheckbox(VOSTOK.landfillName));
+    await screen.findByText(/Выбрано\s1/u);
+    await user.click(screen.getByRole('button', { name: 'Оставить заявку на вывоз' }));
+
+    const поле = await screen.findByRole('combobox', { name: 'Полигон' });
+
+    expect(поле.tagName, 'список полигона собран теми же правилами, что адрес и тип отходов').toBe('INPUT');
+
+    await user.click(поле);
+
+    expect(
+      within(screen.getByRole('listbox', { name: 'Выбранные полигоны' })).getByText(VOSTOK.landfillName),
+    ).toBeInTheDocument();
+  });
 });

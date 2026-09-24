@@ -100,7 +100,7 @@ export function SummaryPanel({
   total,
   totalLabel,
   onRoute,
-  onDownload,
+  onOpenQuote,
   onPickup,
 }: {
   selectedCount: number;
@@ -109,7 +109,8 @@ export function SummaryPanel({
   /** Чей это итог: выбора или распределения объёма. */
   totalLabel: string;
   onRoute: () => void;
-  onDownload: () => void;
+  /** Главное действие сводки: переход на экран предложения (R-036, AC-036f). */
+  onOpenQuote: () => void;
   onPickup: () => void;
 }) {
   useStyles('selection-summary-panel', SUMMARY_PANEL_CSS);
@@ -139,7 +140,10 @@ export function SummaryPanel({
         <Button kind="secondary" onClick={onRoute}>
           Получить маршрут
         </Button>
-        <Button onClick={onDownload}>Скачать КП</Button>
+        {/* Главное действие сводки ведёт на предпросмотр предложения, а не
+            выпускает его: номер и срок действия закрепляются на экране
+            предложения (R-036, AC-036f). */}
+        <Button onClick={onOpenQuote}>Сформировать предложение</Button>
         <Button kind="tertiary" onClick={onPickup}>
           Оставить заявку на вывоз
         </Button>

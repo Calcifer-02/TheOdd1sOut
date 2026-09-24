@@ -805,7 +805,8 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
    разговор поверх страницы отличается от подсказки поведением, а не видом. */
 .imolt-modal {
   width: 100%;
-  max-width: ${layout.modalWidth}px;
+  /* Окно тянется до предела, но не шире окна браузера за вычетом полей. */
+  max-width: min(${layout.modalWidth}px, calc(100vw - ${layout.gutterWide * 2}px));
   max-height: 100%;
   overflow: auto;
   padding: ${space.m}px;

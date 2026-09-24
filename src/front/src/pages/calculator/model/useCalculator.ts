@@ -1,7 +1,7 @@
 /**
  * Предметная часть экрана расчёта: состояние формы, обращения к расчётной
- * части, выбор полигонов, распределение объёма, выпуск предложения и заявка
- * на вывоз.
+ * части, выбор полигонов, распределение объёма, переход к предложению и
+ * заявка на вывоз.
  *
  * Представлений у экрана два — карточки на телефоне и таблица сравнения на
  * рабочем месте, — но предметная часть одна. Копия этой логики во втором
@@ -22,7 +22,6 @@ import type {
   Calculation,
   PlacementOption,
   PlacementOptionPage,
-  Quote,
   RouteSummary,
   SelectionEntry,
   SelectionState,
@@ -36,15 +35,17 @@ import {
   getCalculation,
   getRoute,
   listPlacementOptions,
-  searchWasteGroups,
   setAllocation,
   setSelection,
   suggestAddresses,
 } from '@/shared/api/imolt';
-import { createPickupRequest, issueQuote, quoteDocumentHref } from '@/shared/api/deals';
+import { createPickupRequest } from '@/shared/api/deals';
+import { isPhoneComplete } from '@/shared/ui';
+import { listWasteGroups } from '@/shared/api/references';
+import type { RouteScope } from '@/entities/landfill';
 import type { Unit } from '@/shared/lib/formatting';
 import { formatMoney, formatQuantity } from '@/shared/lib/formatting';
-import { CALCULATOR_PATH, hashOf, replaceRoute } from '@/shared/lib/routing';
+import { CALCULATOR_PATH, navigate, replaceRoute } from '@/shared/lib/routing';
 import type { SortField, ViewState } from '@/shared/lib/viewState';
 import { DEFAULT_VIEW_STATE, parseViewState, viewStateToHash } from '@/shared/lib/viewState';
 import type { WasteLine } from './wasteLine';
@@ -52,6 +53,13 @@ import { emptyLine, filledItems, parseAmount } from './wasteLine';
 
 /** Первая страница — десять полигонов, остальные по «Показать ещё» (R-029). */
 export const PAGE_SIZE = 10;
+
+/**
+ * Сколько записей справочника показывает список выбора типа отходов. Читается
+ * той же функцией, что и справочник на других экранах: вторая функция к той же
+ * точке службы расходилась бы с первой молча (R-013).
+ */
+const GROUP_SUGGESTIONS = 10;
 
 /** Поля сортировки договора и их названия словами (R-024). */
 export const SORTS: { field: SortField; label: string }[] = [
@@ -72,8 +80,21 @@ export type PickupDraft = {
   landfillName: string;
 };
 
-/** Открытый маршрут: полигон известен сразу, сводка приходит следом (R-032). */
-export type OpenRoute = { option: PlacementOption; summary: RouteSummary | null };
+/**
+ * Открытый маршрут: полигоны известны сразу, сводка приходит следом (R-032).
+ *
+ * Полигонов столько, сколько их в вопросе. Из строки таблицы спрашивают про
+ * один полигон — «сколько до него»; из сводки выбора спрашивают про весь
+ * выбор — «куда из выбранных дешевле», и требование R-032 называет выбранные
+ * полигоны во множественном числе.
+ */
+export type OpenRoute = {
+  scope: RouteScope;
+  options: PlacementOption[];
+  summary: RouteSummary | null;
+  /** служба маршрутов не ответила: это не то же, что закрытый подпиской доступ */
+  unavailable: boolean;
+};
 
 export type CalculatorModel = ReturnType<typeof useCalculator>;
 
@@ -102,11 +123,12 @@ export function useCalculator() {
   const [allocationProblem, setAllocationProblem] = useState<ApiProblem | null>(null);
   const [allocationMismatch, setAllocationMismatch] = useState<string | null>(null);
 
-  const [quote, setQuote] = useState<Quote | null>(null);
   const [route, setRoute] = useState<OpenRoute | null>(null);
   const [pickup, setPickup] = useState<PickupDraft | null>(null);
   const [pickupError, setPickupError] = useState<string | undefined>(undefined);
   const [pickupDone, setPickupDone] = useState<string | null>(null);
+  const [pickupPhoneError, setPickupPhoneError] = useState<string | undefined>(undefined);
+  const [pickupLandfillQuery, setPickupLandfillQuery] = useState('');
   const [filterDraft, setFilterDraft] = useState<string | null>(null);
 
   // Адрес подсказывает служба, и набранная строка сама по себе расчёту не
@@ -201,7 +223,7 @@ export function useCalculator() {
   /** Записи справочника по строке поиска; пустая строка — весь справочник. */
   async function loadGroups(key: string, query: string) {
     try {
-      const page = await searchWasteGroups(query);
+      const page = await listWasteGroups({ query, limit: GROUP_SUGGESTIONS });
       updateLine(key, { suggestions: page.items });
     } catch {
       updateLine(key, { suggestions: [] });
@@ -326,7 +348,6 @@ export function useCalculator() {
 
       setCalculation(result);
       setSelectionState(null);
-      setQuote(null);
       setAllocationTotal(null);
       setAllocationDraft({});
       setOptions(result.results.find(tab => tab.wasteGroupId === group)?.options ?? null);
@@ -473,40 +494,79 @@ export function useCalculator() {
     );
   }
 
-  async function download() {
-    if (!calculation || quote) {
-      // Повторное скачивание не выпускает второе предложение: номер и цены
-      // закреплены на момент выпуска (R-036).
-      return;
-    }
-
-    try {
-      setQuote(await issueQuote(calculation.id));
-    } catch (error: unknown) {
-      if (error instanceof ApiProblem) {
-        setFailure(error);
-      }
-    }
-  }
-
-  async function openRoute(option: PlacementOption) {
+  /**
+   * Переход на экран предложения по этому расчёту.
+   *
+   * Экран расчёта предложение не выпускает: у коммерческого предложения есть
+   * номер и срок действия, и закреплять их одним нажатием, не показав
+   * документ, нельзя. Выпуск — отдельное действие на экране предпросмотра
+   * (R-036, AC-036f; решение заказчика от 24.09.2026).
+   *
+   * Расчёт передаётся тем же параметром адреса, которым он восстанавливается
+   * при открытии расчёта по ссылке (`parseViewState`), и которым его читает
+   * экран предложения: второго имени у параметра нет.
+   */
+  function openQuote() {
     if (!calculation) {
       return;
     }
 
-    setRoute({ option, summary: null });
+    navigate('/quote', new URLSearchParams({ calc: calculation.id }));
+  }
+
+  /**
+   * Выбранные полигоны текущей группы вариантами размещения.
+   *
+   * Берётся та же выборка, по которой собрана сводка выбора: перечень маршрута
+   * обязан совпадать с ней строка в строку, иначе два места на одном экране
+   * назовут разный выбор (R-027, R-032).
+   */
+  function selectedOptions(): PlacementOption[] {
+    const items = shown?.items ?? [];
+
+    return selectedInGroup
+      .map(entry => items.find(option => option.landfillId === entry.landfillId))
+      .filter((option): option is PlacementOption => option !== undefined);
+  }
+
+  /**
+   * Чтение сводки маршрута. Полигоны известны сразу — они уже на экране, — а
+   * сводка идёт к службе, поэтому окно открывается до её прихода.
+   */
+  async function loadRoute(scope: RouteScope, options: PlacementOption[]) {
+    if (!calculation || options.length === 0) {
+      return;
+    }
+
+    setRoute({ scope, options, summary: null, unavailable: false });
 
     try {
-      setRoute({ option, summary: await getRoute(calculation.id) });
+      setRoute({ scope, options, summary: await getRoute(calculation.id), unavailable: false });
     } catch {
       // Отказ службы маршрутов не выдаётся за закрытые подпиской детали:
       // недоступное «по подписке» и недоступное «служба молчит» — разные
-      // исходы, и второй показывается пустой сводкой без разрешения.
-      setRoute({
-        option,
-        summary: { access: { granted: false }, legs: [], total: { amount: '0.00', currency: 'RUB' } },
-      });
+      // исходы. Второй называется отдельным признаком, а не пустой сводкой без
+      // разрешения: пустая сводка неотличима от закрытого доступа.
+      setRoute({ scope, options, summary: null, unavailable: true });
     }
+  }
+
+  /**
+   * Маршрут до одного полигона: кнопка в строке таблицы и в карточке телефона.
+   * Спрашивают именно про этот полигон, а не про выбор, поэтому отмечать его
+   * заранее не требуется и остальные выбранные в окно не попадают (R-033).
+   */
+  async function openRoute(option: PlacementOption) {
+    await loadRoute('landfill', [option]);
+  }
+
+  /**
+   * Маршрут по всему выбору: кнопка «Получить маршрут» сводки выбора. Здесь
+   * спрашивают про выбранные полигоны во множественном числе — окно показывает
+   * их все, а не первый из них (R-032).
+   */
+  async function openSelectionRoute() {
+    await loadRoute('selection', selectedOptions());
   }
 
   function closeRoute() {
@@ -522,17 +582,38 @@ export function useCalculator() {
     return (shown?.items ?? []).find(option => option.landfillName === landfillName)?.landfillId;
   }
 
+  /** Названия выбранных полигонов: из них и только из них состоит список. */
+  function pickupLandfills(): string[] {
+    const query = pickupLandfillQuery.trim().toLowerCase();
+
+    return (selection?.entries ?? [])
+      .map(entry => landfillNameById(entry.landfillId) ?? '')
+      .filter(name => name.length > 0 && name.toLowerCase().includes(query));
+  }
+
   function openPickup() {
-    setPickup({
-      name: '',
-      phone: '',
-      consent: false,
-      landfillName: landfillNameById(selection?.entries[0]?.landfillId) ?? '',
-    });
+    const first = landfillNameById(selection?.entries[0]?.landfillId) ?? '';
+
+    setPickup({ name: '', phone: '', consent: false, landfillName: first });
+    setPickupLandfillQuery(first);
   }
 
   function changePickup(change: Partial<PickupDraft>) {
     setPickup(current => (current ? { ...current, ...change } : current));
+  }
+
+  function pickPickupLandfill(landfillName: string) {
+    changePickup({ landfillName });
+    setPickupLandfillQuery(landfillName);
+  }
+
+  /**
+   * Ушли из поля, ничего не выбрав. Перечень закрыт — заявка уходит на
+   * выбранный полигон, — поэтому строка возвращается к выбранному названию, а
+   * не остаётся набранной (R-053).
+   */
+  function dismissPickupLandfill() {
+    setPickupLandfillQuery(pickup?.landfillName ?? '');
   }
 
   function closePickup() {
@@ -543,6 +624,17 @@ export function useCalculator() {
     if (!pickup) {
       return;
     }
+
+    // Договор заявки допускает ровно одну запись номера: «+7» и десять цифр.
+    // По недобранному номеру перезвонить нельзя, и отказ принадлежит полю,
+    // а не форме: повторённый внизу формы, он читался бы вторым отказом (R-053).
+    if (!isPhoneComplete(pickup.phone)) {
+      setPickupPhoneError('Номер не дописан: после «+7» нужны десять цифр');
+      setPickupError(undefined);
+      return;
+    }
+
+    setPickupPhoneError(undefined);
 
     if (!pickup.consent) {
       setPickupError('Без согласия на обработку персональных данных заявка не отправляется');
@@ -605,14 +697,13 @@ export function useCalculator() {
     allocationTotal,
     allocationProblem,
     allocationMismatch,
-    quote,
-    quoteDocumentHref: quote ? quoteDocumentHref(quote) : undefined,
-    /** Ссылка на экран предложения по этому расчёту (карта пути, этап 5). */
-    quoteScreenHref: calculation ? hashOf('/quote', new URLSearchParams({ calc: calculation.id })) : undefined,
     route,
     pickup,
     pickupError,
+    pickupPhoneError,
     pickupDone,
+    pickupLandfillQuery,
+    pickupLandfills: pickupLandfills(),
     filterDraft,
     groupTons,
     isSelected,
@@ -638,11 +729,15 @@ export function useCalculator() {
     loadMore,
     toggleLandfill,
     changeAllocationShare,
-    download,
+    openQuote,
     openRoute,
+    openSelectionRoute,
     closeRoute,
     openPickup,
     changePickup,
+    setPickupLandfillQuery,
+    pickPickupLandfill,
+    dismissPickupLandfill,
     closePickup,
     sendPickup,
   };

@@ -442,9 +442,10 @@ describe('модальное окно маршрута (R-033)', () => {
 
     expect(окно).toContain(`border-radius: ${radius.field}px`);
     expect(окно).toContain(`box-shadow: ${layout.shadow}`);
-    expect(окно, 'окно шире меры разговора перестаёт читаться поверх страницы').toContain(
-      `max-width: ${layout.modalWidth}px`,
-    );
+    // Предел объявлен и ограничен окном браузера: без второй границы окно на
+    // узком экране вылезло бы за его края.
+    expect(окно).toContain(`${layout.modalWidth}px`);
+    expect(окно, 'окно не ограничено шириной окна браузера').toContain('100vw');
   });
 
   it('держит крестик закрытия мерой кнопки-значка', () => {

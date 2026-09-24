@@ -48,7 +48,7 @@ function Экран({ выбрано }: { выбрано: number }) {
       total="39 880 ₽"
       totalLabel="Итого"
       onRoute={() => undefined}
-      onDownload={() => undefined}
+      onOpenQuote={() => undefined}
       onPickup={() => undefined}
     />
   );
@@ -135,8 +135,8 @@ describe('нижняя панель сводки на телефоне', () => {
       <SummaryBar
         selectedCount={2}
         total="39 880 ₽"
-        downloadLabel="Скачать КП"
-        onDownload={() => undefined}
+        quoteLabel="Сформировать предложение"
+        onOpenQuote={() => undefined}
         onPickup={() => undefined}
       />,
     );
