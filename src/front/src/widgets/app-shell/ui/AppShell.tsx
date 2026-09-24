@@ -22,7 +22,7 @@
 import { useRef, type ReactNode } from 'react';
 import { ParticipantSummary, useParticipant } from '@/entities/participant';
 import type { Profile } from '@/shared/api/contracts';
-import { hashOf, useRoute } from '@/shared/lib/routing';
+import { CALCULATOR_PATH, hashOf, useRoute } from '@/shared/lib/routing';
 import { isWide, useViewport } from '@/shared/lib/viewport';
 import { useStyles } from '@/shared/ui';
 import { CABINET_PATH, NAVIGATION_LABEL, SECTIONS, TOP_SECTIONS } from '../model/navigation';
@@ -148,7 +148,16 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <header className="imolt-shell-header">
         <div className="imolt-shell-head-line">
-          <span className="imolt-shell-brand">ИМОЛТ</span>
+          {/* Название сервиса — ссылка на базовую страницу: читатель ждёт
+              этого от любого сайта, и без возврата приходится искать вкладку или править
+              адрес руками (AC-087e, BUG-029). */}
+          <a
+            className="imolt-shell-brand"
+            href={hashOf(CALCULATOR_PATH)}
+            aria-current={route.path === CALCULATOR_PATH ? 'page' : undefined}
+          >
+            ИМОЛТ
+          </a>
           {!narrow && <TopNav current={route.path} />}
           <ProfileLink profile={session?.profile ?? null} current={route.path} compact={narrow} />
         </div>

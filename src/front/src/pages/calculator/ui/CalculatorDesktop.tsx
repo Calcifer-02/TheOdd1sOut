@@ -33,6 +33,7 @@ import { Combobox } from '@/shared/ui/combobox';
 import { Illustration } from '@/shared/ui/illustrations';
 import { OptionTable, RouteModal } from '@/entities/landfill';
 import { AllocationPanel, SummaryPanel, SELECTION_EMPTY_HINT } from '@/widgets/selection-summary';
+import { CompanyProfile } from '@/widgets/company-profile';
 import type { Unit } from '@/shared/lib/formatting';
 import { formatMoney, formatNumber, unitName } from '@/shared/lib/formatting';
 import { BREAKPOINTS } from '@/shared/lib/viewport';
@@ -627,6 +628,11 @@ export function CalculatorDesktop({ model }: { model: CalculatorModel }) {
           строки, и сводка выбора, а фокус после закрытия возвращается на то
           управление, которое окно открыло. Сколько полигонов показать, решает
           не окно: их перечень пришёл вместе с вопросом. */}
+      {/* Представление компании стоит под работой, а не над ней: пришедший за
+          расчётом начинает с формы, а вопросы «кто это» и «как связаться» приходят после
+          неё (R-087). */}
+      <CompanyProfile />
+
       {model.route && calculation && (
         <RouteModal
           option={model.route.options}
