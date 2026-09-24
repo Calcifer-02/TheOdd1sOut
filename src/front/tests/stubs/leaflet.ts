@@ -29,6 +29,16 @@ type MarkerRecord = {
   handlers: Map<string, Listener>;
 };
 
+/** Линия маршрута, проведённая на карте. */
+export type DrawnLine = {
+  /** точки пути в порядке библиотеки карты */
+  shape: [number, number][];
+  color: string;
+};
+
+type LineRecord = DrawnLine & { removed: boolean };
+
+const lines: LineRecord[] = [];
 const markers: MarkerRecord[] = [];
 const tileHandlers = new Map<string, Listener>();
 const tileSources: string[] = [];
@@ -49,6 +59,11 @@ export function mapsRemoved(): number {
 /** Адреса тайлов, которые библиотеке велено показывать. */
 export function tileUrls(): string[] {
   return [...tileSources];
+}
+
+/** Линии маршрута, оставшиеся на карте. */
+export function drawnLines(): DrawnLine[] {
+  return lines.filter(line => !line.removed).map(({ shape, color }) => ({ shape, color }));
 }
 
 /** Метки на карте в порядке постановки. */
@@ -86,6 +101,7 @@ export function breakTiles(): void {
 /** Чистое полотно перед следующей проверкой. */
 export function resetLeaflet(): void {
   markers.length = 0;
+  lines.length = 0;
   tileSources.length = 0;
   tileHandlers.clear();
   drawn = 0;
@@ -139,6 +155,21 @@ export const leafletModule = {
     };
 
     return marker;
+  },
+
+  polyline(shape: [number, number][], options: { color?: string }) {
+    const record: LineRecord = { shape, color: options.color ?? '', removed: false };
+
+    lines.push(record);
+
+    const line = {
+      addTo: () => line,
+      remove: () => {
+        record.removed = true;
+      },
+    };
+
+    return line;
   },
 
   divIcon(options: unknown) {

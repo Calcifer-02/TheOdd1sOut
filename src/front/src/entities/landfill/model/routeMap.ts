@@ -8,12 +8,12 @@
  * авторских правах рисует не библиотека, а само окно маршрута
  * (`RouteModal`): при отказе тайлов подпись обязана остаться видимой.
  *
- * Линий маршрута здесь нет намеренно. Договор расчётной части
- * (`src/back/Imolt.Api/contracts/openapi.yaml`, схема `RouteLeg`) отдаёт
- * расстояние, длительность, ссылку во внешние карты и обременения —
- * геометрии в нём нет. Прямая между точками соврала бы о плече перевозки:
- * расчёт считает по дорожной сети, и прямая его занижает (R-020). Поэтому на
- * карте только метки, а сам маршрут — по ссылке во внешние карты (R-034).
+ * Линия маршрута проводится по дорогам, а не прямой: геометрию отдаёт внешняя
+ * служба маршрутизации (`./routeGeometry`), потому что в договоре расчётной
+ * части её нет. Линия — рисунок: расстояние, длительность и цена приходят от
+ * расчётной части и по ней не считаются, иначе у одной величины стало бы два
+ * источника (R-020, AC-033f). Не пришла геометрия — карта остаётся с метками,
+ * а сам маршрут по-прежнему открывается ссылкой во внешние карты (R-034).
  *
  * Библиотека подключается по требованию: полотно карты нужно одному окну из
  * пяти экранов, и держать её в первом пакете мини-приложения незачем.
@@ -23,7 +23,8 @@
  */
 import type * as Leaflet from 'leaflet';
 import type { Coordinates } from '@/shared/api/contracts';
-import { space } from '@/shared/ui/tokens';
+import { routeTone, space, stroke } from '@/shared/ui/tokens';
+import type { RouteShape } from './routeGeometry';
 
 /** Растровые тайлы OpenStreetMap: ключа не требуют. */
 const OSM_TILES = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
@@ -51,10 +52,42 @@ export type RoutePoint = {
   coordinates: Coordinates;
   /** нажатие на метку; у адреса вывоза показывать нечего */
   onSelect?: () => void;
+  /**
+   * Цвет маршрута этого полигона: им же покрашены его линия на карте и точка
+   * в строке перечня. Связь цветом, а не смысл: что это за полигон, говорит
+   * подпись рядом (AC-033g).
+   */
+  tone?: string;
+};
+
+/** Толщина линии маршрута: тоньше она теряется на рисунке дорог. */
+const LINE_WEIGHT = 5;
+
+/**
+ * Нарисованная карта: снятие и досылка путей.
+ *
+ * Пути приходят позже карты — служба маршрутизации отвечает не мгновенно, — и
+ * дорисовываются на готовое полотно. Перерисовывать карту ради линии нельзя:
+ * полотно моргает, а кадр и приближение сбрасываются на то, что пользователь
+ * уже подвинул.
+ */
+export type RouteMapHandle = {
+  remove: () => void;
+  setShapes: (shapes: RouteShape[]) => void;
 };
 
 /** Отказ карты: тайлы идут по сети и приходят не всегда. */
 export type MapFailure = 'tiles' | 'library';
+
+/**
+ * Мера метки. Адрес вывоза крупнее полигона: точка вывоза на карте одна, а
+ * полигонов бывает пять, и в общей мере она среди них терялась (AC-033g).
+ */
+function pinSize(point: RoutePoint): [number, number] {
+  const side = point.kind === 'pickup' ? space.l : space.m + stroke.emphasis;
+
+  return [side, side];
+}
 
 /** Место точки в порядке библиотеки карты: широта, затем долгота. */
 function place(point: RoutePoint): [number, number] {
@@ -72,7 +105,7 @@ export async function drawRouteMap(
   node: HTMLElement,
   points: RoutePoint[],
   onFailure: (failure: MapFailure) => void,
-): Promise<() => void> {
+): Promise<RouteMapHandle> {
   let loaded: typeof Leaflet;
 
   try {
@@ -82,7 +115,7 @@ export async function drawRouteMap(
     await import('leaflet/dist/leaflet.css');
   } catch {
     onFailure('library');
-    return () => undefined;
+    return { remove: () => undefined, setShapes: () => undefined };
   }
 
   // Библиотека собрана единым модулем старого образца, и сборщик отдаёт её то
@@ -110,8 +143,8 @@ export async function drawRouteMap(
       icon: leaflet.divIcon({
         className: 'imolt-map-pin',
         html: '',
-        iconSize: [space.m, space.m],
-        iconAnchor: [space.m / 2, space.m / 2],
+        iconSize: pinSize(point),
+        iconAnchor: [pinSize(point)[0] / 2, pinSize(point)[1] / 2],
       }),
       title: point.title,
       alt: point.title,
@@ -127,10 +160,61 @@ export async function drawRouteMap(
 
     // Вид метки задаёт её назначение, а не порядок в перечне. Признак
     // ставится после добавления на карту: до него узла метки не существует.
-    marker.getElement()?.setAttribute('data-point', point.kind);
+    const pin = marker.getElement();
+
+    pin?.setAttribute('data-point', point.kind);
+
+    // Цвет маршрута приходит рамкой метки: заливка остаётся лаймовой, и при
+    // одном полигоне карта выглядит ровно как прежде.
+    if (pin && point.tone !== undefined) {
+      pin.style.borderColor = point.tone;
+    }
   }
 
-  map.fitBounds(points.map(place), { padding: [space.m, space.m], maxZoom: CLOSEST_ZOOM });
+  /** Кадр по меткам и уже проведённым путям. */
+  function frame(shapes: RouteShape[]): void {
+    // Кадр вмещает и метки, и путь: дорога между двумя точками часто уходит в
+    // сторону от прямой, и кадр по одним меткам резал бы линию.
+    map.fitBounds([...points.map(place), ...shapes.flat()], {
+      padding: [space.m, space.m],
+      maxZoom: CLOSEST_ZOOM,
+    });
+  }
 
-  return () => map.remove();
+  frame([]);
+
+  let drawn: Leaflet.Polyline[] = [];
+
+  return {
+    remove: () => map.remove(),
+    setShapes: shapes => {
+      const lines = shapes.filter(shape => shape.length > 1);
+
+      if (lines.length === 0 && drawn.length === 0) {
+        // Путей нет и не было: кадр трогать незачем. Лишний пересчёт сбросил
+        // бы приближение, которое читатель уже подвинул.
+        return;
+      }
+
+      // Прежние линии снимаются: без этого повторная досылка положила бы
+      // вторую линию поверх первой, и толщина удвоилась бы.
+      for (const line of drawn) {
+        line.remove();
+      }
+
+      drawn = lines.map((shape, index) =>
+        leaflet
+          .polyline(shape, {
+            color: routeTone(index),
+            weight: LINE_WEIGHT,
+            opacity: 0.75,
+            lineJoin: 'round',
+            lineCap: 'round',
+          })
+          .addTo(map),
+      );
+
+      frame(lines);
+    },
+  };
 }
