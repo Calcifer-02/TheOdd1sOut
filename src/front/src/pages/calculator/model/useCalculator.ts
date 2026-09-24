@@ -41,6 +41,7 @@ import {
   suggestAddresses,
 } from '@/shared/api/imolt';
 import { createPickupRequest } from '@/shared/api/deals';
+import type { RouteScope } from '@/entities/landfill';
 import type { Unit } from '@/shared/lib/formatting';
 import { formatMoney, formatQuantity } from '@/shared/lib/formatting';
 import { CALCULATOR_PATH, navigate, replaceRoute } from '@/shared/lib/routing';
@@ -71,8 +72,21 @@ export type PickupDraft = {
   landfillName: string;
 };
 
-/** Открытый маршрут: полигон известен сразу, сводка приходит следом (R-032). */
-export type OpenRoute = { option: PlacementOption; summary: RouteSummary | null };
+/**
+ * Открытый маршрут: полигоны известны сразу, сводка приходит следом (R-032).
+ *
+ * Полигонов столько, сколько их в вопросе. Из строки таблицы спрашивают про
+ * один полигон — «сколько до него»; из сводки выбора спрашивают про весь
+ * выбор — «куда из выбранных дешевле», и требование R-032 называет выбранные
+ * полигоны во множественном числе.
+ */
+export type OpenRoute = {
+  scope: RouteScope;
+  options: PlacementOption[];
+  summary: RouteSummary | null;
+  /** служба маршрутов не ответила: это не то же, что закрытый подпиской доступ */
+  unavailable: boolean;
+};
 
 export type CalculatorModel = ReturnType<typeof useCalculator>;
 
@@ -490,24 +504,59 @@ export function useCalculator() {
     navigate('/quote', new URLSearchParams({ calc: calculation.id }));
   }
 
-  async function openRoute(option: PlacementOption) {
-    if (!calculation) {
+  /**
+   * Выбранные полигоны текущей группы вариантами размещения.
+   *
+   * Берётся та же выборка, по которой собрана сводка выбора: перечень маршрута
+   * обязан совпадать с ней строка в строку, иначе два места на одном экране
+   * назовут разный выбор (R-027, R-032).
+   */
+  function selectedOptions(): PlacementOption[] {
+    const items = shown?.items ?? [];
+
+    return selectedInGroup
+      .map(entry => items.find(option => option.landfillId === entry.landfillId))
+      .filter((option): option is PlacementOption => option !== undefined);
+  }
+
+  /**
+   * Чтение сводки маршрута. Полигоны известны сразу — они уже на экране, — а
+   * сводка идёт к службе, поэтому окно открывается до её прихода.
+   */
+  async function loadRoute(scope: RouteScope, options: PlacementOption[]) {
+    if (!calculation || options.length === 0) {
       return;
     }
 
-    setRoute({ option, summary: null });
+    setRoute({ scope, options, summary: null, unavailable: false });
 
     try {
-      setRoute({ option, summary: await getRoute(calculation.id) });
+      setRoute({ scope, options, summary: await getRoute(calculation.id), unavailable: false });
     } catch {
       // Отказ службы маршрутов не выдаётся за закрытые подпиской детали:
       // недоступное «по подписке» и недоступное «служба молчит» — разные
-      // исходы, и второй показывается пустой сводкой без разрешения.
-      setRoute({
-        option,
-        summary: { access: { granted: false }, legs: [], total: { amount: '0.00', currency: 'RUB' } },
-      });
+      // исходы. Второй называется отдельным признаком, а не пустой сводкой без
+      // разрешения: пустая сводка неотличима от закрытого доступа.
+      setRoute({ scope, options, summary: null, unavailable: true });
     }
+  }
+
+  /**
+   * Маршрут до одного полигона: кнопка в строке таблицы и в карточке телефона.
+   * Спрашивают именно про этот полигон, а не про выбор, поэтому отмечать его
+   * заранее не требуется и остальные выбранные в окно не попадают (R-033).
+   */
+  async function openRoute(option: PlacementOption) {
+    await loadRoute('landfill', [option]);
+  }
+
+  /**
+   * Маршрут по всему выбору: кнопка «Получить маршрут» сводки выбора. Здесь
+   * спрашивают про выбранные полигоны во множественном числе — окно показывает
+   * их все, а не первый из них (R-032).
+   */
+  async function openSelectionRoute() {
+    await loadRoute('selection', selectedOptions());
   }
 
   function closeRoute() {
@@ -637,6 +686,7 @@ export function useCalculator() {
     changeAllocationShare,
     openQuote,
     openRoute,
+    openSelectionRoute,
     closeRoute,
     openPickup,
     changePickup,

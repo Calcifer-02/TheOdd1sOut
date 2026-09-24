@@ -285,8 +285,16 @@ export function CalculatorMobile({ model }: { model: CalculatorModel }) {
       )}
 
       {model.route && (
+        // Сколько полигонов в сводке, решает не лист: их перечень пришёл
+        // вместе с вопросом — из карточки полигона спрашивают про один, из
+        // сводки выбора про весь выбор (R-032).
         <Sheet title="Маршрут" onClose={model.closeRoute}>
-          <RouteDetails option={model.route.option} summary={model.route.summary} />
+          <RouteDetails
+            option={model.route.options}
+            summary={model.route.summary}
+            scope={model.route.scope}
+            unavailable={model.route.unavailable}
+          />
         </Sheet>
       )}
 

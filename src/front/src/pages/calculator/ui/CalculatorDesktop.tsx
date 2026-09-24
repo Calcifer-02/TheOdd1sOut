@@ -536,12 +536,11 @@ export function CalculatorDesktop({ model }: { model: CalculatorModel }) {
                   lines={summaryLines}
                   total={model.allocationTotal ?? (selection ? formatMoney(selection.total) : '')}
                   totalLabel={model.allocationTotal ? 'Итого по распределению' : 'Итого'}
-                  onRoute={() => {
-                    const first = (shown?.items ?? []).find(option => selectedIds.includes(option.landfillId));
-                    if (first) {
-                      void model.openRoute(first);
-                    }
-                  }}
+                  // Сводка спрашивает про весь выбор, а не про первый отмеченный
+                  // полигон: требование R-032 называет выбранные полигоны во
+                  // множественном числе. Кнопка в строке таблицы — другой
+                  // случай: там спрашивают про один полигон строки.
+                  onRoute={() => void model.openSelectionRoute()}
                   onOpenQuote={model.openQuote}
                   onPickup={model.openPickup}
                 />
@@ -625,11 +624,14 @@ export function CalculatorDesktop({ model }: { model: CalculatorModel }) {
           отрисовывалось внутри ячейки и резалось областью прокрутки таблицы
           (решение заказчика от 24.09.2026, R-033). Открывают его и кнопка
           строки, и сводка выбора, а фокус после закрытия возвращается на то
-          управление, которое окно открыло. */}
+          управление, которое окно открыло. Сколько полигонов показать, решает
+          не окно: их перечень пришёл вместе с вопросом. */}
       {model.route && calculation && (
         <RouteModal
-          option={model.route.option}
+          option={model.route.options}
           summary={model.route.summary}
+          scope={model.route.scope}
+          unavailable={model.route.unavailable}
           pickup={calculation.pickupAddress}
           onClose={model.closeRoute}
         />
