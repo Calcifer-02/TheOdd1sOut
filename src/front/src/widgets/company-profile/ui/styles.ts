@@ -36,6 +36,23 @@ export const COMPANY_CSS = `
 .imolt-company-projects { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .imolt-company-contacts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
+/* Логотипы клиентов: пять в ряд, как на сайте компании. Высота одна на все,
+   а картинка вписывается целиком: у пятнадцати чужих логотипов разные
+   пропорции, и без общей меры ряд разъезжается. */
+.imolt-company-clients { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+
+.imolt-company-client {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: ${colors.bgSurface};
+  border-radius: ${radius.field}px;
+  padding: ${space.m}px;
+  min-height: ${space.xxxl * 2}px;
+}
+
+.imolt-company-logo { max-width: 100%; max-height: ${space.xxxl}px; object-fit: contain; }
+
 .imolt-company-service,
 .imolt-company-project,
 .imolt-company-contact {
@@ -70,6 +87,7 @@ export const COMPANY_CSS = `
 @media (max-width: ${BREAKPOINTS.sideSummary - 1}px) {
   .imolt-company-services { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .imolt-company-projects { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .imolt-company-clients { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 @media (max-width: ${BREAKPOINTS.cards - 1}px) {
@@ -77,5 +95,6 @@ export const COMPANY_CSS = `
   .imolt-company-services,
   .imolt-company-projects,
   .imolt-company-contacts { grid-template-columns: minmax(0, 1fr); }
+  .imolt-company-clients { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 `;

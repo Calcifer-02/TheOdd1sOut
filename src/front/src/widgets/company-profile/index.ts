@@ -6,6 +6,8 @@
  */
 export { CompanyProfile } from './ui/CompanyProfile';
 export {
+  COMPANY_CLIENTS_NOTE,
+  COMPANY_CLIENT_LOGOS,
   COMPANY_CONTACTS,
   COMPANY_PROJECTS,
   COMPANY_SERVICES,

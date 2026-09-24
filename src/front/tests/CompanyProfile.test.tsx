@@ -21,7 +21,7 @@
 import { render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { App } from '@/app/App';
-import { COMPANY_PROJECTS, COMPANY_SERVICES } from '@/widgets/company-profile';
+import { COMPANY_CLIENT_LOGOS, COMPANY_PROJECTS, COMPANY_SERVICES } from '@/widgets/company-profile';
 import type { ApiStub } from './apiStub';
 import { installApiStub } from './apiStub';
 import { DESKTOP_WIDTH, setViewportWidth } from './viewport';
@@ -110,10 +110,24 @@ describe('выполненные проекты на базовой страни
 });
 
 describe('клиенты компании на базовой странице', () => {
-  it('называет, что перечень ожидается от компании', () => {
+  it('показывает каждый переданный логотип', () => {
     render(<App />);
 
-    expect(within(раздел('Наши клиенты')).getByText(/ожидается от компании/u)).toBeInTheDocument();
+    const логотипы = раздел('Наши клиенты').querySelectorAll('.imolt-company-logo');
+
+    expect(логотипы).toHaveLength(COMPANY_CLIENT_LOGOS.length);
+
+    // Логотип без названия — украшение: с непустым alt экранный диктор
+    // зачитал бы пятнадцать безымянных картинок подряд (AC-087c).
+    for (const логотип of логотипы) {
+      expect(логотип).toHaveAttribute('alt', '');
+    }
+  });
+
+  it('называет смысл раздела словами, а не одними картинками', () => {
+    render(<App />);
+
+    expect(within(раздел('Наши клиенты')).getByText(/крупных компаний/u)).toBeInTheDocument();
   });
 
   it('не показывает ни одного названия организации', () => {
