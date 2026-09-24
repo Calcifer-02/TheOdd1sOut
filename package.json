@@ -1,0 +1,13 @@
+{
+  "name": "imolt-lint-tooling",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Оснастка линтера кода: движки и пресеты живут здесь, а не в зависимостях мини-приложения. Образ и конвейер ставят зависимости только из src/front, и внутренний реестр им недоступен.",
+  "devDependencies": {
+    "@trip/eslint-config": "0.8.0",
+    "@trip/prettier-config": "0.8.0",
+    "eslint": "10.11.0",
+    "prettier": "3.9.9",
+    "squawk-cli": "2.66.0"
+  }
+}
