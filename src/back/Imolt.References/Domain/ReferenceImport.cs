@@ -17,7 +17,7 @@ namespace Imolt.References.Domain;
 /// живёт первая половина: структура, типы и причины отказа. Предметное
 /// применение — в зоне приложения.
 ///
-/// @req: R-045
+/// @req: R-045, R-046
 /// @adr: ADR-0005
 public static class ReferenceImportKind
 {

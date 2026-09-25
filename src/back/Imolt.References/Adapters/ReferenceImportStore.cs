@@ -16,7 +16,7 @@ namespace Imolt.References.Adapters;
 /// нужды. Применяется же в любом случае показанный список расхождений, а не
 /// разобранный заново файл.
 ///
-/// @req: R-045
+/// @req: R-045, R-046
 /// @adr: ADR-0005
 public sealed class ReferenceImportStore(NpgsqlDataSource dataSource, IClock clock) : IReferenceImports
 {

@@ -18,7 +18,7 @@ namespace Imolt.References.Application;
 /// случай: применить предпросмотр, опирающийся на устаревшие значения, —
 /// значит тихо отменить чужую правку.
 ///
-/// @req: R-045
+/// @req: R-045, R-046
 /// @adr: ADR-0005
 public sealed class ReferenceImportScenarios(
     IReferenceImports imports,

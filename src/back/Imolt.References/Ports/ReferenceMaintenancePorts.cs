@@ -62,7 +62,7 @@ public sealed record ImportApplied(int Changes, int Added);
 /// Хранилище импорта: чтение текущих значений, применение разобранного и
 /// журнал предпросмотров.
 ///
-/// @supports: R-045
+/// @supports: R-045, R-046
 /// @adr: ADR-0001
 public interface IReferenceImports
 {
