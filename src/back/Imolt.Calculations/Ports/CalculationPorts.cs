@@ -26,6 +26,7 @@ public sealed record LandfillOffer(
     string Id,
     string Name,
     string Address,
+    Coordinates Coordinates,
     string Status,
     DateOnly StatusUpdatedAt,
     Money DisposalPricePerTon);
@@ -47,6 +48,14 @@ public interface IReferenceData
   Task<DataFreshness> FreshnessAsync(CancellationToken cancellationToken);
 }
 
+/// Плечо перевозки до одного полигона: расстояние по дорожной сети и время в
+/// пути (R-020, R-032). Время известно не всегда — источник расстояний мог
+/// отдать только километры, и выдумывать минуты по средней скорости нельзя:
+/// это была бы величина расчёта, назначенная в коде (R-058).
+///
+/// @supports: R-020, R-032
+public sealed record RoadLeg(double DistanceKm, int? DurationMinutes);
+
 /// Плечи перевозки от точки вывоза до полигонов по дорожной сети (R-020).
 /// Полигона нет в ответе — сохранённого расстояния для него нет; расстояние
 /// по прямой не подставляется, потому что оно занижает смету.
@@ -54,7 +63,7 @@ public interface IReferenceData
 /// @supports: R-020
 public interface IRoadDistances
 {
-  Task<IReadOnlyDictionary<string, double>> FromAsync(
+  Task<IReadOnlyDictionary<string, RoadLeg>> FromAsync(
       Coordinates pickup,
       CancellationToken cancellationToken);
 }

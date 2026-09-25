@@ -232,12 +232,13 @@ public sealed class CalculationScenarios(
     return state;
   }
 
-  /// Сводка маршрута по выбранным полигонам (R-032, R-050).
+  /// Сводка маршрута по выбранным полигонам (R-032, R-034, R-050).
   ///
-  /// Детали закрыты: личности пользователя у службы пока нет, а что именно
-  /// открывает подписка, заказчиком не установлено (Q-011). Отказать кодом
-  /// было бы неверно — итог гостю виден и сейчас, закрыты только участки
-  /// маршрута. Поэтому ответ несёт признак доступа, а не код отказа.
+  /// Решением команды от 25.09.2026 (Q-004, Q-011) доступ в версии 1 не
+  /// разграничивается: маршрут открыт всем. Форма разграничения остаётся —
+  /// ответ несёт признак доступа, и политика включится настройкой, когда
+  /// заказчик назовёт тарифы. Поэтому здесь выдача доступа, а не его
+  /// отсутствие, и участки собираются всегда.
   public async Task<RouteSummary?> RouteAsync(string calculationId, CancellationToken cancellationToken)
   {
     var calculation = await store.FindAsync(calculationId, cancellationToken);
@@ -248,12 +249,38 @@ public sealed class CalculationScenarios(
     }
 
     var selection = await SavedSelectionAsync(calculation, cancellationToken);
-    var access = new RouteAccess(false, RouteAccess.SubscriptionRequired);
+    var roads = await distances.FromAsync(calculation.PickupAddress.Coordinates, cancellationToken);
+    var pickup = calculation.PickupAddress.Coordinates;
+    var legs = new List<RouteLeg>();
 
-    // Участки собираются только при выданном доступе: подменять закрытое
-    // содержимое нечем, а заполнить его «на всякий случай» значит выдать то,
-    // что объявлено закрытым.
-    return new RouteSummary(access, [], selection?.Total ?? Money.Rubles(0));
+    // Один полигон — один участок, сколько бы групп отходов на него ни
+    // везли: участок отвечает на вопрос «как туда доехать», а не «что туда
+    // едет». Порядок сохраняется тот, в котором полигоны выбраны.
+    foreach (var landfillId in calculation.Selection.Select(entry => entry.LandfillId).Distinct())
+    {
+      var entry = calculation.Selection.First(candidate => candidate.LandfillId == landfillId);
+      var (offer, _) = await PricedAsync(
+          calculation, entry.WasteGroupId, landfillId, null, cancellationToken);
+
+      // Плечо обязано быть сохранено: без него не посчиталась бы и стоимость
+      // перевозки, и до этой строки выполнение не дошло бы.
+      var road = roads[landfillId];
+
+      legs.Add(RouteLeg.Of(
+          landfillId,
+          road.DistanceKm,
+          road.DurationMinutes,
+          ExternalMapRoute.UrlFor(
+              pickup.Latitude,
+              pickup.Longitude,
+              offer.Coordinates.Latitude,
+              offer.Coordinates.Longitude)));
+    }
+
+    return new RouteSummary(
+        new RouteAccess(true, null),
+        legs,
+        selection?.Total ?? Money.Rubles(0));
   }
 
   /// Строки выбранных полигонов с закреплёнными ценами — то, что коммерческое
@@ -377,7 +404,7 @@ public sealed class CalculationScenarios(
 
     var legs = await distances.FromAsync(calculation.PickupAddress.Coordinates, cancellationToken);
 
-    if (!legs.TryGetValue(landfillId, out var distanceKm))
+    if (!legs.TryGetValue(landfillId, out var leg))
     {
       throw new PlacementUnavailableException(
           $"До полигона «{offer.Name}» не сохранено расстояние по дорожной сети от адреса вывоза");
@@ -386,7 +413,7 @@ public sealed class CalculationScenarios(
     var cost = PlacementCost.Of(
         tons ?? item.Tons,
         group.TransportPricePerTonKm,
-        (decimal)distanceKm,
+        (decimal)leg.DistanceKm,
         calculation.DisposalRequired ? offer.DisposalPricePerTon : null,
         await coefficients.EffectiveAsync(cancellationToken));
 
@@ -445,8 +472,9 @@ public sealed class CalculationScenarios(
     var coefficient = await coefficients.EffectiveAsync(cancellationToken);
 
     var options = known
-        .Where(offer => Fits(legs[offer.Id], distance))
-        .Select(offer => Option(offer, legs[offer.Id], item.Tons, group, calculation.DisposalRequired, coefficient))
+        .Where(offer => Fits(legs[offer.Id].DistanceKm, distance))
+        .Select(offer => Option(
+            offer, legs[offer.Id].DistanceKm, item.Tons, group, calculation.DisposalRequired, coefficient))
         .ToList();
 
     return (options, options.Count == 0 ? PlacementOptionPage.FilteredOutByDistance : null);

@@ -43,6 +43,10 @@ public sealed class ImoltDealsStand : IAsyncLifetime
 
   public const string VostokId = "vostok-timohovo";
 
+  /// Плечо перевозки до «Востока» из начального набора: 45 км. По нему же
+  /// посчитана стоимость перевозки примера договора.
+  public const double VostokDistanceKm = 45;
+
   public const string IkshaId = "iksha";
 
   /// Объём примера договора: 20 тонн лома бетона.

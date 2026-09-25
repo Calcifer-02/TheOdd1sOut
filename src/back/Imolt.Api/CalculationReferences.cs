@@ -69,6 +69,11 @@ public sealed class CalculationReferences(
             landfill.Id,
             landfill.Name,
             landfill.Address,
+            // Координаты области «справочники» переносятся в свой тип области
+            // «расчёт»: общий тип связал бы две области напрямую (ADR-0001).
+            new Imolt.Calculations.Contracts.Coordinates(
+                landfill.Coordinates.Latitude,
+                landfill.Coordinates.Longitude),
             landfill.Status,
             landfill.StatusUpdatedAt,
             tariff.DisposalPricePerTon);

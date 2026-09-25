@@ -22,7 +22,7 @@ public sealed class RoadDistances(NpgsqlDataSource dataSource) : IRoadDistances
   /// один и тот же адрес не нашёл бы собственной строки.
   private const int KeyPrecision = 5;
 
-  public async Task<IReadOnlyDictionary<string, double>> FromAsync(
+  public async Task<IReadOnlyDictionary<string, RoadLeg>> FromAsync(
       Coordinates pickup,
       CancellationToken cancellationToken)
   {
@@ -30,7 +30,7 @@ public sealed class RoadDistances(NpgsqlDataSource dataSource) : IRoadDistances
 
     var rows = await connection.QueryAsync<DistanceRow>(new CommandDefinition(
         """
-        select landfill_id, distance_km
+        select landfill_id, distance_km, duration_minutes
           from road_distance
          where from_latitude = @latitude
            and from_longitude = @longitude
@@ -42,7 +42,9 @@ public sealed class RoadDistances(NpgsqlDataSource dataSource) : IRoadDistances
         },
         cancellationToken: cancellationToken));
 
-    return rows.ToDictionary(row => row.LandfillId, row => (double)row.DistanceKm);
+    return rows.ToDictionary(
+        row => row.LandfillId,
+        row => new RoadLeg((double)row.DistanceKm, row.DurationMinutes));
   }
 
   // Средство доступа к данным собирает строку через открытые свойства, а
@@ -52,5 +54,9 @@ public sealed class RoadDistances(NpgsqlDataSource dataSource) : IRoadDistances
     public string LandfillId { get; set; } = string.Empty;
 
     public decimal DistanceKm { get; set; }
+
+    /// Время в пути известно не у всех плеч: столбец объявлен обнуляемым, и
+    /// пустое значение остаётся пустым, а не превращается в ноль минут.
+    public int? DurationMinutes { get; set; }
   }
 }
