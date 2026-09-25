@@ -1,6 +1,6 @@
 {
   "schemaVersion": "trip.trace-policy/v1",
-  "mode": "observe",
+  "mode": "changed",
   "registry": {
     "adapter": "markdown-trip",
     "paths": [
