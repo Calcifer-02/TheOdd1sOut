@@ -87,19 +87,46 @@ public sealed class ReferenceImportScenarios(
         .Select(rejection => new ReferenceImportRejectedRow(rejection.Row, rejection.Reason))
         .ToList();
     var unknown = new HashSet<string>(StringComparer.Ordinal);
+    var additions = new List<string>();
+    var added = new HashSet<string>(StringComparer.Ordinal);
+
+    // Запись, которой в справочнике нет, разбирается целиком, а не построчно:
+    // завести можно только ту, у которой книга принесла все обязательные
+    // поля, и решается это по всем её столбцам сразу (R-046).
+    var offered = interpreted.Candidates
+        .GroupBy(candidate => candidate.EntityId, StringComparer.Ordinal)
+        .ToDictionary(
+            group => group.Key,
+            group => group.Select(candidate => candidate.Field).ToHashSet(StringComparer.Ordinal),
+            StringComparer.Ordinal);
 
     foreach (var candidate in interpreted.Candidates)
     {
       if (!known.TryGetValue(candidate.EntityId, out var fields))
       {
-        // Запись называется один раз, сколько бы её столбцов ни пришло:
-        // повторённая причина не добавляет сведений, а список отказов делает
-        // нечитаемым.
-        if (unknown.Add(candidate.EntityId))
+        if (!Addable(schema, offered[candidate.EntityId]))
         {
-          rejections.Add(new ReferenceImportRejectedRow(
-              RowOf(workbook, candidate.EntityId), ImportRejections.UnknownEntity));
+          // Запись называется один раз, сколько бы её столбцов ни пришло:
+          // повторённая причина не добавляет сведений, а список отказов делает
+          // нечитаемым.
+          if (unknown.Add(candidate.EntityId))
+          {
+            rejections.Add(new ReferenceImportRejectedRow(
+                RowOf(workbook, candidate.EntityId),
+                Refusal(schema, offered[candidate.EntityId])));
+          }
+
+          continue;
         }
+
+        if (added.Add(candidate.EntityId))
+        {
+          additions.Add(candidate.EntityId);
+        }
+
+        // Текущего значения у поля заводимой записи нет вовсе, и пустота
+        // здесь не «поле не заполнено», а «записи ещё нет».
+        changes.Add(new ReferenceImportChange(candidate.EntityId, candidate.Field, null, candidate.Value));
 
         continue;
       }
@@ -121,9 +148,10 @@ public sealed class ReferenceImportScenarios(
         Guid.NewGuid().ToString(),
         kind!,
         changes,
-        rejections.OrderBy(rejection => rejection.Row).ToList());
+        rejections.OrderBy(rejection => rejection.Row).ToList(),
+        additions);
 
-    await imports.SaveAsync(preview, Snapshot(changes), cancellationToken);
+    await imports.SaveAsync(preview, Snapshot(changes, additions), cancellationToken);
 
     return preview;
   }
@@ -148,6 +176,17 @@ public sealed class ReferenceImportScenarios(
 
     var entityIds = stored.Changes.Select(change => change.EntityId).Distinct().ToList();
     var current = await imports.CurrentAsync(stored.Kind, entityIds, cancellationToken);
+
+    // Заводимая запись обязана отсутствовать и на этом шаге. Появилась —
+    // значит её завели другим способом, и применить предпросмотр поверх
+    // значило бы молча переписать чужую запись (R-046).
+    if (stored.Additions.Any(id => current.Any(value =>
+        string.Equals(value.EntityId, id, StringComparison.Ordinal))))
+    {
+      throw new StalePreviewException(
+          "Запись, которую собирался завести импорт, уже есть в справочнике: разберите файл заново");
+    }
+
     var actual = current
         .Where(value => stored.Changes.Any(change =>
             string.Equals(change.EntityId, value.EntityId, StringComparison.Ordinal)
@@ -161,10 +200,11 @@ public sealed class ReferenceImportScenarios(
     }
 
     var startedAt = clock.Now;
-    var applied = await imports.ApplyAsync(stored.Kind, stored.Changes, cancellationToken);
+    var applied = await imports.ApplyAsync(
+        stored.Kind, stored.Changes, stored.Additions, cancellationToken);
     var finishedAt = clock.Now;
 
-    await imports.MarkAppliedAsync(importId, applied, finishedAt, cancellationToken);
+    await imports.MarkAppliedAsync(importId, applied.Changes, finishedAt, cancellationToken);
 
     // Применённый импорт — и есть обновление справочника в версии 1: службы
     // сбора в составе нет (ADR-0002), а источник `file` договор объявляет.
@@ -172,13 +212,32 @@ public sealed class ReferenceImportScenarios(
         new SyncRun(startedAt, finishedAt, "file", "succeeded", 0, LandfillsOf(stored), null),
         cancellationToken);
 
-    return new ReferenceImportResult(importId, applied, finishedAt);
+    return new ReferenceImportResult(importId, applied.Changes, applied.Added, finishedAt);
   }
 
   /// Отпечаток снимается по тем же парам «запись и поле», которые импорт
-  /// собирается изменить, и по их значениям до правки.
-  private static string Snapshot(IReadOnlyList<ReferenceImportChange> changes)
-      => ImportSnapshot.Of(changes.Select(change => (change.EntityId, change.Field, change.CurrentValue)));
+  /// собирается изменить, и по их значениям до правки. Заводимые записи в
+  /// него не входят: у них нет текущих значений, и сторожит их не отпечаток,
+  /// а отдельная проверка отсутствия при подтверждении (R-046).
+  private static string Snapshot(
+      IReadOnlyList<ReferenceImportChange> changes,
+      IReadOnlyCollection<string> additions)
+      => ImportSnapshot.Of(changes
+          .Where(change => !additions.Contains(change.EntityId, StringComparer.Ordinal))
+          .Select(change => (change.EntityId, change.Field, change.CurrentValue)));
+
+  /// Годится ли запись к заведению: вид справочника вообще заводит новые
+  /// записи, и книга принесла все обязательные поля.
+  private static bool Addable(WorkbookSchema schema, IReadOnlyCollection<string> offered)
+      => schema.RequiredForNew.Count > 0 && schema.RequiredForNew.All(offered.Contains);
+
+  /// Почему запись не применяется. Причину читает менеджер данных и по ней
+  /// правит книгу, поэтому недостающие столбцы называются поимённо.
+  private static string Refusal(WorkbookSchema schema, IReadOnlyCollection<string> offered)
+      => schema.RequiredForNew.Count == 0
+          ? ImportRejections.UnknownEntity
+          : ImportRejections.IncompleteNewEntity
+              + string.Join(", ", schema.RequiredForNew.Where(field => !offered.Contains(field)));
 
   /// Сколько полигонов затронуто. У тарифа запись названа парой «полигон и
   /// группа», и считать надо полигоны, а не пары: иначе десять тарифов одного

@@ -50,8 +50,14 @@ public sealed record StoredImport(
     string Id,
     string Kind,
     IReadOnlyList<ReferenceImportChange> Changes,
+    IReadOnlyList<string> Additions,
     string SnapshotHash,
     bool Applied);
+
+/// Что применение записало: правок и заведённых записей. Числа разные, и
+/// путать их нельзя — «обновлено три поля» и «заведён один полигон» говорят
+/// менеджеру данных о разном (R-046).
+public sealed record ImportApplied(int Changes, int Added);
 
 /// Хранилище импорта: чтение текущих значений, применение разобранного и
 /// журнал предпросмотров.
@@ -67,9 +73,12 @@ public interface IReferenceImports
 
   /// Применение идёт одной транзакцией: половина применённой книги хуже
   /// неприменённой — по ней не видно, что именно уже записано.
-  Task<int> ApplyAsync(
+  /// Заводимые записи передаются отдельно от правок: заводит их приложение
+  /// по схеме вида справочника, а хранилище только исполняет решение (R-046).
+  Task<ImportApplied> ApplyAsync(
       string kind,
       IReadOnlyList<ReferenceImportChange> changes,
+      IReadOnlyCollection<string> additions,
       CancellationToken cancellationToken);
 
   /// Предпросмотр сохраняется целиком, вместе с неразобранными строками:

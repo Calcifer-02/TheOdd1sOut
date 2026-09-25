@@ -47,20 +47,36 @@ public sealed class ReferenceImportStore(NpgsqlDataSource dataSource, IClock clo
     };
   }
 
-  public async Task<int> ApplyAsync(
+  public async Task<ImportApplied> ApplyAsync(
       string kind,
       IReadOnlyList<ReferenceImportChange> changes,
+      IReadOnlyCollection<string> additions,
       CancellationToken cancellationToken)
   {
     if (changes.Count == 0)
     {
-      return 0;
+      return new ImportApplied(0, 0);
     }
 
     await using var connection = await dataSource.OpenConnectionAsync(cancellationToken);
     await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
 
     var applied = 0;
+    var added = 0;
+
+    // Заводимые записи создаются до правок: правка ищет запись по ключу, и
+    // без неё применять значения некуда. Значения берутся из тех же
+    // расхождений — второго источника у них нет (R-046).
+    foreach (var entityId in additions)
+    {
+      added += await AddAsync(
+          connection,
+          transaction,
+          kind,
+          entityId,
+          changes.Where(change => string.Equals(change.EntityId, entityId, StringComparison.Ordinal)).ToList(),
+          cancellationToken);
+    }
 
     // Одной транзакцией: половина применённой книги хуже неприменённой — по
     // ней не видно, что именно уже записано, и повторить её нечем.
@@ -77,7 +93,58 @@ public sealed class ReferenceImportStore(NpgsqlDataSource dataSource, IClock clo
 
     await transaction.CommitAsync(cancellationToken);
 
-    return applied;
+    return new ImportApplied(applied, added);
+  }
+
+  /// Заведение записи справочника книгой. Новых видов, кроме полигонов, не
+  /// заводится: у групп отходов и тарифов нет обязательного состава, который
+  /// книга могла бы принести целиком (R-046).
+  ///
+  /// Статус новой записи — «не подтверждён», источник статуса — «реестр»:
+  /// официальный перечень говорит, что объект существует, а не что он
+  /// принимает отходы сегодня. Объявить его активным значило бы подставить
+  /// полигон в подбор без единого подтверждения (R-044, R-046).
+  private async Task<int> AddAsync(
+      NpgsqlConnection connection,
+      System.Data.Common.DbTransaction transaction,
+      string kind,
+      string entityId,
+      IReadOnlyList<ReferenceImportChange> values,
+      CancellationToken cancellationToken)
+  {
+    if (kind != ReferenceImportKind.Landfills)
+    {
+      return 0;
+    }
+
+    string? Value(string field) => values
+        .FirstOrDefault(change => string.Equals(change.Field, field, StringComparison.Ordinal))
+        ?.FileValue;
+
+    return await connection.ExecuteAsync(new CommandDefinition(
+        """
+        insert into landfill (
+            id, name, legal_entity, address, latitude, longitude,
+            status, status_source, status_updated_at
+        ) values (
+            @id, @name, @legalEntity, @address,
+            cast(@latitude as double precision), cast(@longitude as double precision),
+            'unconfirmed', 'registry', @today
+        )
+        on conflict (id) do nothing
+        """,
+        new
+        {
+          id = entityId,
+          name = Value("name"),
+          legalEntity = Value("legalEntity"),
+          address = Value("address"),
+          latitude = Value("latitude"),
+          longitude = Value("longitude"),
+          today = clock.Today,
+        },
+        transaction,
+        cancellationToken: cancellationToken));
   }
 
   public async Task SaveAsync(
@@ -134,6 +201,9 @@ public sealed class ReferenceImportStore(NpgsqlDataSource dataSource, IClock clo
             row.Id.ToString(),
             row.Kind,
             preview.Changes,
+            // Предпросмотры, сохранённые до появления заведения записей, поля
+            // не несут: пустой состав читается как «заводить нечего».
+            preview.Additions ?? [],
             row.SourceSnapshotHash,
             row.AppliedAt is not null);
   }
@@ -252,6 +322,10 @@ public sealed class ReferenceImportStore(NpgsqlDataSource dataSource, IClock clo
       "name" => "name = @value",
       "legalEntity" => "legal_entity = @value",
       "address" => "address = @value",
+      // Координаты приходят строкой инвариантной записи: приведение делает
+      // база, а не разбор, — иначе культура машины попала бы в число (R-046).
+      "latitude" => "latitude = cast(@value as double precision)",
+      "longitude" => "longitude = cast(@value as double precision)",
       _ => null,
     };
 

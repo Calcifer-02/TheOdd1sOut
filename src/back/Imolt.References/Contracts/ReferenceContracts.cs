@@ -169,10 +169,16 @@ public sealed record ReferenceImportPreview(
     string Id,
     string Kind,
     IReadOnlyList<ReferenceImportChange> Changes,
-    IReadOnlyList<ReferenceImportRejectedRow> RejectedRows);
+    IReadOnlyList<ReferenceImportRejectedRow> RejectedRows,
+    /// Записи, которых в справочнике нет и которые заведёт подтверждение
+    /// (R-046). Их поля стоят в Changes с пустым текущим значением, но
+    /// «поля ещё нет» и «запись ещё нет» — разные вещи, и менеджер данных
+    /// обязан видеть вторую до применения.
+    IReadOnlyList<string> Additions);
 
 /// Итог применения разобранной книги (R-045).
 public sealed record ReferenceImportResult(
     string Id,
     int AppliedChanges,
+    int AddedEntities,
     DateTimeOffset UpdatedAt);

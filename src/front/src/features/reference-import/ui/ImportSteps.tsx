@@ -38,6 +38,7 @@ export function ImportSteps({
 
   const changes = state.preview?.changes ?? [];
   const rejected = state.preview?.rejectedRows ?? [];
+  const additions = state.preview?.additions ?? [];
 
   return (
     <Card className="imolt-import">
@@ -92,14 +93,18 @@ export function ImportSteps({
 
       {state.stage === 'applied' && state.result !== null && (
         <Notice kind="done">
-          {`Применено изменений: ${state.result.appliedChanges}. Справочник обновлён ${formatDate(state.result.updatedAt)}.`}
+          {`Применено изменений: ${state.result.appliedChanges}.`}
+          {state.result.addedEntities > 0 ? ` Заведено записей: ${state.result.addedEntities}.` : ''}
+          {` Справочник обновлён ${formatDate(state.result.updatedAt)}.`}
         </Notice>
       )}
 
       {(state.stage === 'preview' || state.stage === 'applying') && (
         <>
           <span className="imolt-import-source">
-            {`${state.fileName ?? 'Книга'} – ${importKindName(state.kind)}. Расхождений: ${changes.length}. Справочник пока не изменён.`}
+            {`${state.fileName ?? 'Книга'} – ${importKindName(state.kind)}. Расхождений: ${changes.length}.`}
+            {additions.length > 0 ? ` Будет заведено записей: ${additions.length}.` : ''}
+            {' Справочник пока не изменён.'}
           </span>
 
           {changes.length === 0 ? (

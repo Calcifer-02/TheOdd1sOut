@@ -80,6 +80,11 @@ public static class ImportRejections
 
   public const string EmptyKey = "не заполнен столбец, определяющий запись";
 
+  /// Новая запись пришла не целиком. Завести полигон без координат нельзя:
+  /// плечо перевозки считается от них, и запись без них в подборе бесполезна
+  /// (R-046).
+  public const string IncompleteNewEntity = "записи с таким идентификатором в справочнике нет, а для новой не хватает обязательных столбцов: ";
+
   /// Коды каталога ФККО не применяются, пока не сверена редакция каталога
   /// (Q-015). Отказ назван строкой, а не умолчанием: молча пропущенный
   /// столбец читается как «импортировалось», и расхождение всплывёт позже.
@@ -98,10 +103,12 @@ public sealed class WorkbookSchema
 
   private WorkbookSchema(
       IReadOnlyList<string> keyHeaders,
-      IReadOnlyDictionary<string, ImportField> fields)
+      IReadOnlyDictionary<string, ImportField> fields,
+      IReadOnlyList<string>? requiredForNew = null)
   {
     KeyHeaders = keyHeaders;
     Fields = fields;
+    RequiredForNew = requiredForNew ?? [];
   }
 
   /// Столбцы, определяющие запись. У тарифа их два: тариф — это ячейка
@@ -109,6 +116,12 @@ public sealed class WorkbookSchema
   public IReadOnlyList<string> KeyHeaders { get; }
 
   public IReadOnlyDictionary<string, ImportField> Fields { get; }
+
+  /// Поля, без которых новую запись заводить нельзя. Пустой состав означает,
+  /// что вид справочника новых записей не заводит вовсе: цены и тарифы
+  /// импорт только правит, потому что заводить их не из чего — группа отходов
+  /// и тариф появляются вместе со своей записью справочника.
+  public IReadOnlyList<string> RequiredForNew { get; }
 
   public static WorkbookSchema For(string kind) => kind switch
   {
@@ -127,7 +140,12 @@ public sealed class WorkbookSchema
           ["название"] = new("name", ImportValueKind.Text),
           ["юрлицо"] = new("legalEntity", ImportValueKind.Text),
           ["адрес"] = new("address", ImportValueKind.Text),
-        }),
+          ["широта"] = new("latitude", ImportValueKind.Number),
+          ["долгота"] = new("longitude", ImportValueKind.Number),
+        },
+        // Юрлицо в обязательные не входит: официальный перечень называет его
+        // не всегда, а без координат полигон в подборе бесполезен (R-046).
+        ["name", "address", "latitude", "longitude"]),
     ReferenceImportKind.Tariffs => new WorkbookSchema(
         ["полигон", "группа отходов"],
         new Dictionary<string, ImportField>(StringComparer.Ordinal)

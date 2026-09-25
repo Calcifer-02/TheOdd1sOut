@@ -73,11 +73,15 @@ export type ReferenceImportPreview = {
   kind: ReferenceImportKind;
   changes: ReferenceImportChange[];
   rejectedRows?: ReferenceImportRejectedRow[];
+  /** Записи, которых в справочнике нет: их заведёт подтверждение (R-046). */
+  additions?: string[];
 };
 
 export type ReferenceImportResult = {
   id: string;
   appliedChanges: number;
+  /** Сколько записей заведено подтверждением (R-046). */
+  addedEntities: number;
   updatedAt: string;
 };
 

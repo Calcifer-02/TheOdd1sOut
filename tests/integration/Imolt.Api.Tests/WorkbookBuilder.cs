@@ -81,6 +81,16 @@ internal sealed class WorkbookBuilder
 
   public const string DensityColumn = "Плотность";
 
+  public const string LegalEntityColumn = "Юрлицо";
+
+  public const string AddressColumn = "Адрес";
+
+  /// Столбцы координат полигона: без них новая запись реестра не заводится —
+  /// плечо перевозки считается от них (R-046).
+  public const string LatitudeColumn = "Широта";
+
+  public const string LongitudeColumn = "Долгота";
+
   /// Столбец кодов каталога ФККО. Распознаётся, но не применяется: редакция
   /// каталога не сверена (Q-015).
   public const string FkkoCodesColumn = "Коды ФККО";

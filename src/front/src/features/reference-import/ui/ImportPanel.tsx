@@ -61,6 +61,10 @@ export function ImportPanel({
   const changes = state.preview?.changes ?? [];
   const rejected = state.preview?.rejectedRows ?? [];
 
+  // Заводимые записи называются отдельно от правок: применить книгу, которая
+  // заводит полигон, и книгу, которая правит адрес, — разные решения (R-046).
+  const additions = state.preview?.additions ?? [];
+
   return (
     <Card className="imolt-import">
       <div className="imolt-import-head">
@@ -126,13 +130,19 @@ export function ImportPanel({
 
       {state.stage === 'applied' && state.result !== null && (
         <Notice kind="done">
-          {`Применено изменений: ${state.result.appliedChanges}. Справочник обновлён ${formatDate(state.result.updatedAt)}.`}
+          {`Применено изменений: ${state.result.appliedChanges}.`}
+          {state.result.addedEntities > 0 ? ` Заведено записей: ${state.result.addedEntities}.` : ''}
+          {` Справочник обновлён ${formatDate(state.result.updatedAt)}.`}
         </Notice>
       )}
 
       {(state.stage === 'preview' || state.stage === 'applying') && (
         <>
-          <span className="imolt-import-source">{`Расхождений: ${changes.length}. Справочник пока не изменён.`}</span>
+          <span className="imolt-import-source">
+            {`Расхождений: ${changes.length}.`}
+            {additions.length > 0 ? ` Будет заведено записей: ${additions.length}.` : ''}
+            {' Справочник пока не изменён.'}
+          </span>
 
           {changes.length === 0 ? (
             <EmptyState title="Расхождений нет" hint="Значения книги совпадают со справочником, применять нечего" />
