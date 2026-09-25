@@ -39,7 +39,44 @@ export const COMPANY_CSS = `
 /* Логотипы клиентов: пять в ряд, как на сайте компании. Высота одна на все,
    а картинка вписывается целиком: у пятнадцати чужих логотипов разные
    пропорции, и без общей меры ряд разъезжается. */
-.imolt-company-clients { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+/* Лента клиентов: одна строка вместо трёх рядов плиток. Ряд едет влево на
+   свою ширину, второй такой же ряд подхватывает — и движение замыкается без
+   рывка. Останавливается на наведении и на фокусе внутри: читать логотип на
+   ходу нельзя. */
+.imolt-company-clients-track {
+  display: flex;
+  gap: ${space.m}px;
+  overflow: hidden;
+}
+
+.imolt-company-clients-track:hover .imolt-company-clients,
+.imolt-company-clients-track:focus-within .imolt-company-clients {
+  animation-play-state: paused;
+}
+
+.imolt-company-clients {
+  display: flex;
+  flex: 0 0 auto;
+  gap: ${space.m}px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  animation: imolt-company-clients-run 40s linear infinite;
+}
+
+.imolt-company-client { flex: 0 0 ${space.xxxl * 4}px; }
+
+@keyframes imolt-company-clients-run {
+  from { transform: translateX(0); }
+  to { transform: translateX(calc(-100% - ${space.m}px)); }
+}
+
+/* Движение — украшение: при выключенном движении в системе лента стоит, а
+   прокрутка остаётся пальцем и колесом. */
+@media (prefers-reduced-motion: reduce) {
+  .imolt-company-clients { animation: none; }
+  .imolt-company-clients-track { overflow-x: auto; }
+}
 
 .imolt-company-client {
   display: flex;
@@ -97,7 +134,6 @@ export const COMPANY_CSS = `
 @media (max-width: ${BREAKPOINTS.sideSummary - 1}px) {
   .imolt-company-services { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .imolt-company-projects { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .imolt-company-clients { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 
 @media (max-width: ${BREAKPOINTS.cards - 1}px) {
@@ -105,6 +141,9 @@ export const COMPANY_CSS = `
   .imolt-company-services,
   .imolt-company-projects,
   .imolt-company-contacts { grid-template-columns: minmax(0, 1fr); }
-  .imolt-company-clients { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  /* На телефоне плитка клиента уже: иначе в ленту помещается полторы штуки и
+     движение читается рывком. */
+  .imolt-company-client { flex-basis: ${space.xxxl * 3}px; }
 }
 `;

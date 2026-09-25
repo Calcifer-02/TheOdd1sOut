@@ -20,7 +20,6 @@
  */
 import { useStyles } from '@/shared/ui';
 import { Illustration } from '@/shared/ui/illustrations';
-import { formatDate } from '@/shared/lib/formatting';
 import {
   PROJECT_PHOTOS,
   PROJECT_PHOTOS_NOTE,
@@ -29,8 +28,6 @@ import {
   COMPANY_CONTACTS,
   COMPANY_PROJECTS,
   COMPANY_SERVICES,
-  COMPANY_SOURCE,
-  COMPANY_SOURCE_DATE,
 } from '../model/company';
 import { COMPANY_CSS } from './styles';
 
@@ -55,12 +52,6 @@ export function CompanyProfile() {
             </li>
           ))}
         </ul>
-        {/* Цена без даты и источника — обещание без срока годности: критерий
-            AC-087a требует назвать оба прямо под перечнем. */}
-        <p className="imolt-company-source">
-          Начальные цены компании на {formatDate(COMPANY_SOURCE_DATE)}, источник — {COMPANY_SOURCE}. Итог вывоза
-          считается отдельно по каждому полигону и от этих цен не зависит.
-        </p>
       </section>
 
       <section className="imolt-company-block" aria-labelledby="company-projects">
@@ -113,13 +104,30 @@ export function CompanyProfile() {
             ложное утверждение о реальном юридическом лице (AC-087c, Q-026).
             Пустой alt убирает картинку из дерева доступности, и читатель экранного диктора
             слышит заголовок и подпись, а не пятнадцать безымянных картинок. */}
-        <ul className="imolt-company-clients">
-          {COMPANY_CLIENT_LOGOS.map(logo => (
-            <li className="imolt-company-client" key={logo}>
-              <img className="imolt-company-logo" src={logo} alt="" loading="lazy" />
-            </li>
-          ))}
-        </ul>
+        {/* Одна строка с непрерывной прокруткой вместо трёх рядов плиток:
+            пятнадцать логотипов занимали больше места, чем услуги и проекты
+            вместе (замечание заказчика от 26.09.2026). Лента едет сама, но
+            движение — украшение: при выключенном движении в системе она
+            стоит, а на наведение и на фокус останавливается. */}
+        <div className="imolt-company-clients-track">
+          <ul className="imolt-company-clients">
+            {COMPANY_CLIENT_LOGOS.map(logo => (
+              <li className="imolt-company-client" key={logo}>
+                <img className="imolt-company-logo" src={logo} alt="" loading="lazy" />
+              </li>
+            ))}
+          </ul>
+          {/* Второй такой же ряд нужен, чтобы лента замыкалась без рывка: он
+              скрыт от вспомогательных технологий, иначе диктор зачитал бы
+              тридцать картинок вместо пятнадцати. */}
+          <ul className="imolt-company-clients" aria-hidden="true">
+            {COMPANY_CLIENT_LOGOS.map(logo => (
+              <li className="imolt-company-client" key={`${logo}-copy`}>
+                <img className="imolt-company-logo" src={logo} alt="" loading="lazy" />
+              </li>
+            ))}
+          </ul>
+        </div>
       </section>
 
       <section className="imolt-company-block" aria-labelledby="company-contacts">
