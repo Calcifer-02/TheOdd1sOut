@@ -9,7 +9,7 @@
  * заявка не уходит, и подставлять согласие за участника нельзя (R-054).
  *
  * @req: R-052
- * @supports: R-009, R-054
+ * @supports: R-054
  * @adr: ADR-0008
  */
 import { useId, useState } from 'react';

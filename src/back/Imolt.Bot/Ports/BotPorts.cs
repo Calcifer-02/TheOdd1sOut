@@ -67,8 +67,7 @@ public interface IDialogs
 }
 
 /// Платформа отклонила обращение и повторы исчерпаны. Служба обязана назвать
-/// отказ и продолжить принимать следующие обновления (R-082).
-///
-/// @supports: R-082
+/// отказ и продолжить принимать следующие обновления (R-082). Маркер здесь
+/// не ставится: связь несёт MaxDelivery, а этот тип — её следствие.
 public sealed class MaxRefusedException(string message, Exception? inner = null)
     : Exception(message, inner);

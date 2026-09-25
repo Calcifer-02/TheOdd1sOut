@@ -5,7 +5,7 @@
  * и перестаёт читаться, поэтому у узкого экрана другая разметка, а не другое
  * оформление той же таблицы (дизайн-договор, разд. 4.5).
  *
- * @supports: R-008, R-049
+ * @supports: R-049
  * @adr: ADR-0008
  */
 import { formatDate, formatMoney } from '@/shared/lib/formatting';

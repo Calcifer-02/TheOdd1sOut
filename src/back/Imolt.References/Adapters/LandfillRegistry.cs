@@ -8,7 +8,7 @@ namespace Imolt.References.Adapters;
 
 /// Реестр полигонов и отзывы о них поверх PostgreSQL (СУЩ-02, СУЩ-03, СУЩ-04).
 ///
-/// @req: R-031, R-040, R-041
+/// @req: R-031, R-040, R-041, R-088
 /// @adr: ADR-0005
 public sealed class LandfillRegistry(NpgsqlDataSource dataSource) : ILandfillRegistry
 {
