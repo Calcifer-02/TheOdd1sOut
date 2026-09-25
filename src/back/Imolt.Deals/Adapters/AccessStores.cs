@@ -20,9 +20,13 @@ namespace Imolt.Deals.Adapters;
 /// @adr: ADR-0005
 public sealed class SubscriberStore(NpgsqlDataSource dataSource, IClock clock) : ISubscriberStore
 {
+  /// Столбец `has_sez` назван в схеме сокращением, а договор называет
+  /// документ целиком; псевдоним сводит их, не трогая схему.
   private const string Columns = """
-    select id, max_user_id, display_name, role, company_name, inn,
-           registered_in_ais_ossig, subscription_state, subscription_active_until
+    select id, max_user_id, display_name, role, company_name, inn, phone,
+           registered_in_ais_ossig, has_transport_license,
+           has_sez as has_sanitary_conclusion,
+           subscription_state, subscription_active_until
       from subscriber
     """;
 
@@ -40,8 +44,10 @@ public sealed class SubscriberStore(NpgsqlDataSource dataSource, IClock clock) :
         insert into subscriber (id, max_user_id, display_name, created_at)
         values (@id, @maxUserId, @displayName, @createdAt)
         on conflict (max_user_id) do update set display_name = excluded.display_name
-        returning id, max_user_id, display_name, role, company_name, inn,
-                  registered_in_ais_ossig, subscription_state, subscription_active_until
+        returning id, max_user_id, display_name, role, company_name, inn, phone,
+                  registered_in_ais_ossig, has_transport_license,
+                  has_sez as has_sanitary_conclusion,
+                  subscription_state, subscription_active_until
         """,
         new
         {
@@ -92,7 +98,10 @@ public sealed class SubscriberStore(NpgsqlDataSource dataSource, IClock clock) :
            set role = @role,
                company_name = @companyName,
                inn = @inn,
+               phone = @phone,
                registered_in_ais_ossig = @registeredInAisOssig,
+               has_transport_license = @hasTransportLicense,
+               has_sez = @hasSanitaryConclusion,
                subscription_state = @state
          where id = @key
         """,
@@ -102,7 +111,10 @@ public sealed class SubscriberStore(NpgsqlDataSource dataSource, IClock clock) :
           role = input.Role,
           companyName = input.CompanyName,
           inn = input.Inn,
+          phone = input.Phone,
           registeredInAisOssig = input.RegisteredInAisOssig,
+          hasTransportLicense = input.HasTransportLicense,
+          hasSanitaryConclusion = input.HasSanitaryConclusion,
           state = SubscriptionState.Pending,
         },
         transaction,
@@ -111,9 +123,11 @@ public sealed class SubscriberStore(NpgsqlDataSource dataSource, IClock clock) :
     await connection.ExecuteAsync(new CommandDefinition(
         """
         insert into subscription_request (
-            id, subscriber_id, role, company_name, inn, registered_in_ais_ossig, created_at, state
+            id, subscriber_id, role, company_name, inn, phone,
+            registered_in_ais_ossig, has_transport_license, has_sez, created_at, state
         ) values (
-            @id, @key, @role, @companyName, @inn, @registeredInAisOssig, @createdAt, @state
+            @id, @key, @role, @companyName, @inn, @phone,
+            @registeredInAisOssig, @hasTransportLicense, @hasSanitaryConclusion, @createdAt, @state
         )
         """,
         new
@@ -123,7 +137,10 @@ public sealed class SubscriberStore(NpgsqlDataSource dataSource, IClock clock) :
           role = input.Role,
           companyName = input.CompanyName,
           inn = input.Inn,
+          phone = input.Phone,
           registeredInAisOssig = input.RegisteredInAisOssig,
+          hasTransportLicense = input.HasTransportLicense,
+          hasSanitaryConclusion = input.HasSanitaryConclusion,
           createdAt,
           state = SubscriptionState.Pending,
         },
@@ -146,7 +163,10 @@ public sealed class SubscriberStore(NpgsqlDataSource dataSource, IClock clock) :
       row.Role,
       row.CompanyName,
       row.Inn,
+      row.Phone,
       row.RegisteredInAisOssig,
+      row.HasTransportLicense,
+      row.HasSanitaryConclusion,
       new SubscriptionState(row.SubscriptionState, row.SubscriptionActiveUntil));
 
   // Средство доступа к данным собирает строки через открытые свойства, а
@@ -165,7 +185,13 @@ public sealed class SubscriberStore(NpgsqlDataSource dataSource, IClock clock) :
 
     public string? Inn { get; set; }
 
+    public string? Phone { get; set; }
+
     public bool? RegisteredInAisOssig { get; set; }
+
+    public bool? HasTransportLicense { get; set; }
+
+    public bool? HasSanitaryConclusion { get; set; }
 
     public string SubscriptionState { get; set; } = string.Empty;
 

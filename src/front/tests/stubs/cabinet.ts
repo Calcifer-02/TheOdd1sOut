@@ -28,7 +28,10 @@ export type Profile = {
   role: 'carrier' | 'demolitionCompany' | null;
   companyName: string | null;
   inn: string | null;
+  phone: string | null;
   registeredInAisOssig: boolean | null;
+  hasTransportLicense: boolean | null;
+  hasSanitaryConclusion: boolean | null;
   subscription: SubscriptionState;
 };
 
@@ -87,7 +90,10 @@ export const НОВЫЙ_УЧАСТНИК: Profile = {
   role: null,
   companyName: null,
   inn: null,
+  phone: null,
   registeredInAisOssig: null,
+  hasTransportLicense: null,
+  hasSanitaryConclusion: null,
   subscription: { state: 'none' },
 };
 
@@ -216,7 +222,10 @@ export function installCabinetStub(): CabinetStub {
         role?: Profile['role'];
         companyName?: string;
         inn?: string;
+        phone?: string;
         registeredInAisOssig?: boolean;
+        hasTransportLicense?: boolean;
+        hasSanitaryConclusion?: boolean;
       };
 
       profile = {
@@ -224,7 +233,10 @@ export function installCabinetStub(): CabinetStub {
         role: body.role ?? null,
         companyName: body.companyName ?? null,
         inn: body.inn ?? null,
+        phone: body.phone ?? null,
         registeredInAisOssig: body.registeredInAisOssig ?? null,
+        hasTransportLicense: body.hasTransportLicense ?? null,
+        hasSanitaryConclusion: body.hasSanitaryConclusion ?? null,
         subscription: { state: 'pending' },
       };
 

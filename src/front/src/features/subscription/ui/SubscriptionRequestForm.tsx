@@ -112,11 +112,36 @@ export function SubscriptionRequestForm({
         onChange={inn => change({ inn })}
       />
 
+      <Field
+        id={`${fieldId}-phone`}
+        label="Телефон"
+        value={draft.phone}
+        inputMode="tel"
+        placeholder="+7 916 123-45-67"
+        hint="Необязательно: менеджер напишет и в мессенджере"
+        error={shown.phone}
+        onChange={phone => change({ phone })}
+      />
+
       <Checkbox
         id={`${fieldId}-ais`}
         label="Транспорт зарегистрирован в АИС ОССиГ"
         checked={draft.registeredInAisOssig}
         onChange={registeredInAisOssig => change({ registeredInAisOssig })}
+      />
+
+      <Checkbox
+        id={`${fieldId}-license`}
+        label="Есть лицензия на транспортирование отходов I–IV классов опасности"
+        checked={draft.hasTransportLicense}
+        onChange={hasTransportLicense => change({ hasTransportLicense })}
+      />
+
+      <Checkbox
+        id={`${fieldId}-sez`}
+        label="Есть санитарно-эпидемиологическое заключение"
+        checked={draft.hasSanitaryConclusion}
+        onChange={hasSanitaryConclusion => change({ hasSanitaryConclusion })}
       />
 
       <p className="imolt-subscription-terms">

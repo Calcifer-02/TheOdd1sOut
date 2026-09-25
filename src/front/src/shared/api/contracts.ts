@@ -206,7 +206,10 @@ export type Profile = {
   role?: 'carrier' | 'demolitionCompany' | null;
   companyName?: string | null;
   inn?: string | null;
+  phone?: string | null;
   registeredInAisOssig?: boolean | null;
+  hasTransportLicense?: boolean | null;
+  hasSanitaryConclusion?: boolean | null;
   subscription: SubscriptionStanding;
 };
 

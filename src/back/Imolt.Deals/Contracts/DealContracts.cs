@@ -117,18 +117,27 @@ public sealed record Profile(
     string? Role,
     string? CompanyName,
     string? Inn,
+    string? Phone,
     bool? RegisteredInAisOssig,
+    bool? HasTransportLicense,
+    bool? HasSanitaryConclusion,
     SubscriptionState Subscription);
 
 /// Сессия участника. Срок жизни маркера объявлен полем: клиент не угадывает
 /// его по опыту.
 public sealed record Session(string AccessToken, int ExpiresIn, Profile Profile);
 
+/// Что участник сообщает о себе, подавая заявку (R-051). Признаки допускают
+/// пустое значение и после правки остаются пустыми: «не сообщил» и «сообщил,
+/// что документа нет» — разные ответы, и по второму перевозчику откажут.
 public sealed record SubscriptionRequestInput(
     string Role,
     string CompanyName,
     string Inn,
-    bool? RegisteredInAisOssig);
+    string? Phone,
+    bool? RegisteredInAisOssig,
+    bool? HasTransportLicense,
+    bool? HasSanitaryConclusion);
 
 public sealed record SubscriptionRequest(
     string Id,
