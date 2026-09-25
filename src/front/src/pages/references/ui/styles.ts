@@ -36,7 +36,6 @@ export const REFERENCES_CSS = `
 .imolt-references > .imolt-references-status,
 .imolt-references > .imolt-references-card-entity,
 .imolt-references > .imolt-references-actions,
-.imolt-references > .imolt-references-selection,
 .imolt-references > .imolt-grow,
 .imolt-references > .imolt-notice,
 .imolt-references > .imolt-button {
@@ -104,15 +103,24 @@ export const REFERENCES_CSS = `
 }
 
 /* Счётчик и поиск — один блок выборки: счётчик стоит над полем и называет
-   показанное из найденного, а не длину строки ввода. Поле берёт на себя сам блок:
-   у полосы отбора его больше нет, а текст счётчика обязан остаться на общей
-   вертикали экрана. */
+   показанное из найденного, а не длину строки ввода. Отбивку блок несёт сам,
+   а не берёт от общего правила: на рабочем месте её снимает соседний
+   признак, и внешнее правило спорило бы с ним по весу. */
 .imolt-references-selection {
   display: grid;
   gap: ${space.xxs}px;
   min-width: 0;
   padding-left: ${INSET}px;
   padding-right: ${INSET}px;
+}
+
+/* На рабочем месте блок выборки идёт от края, как полоса отбора и таблица под
+   ним (замечание заказчика от 26.09.2026). На телефоне боковое поле остаётся:
+   без него поле поиска упёрлось бы в края экрана, а отбивка телефона — общее
+   правило дизайн-договора, а не украшение этого экрана. */
+.imolt-references-selection--flush {
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .imolt-references-sync {

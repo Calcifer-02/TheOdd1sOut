@@ -202,7 +202,7 @@ export function ReferencesDesktop({ editor, route, importing }: ReferencesViewPr
           onToggle={editor.toggleOrder}
         />
 
-        <div className="imolt-references-selection">
+        <div className="imolt-references-selection imolt-references-selection--flush">
           <p className="imolt-references-count" role="status">
             {selectionCaption(
               route.tab,
