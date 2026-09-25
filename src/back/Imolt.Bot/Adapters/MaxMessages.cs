@@ -30,17 +30,22 @@ public sealed record MaxAccess(string Token);
 /// запроса и имена полей ответа здесь поэтому названы в одном месте и
 /// разбираются мягко: неизвестное поле пропускается, а не роняет службу.
 ///
-/// Токен доступа в журнал не пишется и в тело запроса не попадает: он
-/// добавляется в адрес обращения и живёт только в настройке службы
-/// (условия трека, разд. 4 п. 9).
+/// Токен доступа в журнал не пишется и в тело запроса не попадает: он уходит
+/// заголовком `Authorization` и живёт только в настройке службы (условия
+/// трека, разд. 4 п. 9).
 ///
 /// @supports: R-069, R-070, R-078, R-079, R-081, R-082
 /// @adr: ADR-0009
 public sealed class MaxMessages(HttpClient client, MaxAccess access, ILogger<MaxMessages> logger)
     : IMaxMessages
 {
-  /// Имя параметра, которым платформа принимает токен доступа.
-  private const string TokenParameter = "access_token";
+  /// Имя заголовка, которым платформа принимает токен доступа.
+  ///
+  /// Параметр запроса `access_token` платформа объявила устаревшим и отвечает
+  /// на него кодом 401 `verify.token`. Проверено 25.09.2026 живым обращением
+  /// `GET /me`: заголовок с самим токеном — 200, он же со словом `Bearer`
+  /// перед токеном — 401. Схема доступа поэтому не пишется.
+  private const string TokenHeader = "Authorization";
 
   /// Вид вложения, которым платформа принимает встроенную клавиатуру.
   private const string KeyboardAttachment = "inline_keyboard";
@@ -212,6 +217,11 @@ public sealed class MaxMessages(HttpClient client, MaxAccess access, ILogger<Max
   {
     using var request = new HttpRequestMessage(method, address) { Content = content };
 
+    // Значение проверке заголовка не подвергается: токен платформы не обязан
+    // укладываться в правило «схема и параметр», а строгая проверка на таком
+    // значении бросает исключение вместо обращения.
+    request.Headers.TryAddWithoutValidation(TokenHeader, access.Token);
+
     HttpResponseMessage answer;
 
     try
@@ -233,8 +243,8 @@ public sealed class MaxMessages(HttpClient client, MaxAccess access, ILogger<Max
 
       if (!answer.IsSuccessStatusCode)
       {
-        // В отказ попадает код и начало тела, но не адрес обращения: в
-        // адресе стоит токен, и в журнале ему не место.
+        // В отказ попадает код и начало тела: этого хватает, чтобы назвать
+        // причину. Тело обрезается — платформа возвращает и длинные ответы.
         throw new MaxRefusedException(string.Format(
             CultureInfo.InvariantCulture,
             "платформа MAX ответила кодом {0}: {1}",
@@ -248,18 +258,19 @@ public sealed class MaxMessages(HttpClient client, MaxAccess access, ILogger<Max
     }
   }
 
-  /// Адрес обращения с токеном доступа. Собирается одним местом: токен,
-  /// забытый в одном обращении, даёт отказ платформы без видимой причины.
-  private string Address(string path, params (string Name, string? Value)[] query)
+  /// Адрес обращения. Токена здесь нет: он уходит заголовком, а адрес
+  /// остаётся годным для журнала и сообщения об отказе.
+  private static string Address(string path, params (string Name, string? Value)[] query)
   {
     var address = new StringBuilder(path);
-    address.Append('?').Append(TokenParameter).Append('=').Append(Uri.EscapeDataString(access.Token));
+    var separator = '?';
 
     foreach (var (name, value) in query)
     {
       if (!string.IsNullOrEmpty(value))
       {
-        address.Append('&').Append(name).Append('=').Append(Uri.EscapeDataString(value));
+        address.Append(separator).Append(name).Append('=').Append(Uri.EscapeDataString(value));
+        separator = '&';
       }
     }
 
