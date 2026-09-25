@@ -103,6 +103,70 @@ describe('заявка на подписку', () => {
     // целиком (`additionalProperties: false`), и слать его нельзя.
     expect(тело.personalDataConsent, 'в заявке ушло поле, которого договор не объявляет').toBeUndefined();
   });
+
+  /** @ac: AC-051c */
+  it('телефон уходит в каноническом виде, а признаки документов — как отмечены', async () => {
+    const пользователь = userEvent.setup();
+    await опознать('subscription');
+    render(<CabinetPage />);
+
+    await пользователь.type(await screen.findByRole('textbox', { name: 'Название компании' }), 'ООО «Перевозчик»');
+    await пользователь.type(screen.getByRole('textbox', { name: 'ИНН' }), '7701234567');
+
+    // Человек пишет номер так, а договор принимает только «+7» и десять
+    // цифр: приведение — работа экрана, иначе служба отвергнет заявку из-за
+    // чёрточек.
+    await пользователь.type(screen.getByRole('textbox', { name: 'Телефон' }), '8 (916) 123-45-67');
+
+    // Признаки отмечаются разными значениями нарочно: на двух отмеченных
+    // перепутанные местами поля прошли бы проверку.
+    await пользователь.click(
+      screen.getByRole('checkbox', { name: 'Есть лицензия на транспортирование отходов I–IV классов опасности' }),
+    );
+    await пользователь.click(screen.getByRole('checkbox', { name: 'Согласен на обработку персональных данных' }));
+    await пользователь.click(screen.getByRole('button', { name: 'Оставить заявку на подписку' }));
+
+    const тело = служба.bodyOf('POST /v1/subscription-requests');
+    expect(тело.phone).toBe('+79161234567');
+    expect(тело.hasTransportLicense).toBe(true);
+    expect(тело.hasSanitaryConclusion).toBe(false);
+
+    // Кабинет показывает накопленное обратно: иначе перевозчик не видит, что
+    // именно он о себе сообщил (R-051).
+    await пользователь.click(screen.getByRole('tab', { name: 'Профиль' }));
+
+    expect(await screen.findByText('+79161234567')).toBeInTheDocument();
+
+    const лицензия = (await screen.findByText('Лицензия на транспортирование отходов')).nextElementSibling;
+    expect(лицензия).toHaveTextContent('да');
+
+    const заключение = (await screen.findByText('Санитарно-эпидемиологическое заключение')).nextElementSibling;
+    expect(заключение).toHaveTextContent('нет');
+  });
+
+  /** @ac: AC-051d */
+  it('при телефоне не по образцу отправка останавливается, а без телефона заявка уходит', async () => {
+    const пользователь = userEvent.setup();
+    await опознать('subscription');
+    render(<CabinetPage />);
+
+    await пользователь.type(await screen.findByRole('textbox', { name: 'Название компании' }), 'ООО «Перевозчик»');
+    await пользователь.type(screen.getByRole('textbox', { name: 'ИНН' }), '7701234567');
+    await пользователь.type(screen.getByRole('textbox', { name: 'Телефон' }), '495-532-02');
+    await пользователь.click(screen.getByRole('checkbox', { name: 'Согласен на обработку персональных данных' }));
+    await пользователь.click(screen.getByRole('button', { name: 'Оставить заявку на подписку' }));
+
+    expect(служба.sentTo('POST /v1/subscription-requests')).toEqual([]);
+    expect(await screen.findByText('Телефон записывается как +7 и десять цифр')).toBeInTheDocument();
+
+    // Стёртый телефон отправке не мешает: договор его не требует.
+    await пользователь.clear(screen.getByRole('textbox', { name: 'Телефон' }));
+    await пользователь.click(screen.getByRole('button', { name: 'Оставить заявку на подписку' }));
+
+    const тело = служба.bodyOf('POST /v1/subscription-requests');
+    expect(тело.inn).toBe('7701234567');
+    expect(тело.phone, 'в заявке ушёл телефон, которого никто не набирал').toBeUndefined();
+  });
 });
 
 describe('каталог услуг по документации', () => {
