@@ -6,6 +6,7 @@ using Imolt.Calculations.Ports;
 using Imolt.Database;
 using Imolt.Deals.Adapters;
 using Imolt.Deals.Application;
+using Imolt.Deals.Contracts;
 using Imolt.Deals.Ports;
 using Imolt.References.Adapters;
 using Imolt.References.Application;
@@ -122,10 +123,25 @@ builder.Services.AddScoped<ICalculationSnapshot, CalculationSnapshot>();
 builder.Services.AddScoped<IQuoteStore, QuoteStore>();
 builder.Services.AddScoped<IPickupRequestStore, PickupRequestStore>();
 builder.Services.AddScoped<IDocumentServiceCatalog, DocumentServiceCatalog>();
+
+// Исполнитель документа — настройка службы (решение по Q-012). Раздел
+// `Quote:Issuer` лежит в appsettings: это не секрет, а публичные реквизиты
+// компании, и разным развёртываниям нужны разные.
+// Настройка читается при разрешении зависимости, а не при её объявлении:
+// значения, положенные поверх (развёртыванием или стендом проверки),
+// добавляются к конфигурации позже сборки и раннему чтению не видны.
+builder.Services.AddSingleton(services => services.GetRequiredService<IConfiguration>()
+    .GetSection("Quote:Issuer")
+    .Get<QuoteIssuer>() ?? throw new InvalidOperationException(
+        "Раздел настройки Quote:Issuer не задан: документ предложения не может не назвать исполнителя"));
+
 builder.Services.AddSingleton<IQuoteDocumentWriter, QuoteDocumentWriter>();
 builder.Services.AddScoped<IPriceValidity>(services => new PriceValidity(
     services.GetRequiredService<IConfiguration>()
-        .GetValue("QUOTE_VALIDITY_DAYS", PriceValidity.DemonstrationDays)));
+        .GetValue("QUOTE_VALIDITY_DAYS", PriceValidity.DefaultDays)));
+builder.Services.AddScoped<IPriceTolerance>(services => new PriceTolerance(
+    services.GetRequiredService<IConfiguration>()
+        .GetValue("QUOTE_PRICE_TOLERANCE_PERCENT", PriceTolerance.DefaultPercent)));
 builder.Services.AddScoped<DealScenarios>();
 
 // Личность от платформы MAX (ADR-0006). Ключ бота и срок давности стартовых

@@ -39,6 +39,12 @@ public sealed record Quote(
 
 /// Всё, что нужно напечатать в документе. Отдельно от ответа операции: ответ
 /// объявлен договором, а состав документа — требованием R-037.
+///
+/// Допустимое отклонение хранится вместе со снимком цен, а не берётся
+/// настройкой при скачивании: это условие, на котором предложение выпущено, и
+/// документ, пересчитанный по сегодняшней настройке, назвал бы клиенту другое
+/// (R-059). У предложений, выпущенных до решения по Q-010, его нет — тогда
+/// отметка о предварительности печатается без числа.
 public sealed record QuoteDocumentModel(
     string Number,
     DateTimeOffset IssuedAt,
@@ -47,7 +53,16 @@ public sealed record QuoteDocumentModel(
     string PickupAddress,
     string? CustomerName,
     IReadOnlyList<QuoteLine> Lines,
-    Money Total);
+    Money Total,
+    decimal? PriceTolerancePercent = null);
+
+/// Исполнитель, от чьего имени выпущено предложение (R-037, решение по Q-012).
+///
+/// Реквизиты — настройка службы, а не запись в коде: то же решение в другом
+/// развёртывании назовёт другую компанию. Логотипа, подписи и печати здесь
+/// нет намеренно — прав на них никто не передавал, а подпись в автоматическом
+/// документе была бы обязательством, которого никто не брал.
+public sealed record QuoteIssuer(string Name, string Phone, string Email, string City);
 
 public sealed record PickupRequestInput(
     string? CalculationId,

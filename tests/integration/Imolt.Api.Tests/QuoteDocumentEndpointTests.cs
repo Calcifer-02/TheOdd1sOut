@@ -7,10 +7,10 @@ namespace Imolt.Api.Tests;
 /// файл на одном листе со всем составом расчёта, пригодный для
 /// автоматического скачивания.
 ///
-/// Срок действия цены проверяется не числом дней — длительность заказчиком не
-/// названа (Q-010). Стенд объявляет её настройкой службы, а проверка требует
-/// лишь того, чтобы поле validUntil и дата в документе назывались этой одной
-/// величиной: два места, считающие срок по-своему, разойдутся молча.
+/// Срок действия цены, допустимое отклонение и реквизиты исполнителя
+/// проверяются не записанными здесь значениями: все три объявляет настройкой
+/// стенд, а проверка требует, чтобы служба назвала ту же величину. Записанное
+/// в коде число прошло бы и у службы, которая настройку не читает вовсе.
 ///
 /// Проверка фальсифицируема: она падает, если повторное скачивание выпустит
 /// второе предложение или сменит номер в документе, если медиатип, заголовок
@@ -21,7 +21,7 @@ namespace Imolt.Api.Tests;
 ///
 ///   dotnet test tests/integration/Imolt.Api.Tests
 ///
-/// @ac: AC-036b, AC-036c, AC-037a, AC-038a, AC-061a
+/// @ac: AC-036b, AC-036c, AC-037a, AC-037b, AC-038a, AC-059b, AC-061a
 [Collection(ImoltDealsCollection.Name)]
 public sealed class QuoteDocumentEndpointTests(ImoltDealsStand stand)
 {
@@ -141,6 +141,45 @@ public sealed class QuoteDocumentEndpointTests(ImoltDealsStand stand)
 
     // Отметка о предварительности (R-059): молчание о ней в документе с
     // ценами читается как окончательная смета.
+    Assert.Contains("редварительн", text, StringComparison.OrdinalIgnoreCase);
+  }
+
+  [Fact(DisplayName = "документ называет исполнителя")]
+  public async Task TheDocumentNamesTheIssuerFromTheDeclaredSetting()
+  {
+    var calculationId = await DealChecks.CreateSelectedCalculationAsync(
+        stand.Client, ImoltDealsStand.VostokId);
+
+    var text = await DocumentTextAsync(calculationId);
+
+    // AC-037b: реквизиты взяты из настройки, которую объявил стенд. Записанное
+    // в коде наименование прошло бы и у службы, которая настройку не читает, —
+    // а в другом развёртывании документ выпускает другая компания (Q-012).
+    Assert.Contains(ImoltDealsStand.IssuerName, text, StringComparison.Ordinal);
+
+    // Телефон и почта: документ уходит наружу, и ответить на него читатель
+    // должен, не возвращаясь в мини-приложение.
+    Assert.Contains(ImoltDealsStand.IssuerPhone, text, StringComparison.Ordinal);
+    Assert.Contains(ImoltDealsStand.IssuerEmail, text, StringComparison.Ordinal);
+  }
+
+  [Fact(DisplayName = "документ называет допустимое отклонение числом")]
+  public async Task TheDocumentNamesThePriceToleranceByNumber()
+  {
+    var calculationId = await DealChecks.CreateSelectedCalculationAsync(
+        stand.Client, ImoltDealsStand.VostokId);
+
+    var text = await DocumentTextAsync(calculationId);
+
+    // AC-059b: число приходит из настройки стенда, а не записано здесь. Оно
+    // намеренно отличается от значения службы по умолчанию: с десятью
+    // процентами проверка прошла бы и у службы, которая настройку не читает.
+    var tolerance = ImoltDealsStand.TolerancePercent.ToString("0.##", new CultureInfo("ru-RU"));
+
+    Assert.Matches(tolerance + @"\s*%", text);
+
+    // Отметка о предварительности остаётся: число говорит, насколько цена
+    // вправе измениться, но не отменяет самого предупреждения (R-059).
     Assert.Contains("редварительн", text, StringComparison.OrdinalIgnoreCase);
   }
 

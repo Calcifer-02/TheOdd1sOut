@@ -67,6 +67,24 @@ public sealed class ImoltDealsStand : IAsyncLifetime
   /// этого ряда прошла бы при жёстко записанном сроке.
   public const int ValidityDays = 11;
 
+  /// Название настройки, объявляющей допустимое отклонение цены (R-059).
+  public const string ToleranceSetting = "QUOTE_PRICE_TOLERANCE_PERCENT";
+
+  /// Значение настройки на стенде. Намеренно не совпадает со значением по
+  /// умолчанию: с десятью процентами проверка прошла бы и у службы, которая
+  /// настройку не читает вовсе.
+  public const decimal TolerancePercent = 7m;
+
+  /// Реквизиты исполнителя объявляет стенд, а не проверка. Значения из
+  /// appsettings — настройка развёртывания; проверка, записавшая их у себя,
+  /// подтверждала бы совпадение двух записей, а не то, что документ берёт
+  /// реквизиты из настройки (R-037).
+  public const string IssuerName = "ИМОЛТ на стенде проверок";
+
+  public const string IssuerPhone = "+7 495 000-00-00";
+
+  public const string IssuerEmail = "checks@imolt.test";
+
   /// Услуга с ценой «от» из примера договора (ответ listDocumentServices).
   public const string PricedServiceId = "ossig-mo";
 
@@ -99,6 +117,11 @@ public sealed class ImoltDealsStand : IAsyncLifetime
           // Инвариантная культура: настройка читается службой как число, а не
           // человеком, и разделитель разрядов русской локали её порвал бы.
           [ValidityDaysSetting] = ValidityDays.ToString(CultureInfo.InvariantCulture),
+          [ToleranceSetting] = TolerancePercent.ToString(CultureInfo.InvariantCulture),
+          ["Quote:Issuer:Name"] = IssuerName,
+          ["Quote:Issuer:Phone"] = IssuerPhone,
+          ["Quote:Issuer:Email"] = IssuerEmail,
+          ["Quote:Issuer:City"] = "Москва",
         });
 
     Client = service.CreateClient();
