@@ -14,7 +14,7 @@ namespace Imolt.Calculations.Application;
 /// другое — адрес, объёмы, предел расстояния и дата актуальности данных
 /// (R-048).
 ///
-/// @req: R-014, R-018, R-020, R-021, R-023, R-024, R-025, R-026, R-027, R-028, R-029, R-030, R-032, R-058, R-059, R-060
+/// @req: R-014, R-016, R-018, R-020, R-021, R-023, R-024, R-025, R-026, R-027, R-028, R-029, R-030, R-032, R-058, R-059, R-060
 /// @adr: ADR-0001
 public sealed class CalculationScenarios(
     IReferenceData references,
@@ -27,8 +27,9 @@ public sealed class CalculationScenarios(
   /// Остальные страницы берутся отдельной операцией.
   private const int FirstPageSize = 10;
 
-  /// Пересчёт объёма между мерами. Обе меры возвращаются рядом: мера расчёта
-  /// заказчиком не выбрана (Q-009), и решать за него сервер не будет.
+  /// Пересчёт объёма между мерами. Обе меры возвращаются рядом: меру расчёта
+  /// задаёт зона адреса вывоза (R-016), а этой операции адрес не передаётся —
+  /// выбирать меру ей нечем и не по чему.
   public async Task<AmountConversionResult> ConvertAsync(
       AmountConversionRequest? request,
       CancellationToken cancellationToken)
@@ -66,6 +67,11 @@ public sealed class CalculationScenarios(
   {
     var pickup = request?.PickupAddress
         ?? throw new ArgumentOutOfRangeException(nameof(request), "адрес вывоза обязателен");
+
+    // Зона адреса закрепляется в расчёте разобранной, а не такой, какой её
+    // объявил запрос: от зоны зависит мера расчёта (R-016), и принять её на
+    // слово клиента значило бы отдать ему выбор меры.
+    pickup = pickup with { Area = await AreaAsync(pickup, cancellationToken) };
 
     // Предел расстояния закрепляется в расчёте, а не подставляется заново при
     // каждом чтении: иначе смена значения по умолчанию молча изменила бы
@@ -513,11 +519,17 @@ public sealed class CalculationScenarios(
       CancellationToken cancellationToken)
   {
     var items = new List<CalculationItem>();
+    var measure = CalculationMeasure.For(calculation.PickupAddress.Area);
 
     foreach (var item in calculation.Items)
     {
       var group = await GroupAsync(item.WasteGroupId, cancellationToken);
-      items.Add(new CalculationItem(group.Id, group.Name, item.Input, item.Tons));
+      items.Add(new CalculationItem(
+          group.Id,
+          group.Name,
+          item.Input,
+          Measured(item, measure, group.DensityTonPerCubicMeter),
+          item.Tons));
     }
 
     return new Calculation(
@@ -527,6 +539,7 @@ public sealed class CalculationScenarios(
         // финальной цены заказчиком не названо (R-059, Q-010).
         true,
         calculation.PickupAddress,
+        UnitName(measure),
         calculation.DisposalRequired,
         calculation.DistanceFilter,
         items,
@@ -655,6 +668,41 @@ public sealed class CalculationScenarios(
     "m3" => AmountUnit.CubicMeter,
     _ => throw new ArgumentOutOfRangeException(nameof(quantity), quantity.Unit, "мера объёма — t либо m3"),
   };
+
+  private static string UnitName(AmountUnit unit) => unit == AmountUnit.Ton ? "t" : "m3";
+
+  /// Зона адреса вывоза (R-016). Спрашивается у справочника адресов, а
+  /// объявленная запросом зона — запасной путь: адрес мог прийти от внешней
+  /// службы подсказок, которой наш справочник не знает (Q-014). Проверяется и
+  /// она — зон ровно две, и третьей в расчёте не будет.
+  private async Task<string> AreaAsync(PickupAddress pickup, CancellationToken cancellationToken)
+  {
+    var known = await references.PickupAreaAsync(pickup.SuggestionId, pickup.Value, cancellationToken);
+
+    if (known is not null)
+    {
+      return known;
+    }
+
+    return pickup.Area is ServiceAreas.Moscow or ServiceAreas.MoscowRegion
+        ? pickup.Area
+        : throw new PickupAreaUnknownException(
+            $"Адрес «{pickup.Value}» не найден в справочнике, а зона обслуживания в запросе не названа. "
+                + "Сервис считает вывоз по Москве и Московской области");
+  }
+
+  /// Объём позиции в мере расчёта. Считается из тонн, а не из введённой
+  /// величины: тонны посчитаны при создании расчёта, и второй путь от ввода
+  /// разошёлся бы с ними на первой же правке плотности в справочнике.
+  ///
+  /// Округления здесь нет — его нет и в операции пересчёта: округлить
+  /// представление объёма значило бы назначить точность в коде (R-058).
+  private static Quantity Measured(StoredItem item, AmountUnit measure, decimal density)
+      => measure == AmountUnit.Ton
+          ? new Quantity(item.Tons, UnitName(AmountUnit.Ton))
+          : new Quantity(
+              AmountConversion.ToCubicMeters(item.Tons, AmountUnit.Ton, density),
+              UnitName(AmountUnit.CubicMeter));
 
   private static DistanceFilter? Checked(DistanceFilter? filter)
   {

@@ -63,6 +63,8 @@ export type CalculationItem = {
   wasteGroupId: string;
   wasteGroupName: string;
   input: Quantity;
+  /** Объём в мере расчёта: с введённым совпадает, только если меры совпали. */
+  calculated: Quantity;
   tons: number;
 };
 
@@ -116,6 +118,8 @@ export type Calculation = {
   createdAt: string;
   preliminary: boolean;
   pickupAddress: PickupAddress;
+  /** Мера расчёта по зоне адреса вывоза: «t» по Москве, «m3» по области. */
+  measure: Unit;
   disposalRequired: boolean;
   distanceFilter?: { mode: DistanceMode; km: number };
   items: CalculationItem[];

@@ -35,10 +35,22 @@ public sealed record LandfillOffer(
 /// «справочники» живёт в составе изделия: области друг на друга не ссылаются
 /// (ADR-0001, инвариант о зоне портов).
 ///
-/// @supports: R-017, R-018, R-019, R-048
+/// @supports: R-016, R-017, R-018, R-019, R-048
 public interface IReferenceData
 {
   Task<WasteGroupPricing?> WasteGroupAsync(string wasteGroupId, CancellationToken cancellationToken);
+
+  /// Зона обслуживания адреса вывоза по справочнику адресов (R-016). Ищется
+  /// по идентификатору подсказки, а при его отсутствии — по точному значению
+  /// адреса: зону обязан называть справочник, потому что от неё зависит мера
+  /// расчёта, а запрос приходит от клиента.
+  ///
+  /// Адреса нет в справочнике — зоны нет: догадываться по началу строки
+  /// нельзя, «г Москва» пишут и в адресах области.
+  Task<string?> PickupAreaAsync(
+      string? suggestionId,
+      string? value,
+      CancellationToken cancellationToken);
 
   /// Полигоны, принимающие группу. Отбор по расстоянию здесь не делается:
   /// «группу никто не принимает» и «все отсеяны фильтром» — разные исходы,
@@ -164,5 +176,18 @@ public sealed class ReferenceMissingException(string message) : Exception(messag
 ///
 /// @supports: R-027, R-030
 public sealed class PlacementUnavailableException(string message) : Exception(message)
+{
+}
+
+/// Зону адреса вывоза назвать нечем: адрес не найден в справочнике и не
+/// объявлен запросом. Мера расчёта берётся у зоны (R-016), и выбрать её
+/// наугад значило бы посчитать объём в мере, которой никто не просил.
+///
+/// Договор объявляет для этого исхода код 422 и тип «вне зоны обслуживания»
+/// (R-012): сервис обслуживает Москву и Московскую область, и адрес, который
+/// он не может к ним отнести, расчёта не получает.
+///
+/// @supports: R-012, R-016
+public sealed class PickupAreaUnknownException(string message) : Exception(message)
 {
 }

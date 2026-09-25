@@ -87,6 +87,11 @@ builder.Services.AddScoped<ReferenceImportScenarios>();
 // включается настройкой. Целевая служба заказчиком не назначена (Q-014),
 // поэтому выбор источника остаётся настройкой, а не правкой кода области.
 builder.Services.AddScoped<AddressDirectorySuggestions>();
+
+// Справочник адресов регистрируется отдельно от подсказок: зону адреса, от
+// которой зависит мера расчёта (R-016), называет наш справочник, а не тот
+// источник, что подсказал строку.
+builder.Services.AddScoped<IAddressDirectory, AddressDirectory>();
 builder.Services.AddHttpClient<UpstreamAddressSuggestions>(client =>
 {
   // Граница ожидания обязательна: без неё отказ источника превращается в

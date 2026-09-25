@@ -38,7 +38,8 @@ internal static class CalculationChecks
       double longitude,
       bool disposalRequired = true,
       int? distanceKm = null,
-      string distanceMode = "atMost")
+      string distanceMode = "atMost",
+      string? area = "moscow")
   {
     var filter = distanceKm is null
         ? string.Empty
@@ -47,12 +48,21 @@ internal static class CalculationChecks
               "distanceFilter": { "mode": "{{distanceMode}}", "km": {{distanceKm.Value}} }
             """;
 
+    // Зона адреса необязательна по договору, и её отсутствие — отдельный
+    // проверяемый случай (AC-016d): по такому запросу сервису неоткуда взять
+    // меру расчёта, если адреса нет и в справочнике.
+    var declared = area is null
+        ? string.Empty
+        : $$"""
+            ,
+                "area": "{{area}}"
+            """;
+
     return $$"""
         {
           "pickupAddress": {
             "value": "{{pickupValue}}",
-            "coordinates": { "latitude": {{Number(latitude)}}, "longitude": {{Number(longitude)}} },
-            "area": "moscow"
+            "coordinates": { "latitude": {{Number(latitude)}}, "longitude": {{Number(longitude)}} }{{declared}}
           },
           "items": [{{itemsJson}}],
           "disposalRequired": {{(disposalRequired ? "true" : "false")}}{{filter}}

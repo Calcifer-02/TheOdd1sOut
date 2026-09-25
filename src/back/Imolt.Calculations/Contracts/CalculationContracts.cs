@@ -43,11 +43,14 @@ public sealed record CalculationRequest(
     bool DisposalRequired,
     DistanceFilter? DistanceFilter);
 
-/// Позиция расчёта: введённый объём и мера, в которой считается стоимость.
+/// Позиция расчёта: введённый объём, объём в мере расчёта и масса, по которой
+/// считается стоимость. Мера расчёта берётся у зоны адреса вывоза (R-016), и
+/// объём в ней совпадает с введённым только тогда, когда меры совпали.
 public sealed record CalculationItem(
     string WasteGroupId,
     string WasteGroupName,
     Quantity Input,
+    Quantity Calculated,
     decimal Tons);
 
 /// Строка результата: один полигон для одной группы отходов (R-023).
@@ -129,6 +132,7 @@ public sealed record Calculation(
     DateTimeOffset CreatedAt,
     bool Preliminary,
     PickupAddress PickupAddress,
+    string Measure,
     bool DisposalRequired,
     DistanceFilter DistanceFilter,
     IReadOnlyList<CalculationItem> Items,
