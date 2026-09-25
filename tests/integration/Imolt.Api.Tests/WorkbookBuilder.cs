@@ -91,11 +91,33 @@ internal sealed class WorkbookBuilder
 
   private readonly List<IReadOnlyList<WorkbookCell>> rows = [];
 
+  /// Строки книги по порядку первого появления. Заполняется только в записи
+  /// табличного редактора: в ней текст ячейки лежит не в самой ячейке, а
+  /// номером строки этой таблицы.
+  private readonly List<string> shared = [];
+
+  private bool editorStyle;
+
   private WorkbookBuilder(IReadOnlyList<string> headers)
       => rows.Add(headers.Select(WorkbookCell.Text).ToList());
 
   /// Книга с объявленными заголовками в первой строке.
   public static WorkbookBuilder WithHeaders(params string[] headers) => new(headers);
+
+  /// Записать книгу так, как её пишет табличный редактор: текст — через общую
+  /// таблицу строк, число — без явного признака типа.
+  ///
+  /// Это не вариант оформления, а единственная запись, которую сервис увидит
+  /// в жизни: и Excel, и выгрузка таблицы Google кладут текст только в общую
+  /// таблицу, а признак типа у числа опускают — «n» и так значение по
+  /// умолчанию. Встроенная строка остаётся по умолчанию у прочих проверок:
+  /// там она короче и к проверяемому критерию отношения не имеет.
+  public WorkbookBuilder AsSpreadsheetEditorWrites()
+  {
+    editorStyle = true;
+
+    return this;
+  }
 
   /// Строка книги. Ячейки идут по порядку столбцов заголовка; пропущенный
   /// столбец задаётся WorkbookCell.Empty.
@@ -153,23 +175,50 @@ internal sealed class WorkbookBuilder
         sheetData.Append(row);
       }
 
+      if (editorStyle)
+      {
+        // Таблица строк кладётся после обхода строк: до него неизвестно, что
+        // в неё попадёт. Порядок частей в книге на чтение не влияет — часть
+        // ищется по своему виду, а не по месту.
+        var stringsPart = workbookPart.AddNewPart<SharedStringTablePart>();
+        stringsPart.SharedStringTable = new SharedStringTable(
+            shared.Select(value => new SharedStringItem(new Text(value))));
+        stringsPart.SharedStringTable.Save();
+      }
+
       workbookPart.Workbook.Save();
     }
 
     return stream.ToArray();
   }
 
-  // Ячейка листа. Строки кладутся встроенными, а не через общую таблицу
-  // строк: общая таблица — отдельный шов, на котором разбор может сломаться
-  // по причине, к проверяемому критерию отношения не имеющей.
-  private static Cell? Build(WorkbookCell source, string reference) => source.Kind switch
+  // Ячейка листа. По умолчанию строки кладутся встроенными: общая таблица
+  // строк — отдельный шов, на котором разбор может сломаться по причине, к
+  // проверяемому критерию отношения не имеющей. Записью табличного редактора
+  // этот шов проверяется отдельно и нарочно.
+  private Cell? Build(WorkbookCell source, string reference) => source.Kind switch
   {
     WorkbookCellKind.Empty => null,
+    WorkbookCellKind.Text when editorStyle => new Cell
+    {
+      CellReference = reference,
+      DataType = CellValues.SharedString,
+      CellValue = new CellValue(SharedIndex(source.Value).ToString(CultureInfo.InvariantCulture)),
+    },
     WorkbookCellKind.Text => new Cell
     {
       CellReference = reference,
       DataType = CellValues.InlineString,
       InlineString = new InlineString(new Text(source.Value)),
+    },
+
+    // Признак типа у числа опущен: табличный редактор его не пишет, потому
+    // что «n» — значение по умолчанию. Разбор, опирающийся на явный признак,
+    // на таком файле молча прочтёт пустоту.
+    WorkbookCellKind.Number when editorStyle => new Cell
+    {
+      CellReference = reference,
+      CellValue = new CellValue(source.Value),
     },
     WorkbookCellKind.Number => new Cell
     {
@@ -186,6 +235,22 @@ internal sealed class WorkbookBuilder
     },
     _ => null,
   };
+
+  // Место строки в общей таблице. Повторяющийся текст кладётся один раз —
+  // ради этого таблица и заведена в формате, и разбор обязан читать её так же.
+  private int SharedIndex(string value)
+  {
+    var index = shared.IndexOf(value);
+
+    if (index >= 0)
+    {
+      return index;
+    }
+
+    shared.Add(value);
+
+    return shared.Count - 1;
+  }
 
   // Имя столбца листа по его порядковому номеру: 0 — «A», 26 — «AA».
   private static string ColumnName(int index)
