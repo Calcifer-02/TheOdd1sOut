@@ -15,22 +15,21 @@ namespace Imolt.Api.Tests;
 /// (Q-017). Коды ФККО импорт не трогает — редакция каталога не сверена
 /// (Q-015).
 ///
-/// Форма книги — схема версии 1, закреплённая за срезом и собранная
-/// WorkbookBuilder: первый лист, заголовки в строке 1, сопоставление по части
-/// заголовка до первой запятой. Договор эту форму не задаёт; расхождение
-/// названо в отчёте среза, а не восполнено догадкой в каждой проверке
-/// по-своему.
+/// Форма книги — схема версии 1, собранная WorkbookBuilder: первый лист,
+/// заголовки в строке 1, сопоставление по части заголовка до первой запятой.
+/// Договор эту форму не задаёт, расхождение названо в отчёте среза.
 ///
-/// Проверка фальсифицируема: она падает, если загрузка меняет справочник до
-/// подтверждения; если неразобранная строка попадает в расхождения или
-/// теряет номер и причину; если подтверждение применяет не то число
-/// изменений; если предпросмотр можно применить дважды или применить поверх
-/// более поздней правки редактора; если книгой считается всякий файл с
-/// подходящим расширением; и если столбец кодов ФККО всё-таки применяется.
+/// Проверки фальсифицируемы: они падают, если справочник меняется до
+/// подтверждения; если неразобранная строка теряет номер и причину или
+/// попадает в расхождения; если подтверждение применяет не то число
+/// изменений, применяется дважды либо поверх более поздней правки; если
+/// книгой считается всякий файл с подходящим расширением; если применяется
+/// столбец кодов ФККО; и если перестанет читаться книга в записи табличного
+/// редактора — текст в общей таблице строк или число без признака типа.
 ///
 ///   dotnet test tests/integration/Imolt.Api.Tests
 ///
-/// @ac: AC-045a, AC-045b, AC-045c, AC-045d, AC-045e, AC-045f, AC-045g
+/// @ac: AC-045a, AC-045b, AC-045c, AC-045d, AC-045e, AC-045f, AC-045g, AC-045h
 [Collection(ImoltReferenceEditorCollection.Name)]
 public sealed class ReferenceImportTests(ImoltReferenceEditorStand stand)
 {
@@ -41,6 +40,15 @@ public sealed class ReferenceImportTests(ImoltReferenceEditorStand stand)
   /// Схема разбора версии 1 сопоставляет с ним столбец «Цена перевозки»;
   /// договор имён полей расхождения не задаёт вовсе.
   private const string TransportPriceField = "transportPricePerTonKm";
+
+  /// Имя поля названия группы отходов из договора. Схема разбора сопоставляет
+  /// с ним столбец «Название».
+  private const string NameField = "name";
+
+  /// Название из книги табличного редактора. Отличается от начального набора
+  /// и приходит текстом: на совпадающем значении потеря общей таблицы строк
+  /// осталась бы незаметной.
+  private const string EditorWrittenName = "Группа отходов из выгрузки редактора";
 
   private const string StalePreview = "urn:imolt:problem:stale-preview";
 
@@ -289,6 +297,58 @@ public sealed class ReferenceImportTests(ImoltReferenceEditorStand stand)
     Assert.True(
         codes.Count == 1 && codes[0] == ImoltReferenceEditorStand.FkkoImportCode,
         $"перечень кодов ФККО после импорта стал «{string.Join(", ", codes)}»");
+  }
+
+  [Fact(DisplayName = "книга в записи табличного редактора проходит импорт целиком")]
+  public async Task BookWrittenBySpreadsheetEditorIsReadAndApplied()
+  {
+    var token = await stand.DataManagerTokenAsync();
+
+    // AC-045h. Книга собрана так, как её пишет табличный редактор: текст — в
+    // общей таблице строк, число — без явного признака типа. Прочие проверки
+    // среза кладут строки встроенными, и путь, которым приходит всякий
+    // настоящий файл, до этой проверки не исполнялся ни разу.
+    var book = WorkbookBuilder
+        .WithHeaders(
+            WorkbookBuilder.IdentifierColumn,
+            WorkbookBuilder.NameColumn,
+            WorkbookBuilder.TransportPriceColumn)
+        .AsSpreadsheetEditorWrites()
+        .Row(
+            WorkbookCell.Text(ImoltReferenceEditorStand.EditorWrittenGroupId),
+            WorkbookCell.Text(EditorWrittenName),
+            WorkbookCell.Number(47.00m))
+        .Build();
+
+    // Сюда проверка не доходит вовсе, если заголовки из общей таблицы строк
+    // не читаются: столбцы объявлены обязательными, и разбор отвечает 422.
+    using var preview = await UploadAsync(book, "gruppy-othodov-iz-redaktora.xlsx");
+
+    var changes = ChangesOf(preview.RootElement, ImoltReferenceEditorStand.EditorWrittenGroupId);
+    Assert.Equal(
+        new[] { NameField, TransportPriceField }.Order(),
+        changes.Select(change => change.GetProperty("field").GetString()).Order());
+
+    var name = changes.Single(change => change.GetProperty("field").GetString() == NameField);
+    Assert.Equal(EditorWrittenName, name.GetProperty("fileValue").GetString());
+
+    var price = changes.Single(change => change.GetProperty("field").GetString() == TransportPriceField);
+    Assert.Equal(
+        47.00m,
+        MoneyOf(price.GetProperty("fileValue").GetString(), "цена из книги табличного редактора"));
+
+    // Второй шаг пройден здесь же: критерий требует не разбора, а переноса.
+    var confirmation = await stand.ConfirmReferenceImportAsync(IdOf(preview.RootElement), token);
+    using var result = await ReferenceChecks.OkAsync(confirmation, "confirmReferenceImport");
+
+    Assert.Equal(2, result.RootElement.GetProperty("appliedChanges").GetInt32());
+
+    var card = await stand.GetAsync(
+        $"{ImoltReferenceEditorStand.WasteGroupsPath}/{ImoltReferenceEditorStand.EditorWrittenGroupId}");
+    using var group = await ReferenceChecks.OkAsync(card, "getWasteGroup");
+
+    Assert.Equal(EditorWrittenName, group.RootElement.GetProperty("name").GetString());
+    Assert.Equal("47.00", await PriceAsync(ImoltReferenceEditorStand.EditorWrittenGroupId));
   }
 
   /// Идентификатор предпросмотра: без него подтверждать нечего.

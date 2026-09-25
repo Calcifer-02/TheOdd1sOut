@@ -1,16 +1,9 @@
 // Заглушка расчётной части для проверок экрана расчёта мини-приложения.
-//
 // Подменяет глобальный fetch, разбирает путь и отвечает телами договора
-// (../../back/Imolt.Api/contracts/openapi.yaml). Канонические данные взяты из
-// примера `ConcreteCalculation`: адрес «г Москва, ул Годовикова, д 9»,
-// группы `beton-lom` и `drevesina`, полигоны «Восток» и «Икша», дата
-// актуальности 17.09.2026. Ничего сверх договора заглушка не выдумывает:
-// поле, которого договор не обещает, сюда не попадает.
-//
-// Заглушка ведёт журнал обращений, поэтому проверка утверждает не только о
-// разметке, но и о том, какой запрос ушёл наружу и — что важнее для AC-012d,
-// AC-036e и AC-053c — какой не ушёл.
-//
+// (../../back/Imolt.Api/contracts/openapi.yaml) данными примера
+// `ConcreteCalculation`. Поля, которого договор не обещает, здесь нет.
+// Журнал обращений ведётся нарочно: проверка утверждает и о том, какой
+// запрос ушёл наружу и — важнее для AC-012d, AC-036e и AC-053c — какой нет.
 // Файл без «.test.» в имени в прогон не попадает: это общая оснастка.
 
 /** Денежная сумма договора: строка с двумя знаками после точки. */
@@ -375,16 +368,29 @@ export function installApiStub(): ApiStub {
       disposalRequired ? option : { ...option, disposalCost: null, totalCost: option.transportCost },
     );
 
+    const pickupAddress = (sent['pickupAddress'] ?? {
+      suggestionId: ADDRESS_SUGGESTION_ID,
+      value: PICKUP_ADDRESS,
+      coordinates: GODOVIKOVA_SUGGESTION.coordinates,
+      area: 'moscow',
+    }) as { area?: string };
+
+    // Мера расчёта задаётся зоной адреса вывоза: по Москве — тонны, по
+    // области — кубометры. Заглушка повторяет правило службы, а не упрощает
+    // его: расходящаяся заглушка учит интерфейс неверному ответу.
+    const measure = pickupAddress.area === 'moscowRegion' ? 'm3' : 't';
+
     const items = sentItems.map(item => {
       const group = WASTE_GROUPS.find(candidate => candidate.id === item.wasteGroupId);
+      const density = group?.densityTonPerCubicMeter ?? 1;
+      const tons = item.quantity.unit === 't' ? item.quantity.value : item.quantity.value * density;
+
       return {
         wasteGroupId: item.wasteGroupId,
         wasteGroupName: group?.name ?? item.wasteGroupId,
         input: item.quantity,
-        tons:
-          item.quantity.unit === 't'
-            ? item.quantity.value
-            : item.quantity.value * (group?.densityTonPerCubicMeter ?? 1),
+        calculated: { value: measure === 't' ? tons : tons / density, unit: measure },
+        tons,
       };
     });
 
@@ -392,12 +398,8 @@ export function installApiStub(): ApiStub {
       id: CALCULATION_ID,
       createdAt: '2026-09-17T12:00:00+03:00',
       preliminary: true,
-      pickupAddress: sent['pickupAddress'] ?? {
-        suggestionId: ADDRESS_SUGGESTION_ID,
-        value: PICKUP_ADDRESS,
-        coordinates: GODOVIKOVA_SUGGESTION.coordinates,
-        area: 'moscow',
-      },
+      pickupAddress,
+      measure,
       disposalRequired,
       distanceFilter: sent['distanceFilter'] ?? { mode: 'atMost', km: 50 },
       dataFreshness: {

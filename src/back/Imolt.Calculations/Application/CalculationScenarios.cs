@@ -14,7 +14,7 @@ namespace Imolt.Calculations.Application;
 /// другое — адрес, объёмы, предел расстояния и дата актуальности данных
 /// (R-048).
 ///
-/// @req: R-014, R-018, R-020, R-021, R-023, R-024, R-025, R-026, R-027, R-028, R-029, R-030, R-032, R-058, R-059, R-060
+/// @req: R-014, R-016, R-018, R-020, R-021, R-023, R-024, R-025, R-026, R-027, R-028, R-029, R-030, R-032, R-058, R-059, R-060
 /// @adr: ADR-0001
 public sealed class CalculationScenarios(
     IReferenceData references,
@@ -27,8 +27,9 @@ public sealed class CalculationScenarios(
   /// Остальные страницы берутся отдельной операцией.
   private const int FirstPageSize = 10;
 
-  /// Пересчёт объёма между мерами. Обе меры возвращаются рядом: мера расчёта
-  /// заказчиком не выбрана (Q-009), и решать за него сервер не будет.
+  /// Пересчёт объёма между мерами. Обе меры возвращаются рядом: меру расчёта
+  /// задаёт зона адреса вывоза (R-016), а этой операции адрес не передаётся —
+  /// выбирать меру ей нечем и не по чему.
   public async Task<AmountConversionResult> ConvertAsync(
       AmountConversionRequest? request,
       CancellationToken cancellationToken)
@@ -66,6 +67,11 @@ public sealed class CalculationScenarios(
   {
     var pickup = request?.PickupAddress
         ?? throw new ArgumentOutOfRangeException(nameof(request), "адрес вывоза обязателен");
+
+    // Зона адреса закрепляется в расчёте разобранной, а не такой, какой её
+    // объявил запрос: от зоны зависит мера расчёта (R-016), и принять её на
+    // слово клиента значило бы отдать ему выбор меры.
+    pickup = pickup with { Area = await AreaAsync(pickup, cancellationToken) };
 
     // Предел расстояния закрепляется в расчёте, а не подставляется заново при
     // каждом чтении: иначе смена значения по умолчанию молча изменила бы
@@ -232,12 +238,13 @@ public sealed class CalculationScenarios(
     return state;
   }
 
-  /// Сводка маршрута по выбранным полигонам (R-032, R-050).
+  /// Сводка маршрута по выбранным полигонам (R-032, R-034, R-050).
   ///
-  /// Детали закрыты: личности пользователя у службы пока нет, а что именно
-  /// открывает подписка, заказчиком не установлено (Q-011). Отказать кодом
-  /// было бы неверно — итог гостю виден и сейчас, закрыты только участки
-  /// маршрута. Поэтому ответ несёт признак доступа, а не код отказа.
+  /// Решением команды от 25.09.2026 (Q-004, Q-011) доступ в версии 1 не
+  /// разграничивается: маршрут открыт всем. Форма разграничения остаётся —
+  /// ответ несёт признак доступа, и политика включится настройкой, когда
+  /// заказчик назовёт тарифы. Поэтому здесь выдача доступа, а не его
+  /// отсутствие, и участки собираются всегда.
   public async Task<RouteSummary?> RouteAsync(string calculationId, CancellationToken cancellationToken)
   {
     var calculation = await store.FindAsync(calculationId, cancellationToken);
@@ -248,12 +255,38 @@ public sealed class CalculationScenarios(
     }
 
     var selection = await SavedSelectionAsync(calculation, cancellationToken);
-    var access = new RouteAccess(false, RouteAccess.SubscriptionRequired);
+    var roads = await distances.FromAsync(calculation.PickupAddress.Coordinates, cancellationToken);
+    var pickup = calculation.PickupAddress.Coordinates;
+    var legs = new List<RouteLeg>();
 
-    // Участки собираются только при выданном доступе: подменять закрытое
-    // содержимое нечем, а заполнить его «на всякий случай» значит выдать то,
-    // что объявлено закрытым.
-    return new RouteSummary(access, [], selection?.Total ?? Money.Rubles(0));
+    // Один полигон — один участок, сколько бы групп отходов на него ни
+    // везли: участок отвечает на вопрос «как туда доехать», а не «что туда
+    // едет». Порядок сохраняется тот, в котором полигоны выбраны.
+    foreach (var landfillId in calculation.Selection.Select(entry => entry.LandfillId).Distinct())
+    {
+      var entry = calculation.Selection.First(candidate => candidate.LandfillId == landfillId);
+      var (offer, _) = await PricedAsync(
+          calculation, entry.WasteGroupId, landfillId, null, cancellationToken);
+
+      // Плечо обязано быть сохранено: без него не посчиталась бы и стоимость
+      // перевозки, и до этой строки выполнение не дошло бы.
+      var road = roads[landfillId];
+
+      legs.Add(RouteLeg.Of(
+          landfillId,
+          road.DistanceKm,
+          road.DurationMinutes,
+          ExternalMapRoute.UrlFor(
+              pickup.Latitude,
+              pickup.Longitude,
+              offer.Coordinates.Latitude,
+              offer.Coordinates.Longitude)));
+    }
+
+    return new RouteSummary(
+        new RouteAccess(true, null),
+        legs,
+        selection?.Total ?? Money.Rubles(0));
   }
 
   /// Строки выбранных полигонов с закреплёнными ценами — то, что коммерческое
@@ -377,7 +410,7 @@ public sealed class CalculationScenarios(
 
     var legs = await distances.FromAsync(calculation.PickupAddress.Coordinates, cancellationToken);
 
-    if (!legs.TryGetValue(landfillId, out var distanceKm))
+    if (!legs.TryGetValue(landfillId, out var leg))
     {
       throw new PlacementUnavailableException(
           $"До полигона «{offer.Name}» не сохранено расстояние по дорожной сети от адреса вывоза");
@@ -386,7 +419,7 @@ public sealed class CalculationScenarios(
     var cost = PlacementCost.Of(
         tons ?? item.Tons,
         group.TransportPricePerTonKm,
-        (decimal)distanceKm,
+        (decimal)leg.DistanceKm,
         calculation.DisposalRequired ? offer.DisposalPricePerTon : null,
         await coefficients.EffectiveAsync(cancellationToken));
 
@@ -445,8 +478,9 @@ public sealed class CalculationScenarios(
     var coefficient = await coefficients.EffectiveAsync(cancellationToken);
 
     var options = known
-        .Where(offer => Fits(legs[offer.Id], distance))
-        .Select(offer => Option(offer, legs[offer.Id], item.Tons, group, calculation.DisposalRequired, coefficient))
+        .Where(offer => Fits(legs[offer.Id].DistanceKm, distance))
+        .Select(offer => Option(
+            offer, legs[offer.Id].DistanceKm, item.Tons, group, calculation.DisposalRequired, coefficient))
         .ToList();
 
     return (options, options.Count == 0 ? PlacementOptionPage.FilteredOutByDistance : null);
@@ -485,11 +519,17 @@ public sealed class CalculationScenarios(
       CancellationToken cancellationToken)
   {
     var items = new List<CalculationItem>();
+    var measure = CalculationMeasure.For(calculation.PickupAddress.Area);
 
     foreach (var item in calculation.Items)
     {
       var group = await GroupAsync(item.WasteGroupId, cancellationToken);
-      items.Add(new CalculationItem(group.Id, group.Name, item.Input, item.Tons));
+      items.Add(new CalculationItem(
+          group.Id,
+          group.Name,
+          item.Input,
+          Measured(item, measure, group.DensityTonPerCubicMeter),
+          item.Tons));
     }
 
     return new Calculation(
@@ -499,6 +539,7 @@ public sealed class CalculationScenarios(
         // финальной цены заказчиком не названо (R-059, Q-010).
         true,
         calculation.PickupAddress,
+        UnitName(measure),
         calculation.DisposalRequired,
         calculation.DistanceFilter,
         items,
@@ -627,6 +668,41 @@ public sealed class CalculationScenarios(
     "m3" => AmountUnit.CubicMeter,
     _ => throw new ArgumentOutOfRangeException(nameof(quantity), quantity.Unit, "мера объёма — t либо m3"),
   };
+
+  private static string UnitName(AmountUnit unit) => unit == AmountUnit.Ton ? "t" : "m3";
+
+  /// Зона адреса вывоза (R-016). Спрашивается у справочника адресов, а
+  /// объявленная запросом зона — запасной путь: адрес мог прийти от внешней
+  /// службы подсказок, которой наш справочник не знает (Q-014). Проверяется и
+  /// она — зон ровно две, и третьей в расчёте не будет.
+  private async Task<string> AreaAsync(PickupAddress pickup, CancellationToken cancellationToken)
+  {
+    var known = await references.PickupAreaAsync(pickup.SuggestionId, pickup.Value, cancellationToken);
+
+    if (known is not null)
+    {
+      return known;
+    }
+
+    return pickup.Area is ServiceAreas.Moscow or ServiceAreas.MoscowRegion
+        ? pickup.Area
+        : throw new PickupAreaUnknownException(
+            $"Адрес «{pickup.Value}» не найден в справочнике, а зона обслуживания в запросе не названа. "
+                + "Сервис считает вывоз по Москве и Московской области");
+  }
+
+  /// Объём позиции в мере расчёта. Считается из тонн, а не из введённой
+  /// величины: тонны посчитаны при создании расчёта, и второй путь от ввода
+  /// разошёлся бы с ними на первой же правке плотности в справочнике.
+  ///
+  /// Округления здесь нет — его нет и в операции пересчёта: округлить
+  /// представление объёма значило бы назначить точность в коде (R-058).
+  private static Quantity Measured(StoredItem item, AmountUnit measure, decimal density)
+      => measure == AmountUnit.Ton
+          ? new Quantity(item.Tons, UnitName(AmountUnit.Ton))
+          : new Quantity(
+              AmountConversion.ToCubicMeters(item.Tons, AmountUnit.Ton, density),
+              UnitName(AmountUnit.CubicMeter));
 
   private static DistanceFilter? Checked(DistanceFilter? filter)
   {

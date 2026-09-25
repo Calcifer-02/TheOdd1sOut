@@ -34,6 +34,23 @@ public sealed class ImoltCalculationsStand : IAsyncLifetime
 
   public const double PickupLongitude = 37.6206;
 
+  /// Адрес вывоза в Московской области из начального набора вместе с
+  /// координатами: от него сохранены плечи до полигонов, и по нему проверяется
+  /// мера расчёта второй зоны (AC-016b, AC-016c).
+  public const string RegionPickupValue = "Московская обл., г Балашиха, ш Энтузиастов, д 1";
+
+  public const double RegionPickupLatitude = 55.7963;
+
+  public const double RegionPickupLongitude = 37.9385;
+
+  /// Адрес, которого в справочнике нет. Взят заведомо несуществующим: по
+  /// такому адресу зону назвать нечем, и расчёт обязан отказать (AC-016d).
+  public const string UnknownAddressValue = "г Москва, ул Которой Нет, д 1";
+
+  public const double UnknownAddressLatitude = 55.7501;
+
+  public const double UnknownAddressLongitude = 37.6001;
+
   /// Адрес вывоза, для которого не сохранено ни одного плеча перевозки.
   /// Заводится в справочнике адресов, а не выдумывается запросом: иначе отказ
   /// расчёта можно было бы списать на неизвестный адрес, а проверять надо

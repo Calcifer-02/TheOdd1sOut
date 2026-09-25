@@ -1530,6 +1530,7 @@ components:
           value: г Москва, ул Годовикова, д 9
           coordinates: { latitude: 55.8055, longitude: 37.6206 }
           area: moscow
+        measure: t
         disposalRequired: true
         distanceFilter: { mode: atMost, km: 60 }
         dataFreshness:
@@ -1540,10 +1541,12 @@ components:
           - wasteGroupId: beton-lom
             wasteGroupName: Лом бетона и железобетона
             input: { value: 20, unit: t }
+            calculated: { value: 20, unit: t }
             tons: 20
           - wasteGroupId: drevesina
             wasteGroupName: Древесина от разборки
             input: { value: 15, unit: m3 }
+            calculated: { value: 7.5, unit: t }
             tons: 7.5
         results:
           - wasteGroupId: beton-lom
@@ -1969,11 +1972,16 @@ components:
 
     CalculationItem:
       type: object
-      required: [wasteGroupId, wasteGroupName, input, tons]
+      required: [wasteGroupId, wasteGroupName, input, calculated, tons]
       properties:
         wasteGroupId: { type: string }
         wasteGroupName: { type: string }
         input: { $ref: '#/components/schemas/Quantity' }
+        calculated:
+          allOf: [{ $ref: '#/components/schemas/Quantity' }]
+          description: |
+            Объём в мере расчёта — той, которую задала зона адреса вывоза
+            (R-016). С введённым совпадает только тогда, когда меры совпали.
         tons:
           type: number
           format: double
@@ -2026,7 +2034,7 @@ components:
         Расчёт целиком: исходные данные, пересчитанные объёмы, результаты по
         каждой группе отходов, выбор и распределение. Хранит дату
         актуальности данных, на которых посчитан (R-048).
-      required: [id, createdAt, preliminary, pickupAddress, disposalRequired, items, results, dataFreshness]
+      required: [id, createdAt, preliminary, pickupAddress, measure, disposalRequired, items, results, dataFreshness]
       properties:
         id: { type: string }
         createdAt: { type: string, format: date-time }
@@ -2036,6 +2044,12 @@ components:
             Расчёт предварительный всегда (R-059). Допустимое отклонение
             финальной цены заказчиком не названо — Q-010.
         pickupAddress: { $ref: '#/components/schemas/PickupAddress' }
+        measure:
+          allOf: [{ $ref: '#/components/schemas/Unit' }]
+          description: |
+            Мера расчёта: по Москве — тонны, по Московской области —
+            кубические метры (R-016). Задаётся зоной адреса вывоза, а не
+            запросом; стоимость в обеих зонах считается по тоннам (R-018).
         disposalRequired: { type: boolean }
         distanceFilter: { $ref: '#/components/schemas/DistanceFilter' }
         items:
