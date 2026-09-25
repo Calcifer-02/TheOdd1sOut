@@ -59,9 +59,23 @@ export function ProfileCard({ profile }: { profile: ParticipantProfile }) {
     facts.push({ term: 'ИНН', value: profile.inn });
   }
 
+  if (profile.phone) {
+    facts.push({ term: 'Телефон', value: profile.phone });
+  }
+
   facts.push({
     term: 'Транспорт зарегистрирован в АИС ОССиГ',
     value: markWord(profile.registeredInAisOssig),
+  });
+
+  facts.push({
+    term: 'Лицензия на транспортирование отходов',
+    value: markWord(profile.hasTransportLicense),
+  });
+
+  facts.push({
+    term: 'Санитарно-эпидемиологическое заключение',
+    value: markWord(profile.hasSanitaryConclusion),
   });
 
   return (

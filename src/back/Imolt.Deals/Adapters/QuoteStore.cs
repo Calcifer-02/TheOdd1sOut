@@ -52,6 +52,7 @@ public sealed class QuoteStore(NpgsqlDataSource dataSource) : IQuoteStore
     var row = await connection.QuerySingleOrDefaultAsync<DocumentRow>(new CommandDefinition(
         """
         select q.number, q.issued_at, q.valid_until, q.total, q.customer_name,
+               q.price_tolerance_percent,
                c.created_at as calculated_at, c.pickup_value as pickup_address
           from quote q
           join calculation c on c.id = q.calculation_id
@@ -94,7 +95,8 @@ public sealed class QuoteStore(NpgsqlDataSource dataSource) : IQuoteStore
             Money.Rubles(line.TransportCost),
             line.DisposalCost is { } disposal ? Money.Rubles(disposal) : null,
             Money.Rubles(line.TotalCost)))],
-        Money.Rubles(row.Total));
+        Money.Rubles(row.Total),
+        row.PriceTolerancePercent);
   }
 
   public async Task SaveAsync(
@@ -110,8 +112,13 @@ public sealed class QuoteStore(NpgsqlDataSource dataSource) : IQuoteStore
 
     await connection.ExecuteAsync(new CommandDefinition(
         """
-        insert into quote (id, calculation_id, number, issued_at, valid_until, total, customer_name)
-        values (@key, @calculationId, @number, @issuedAt, @validUntil, @total, @customerName)
+        insert into quote (
+            id, calculation_id, number, issued_at, valid_until, total, customer_name,
+            price_tolerance_percent
+        ) values (
+            @key, @calculationId, @number, @issuedAt, @validUntil, @total, @customerName,
+            @priceTolerancePercent
+        )
         """,
         new
         {
@@ -124,6 +131,7 @@ public sealed class QuoteStore(NpgsqlDataSource dataSource) : IQuoteStore
           validUntil = quote.ValidUntil,
           total = quote.Total.Amount,
           customerName = document.CustomerName,
+          priceTolerancePercent = document.PriceTolerancePercent,
         },
         transaction,
         cancellationToken: cancellationToken));
@@ -217,6 +225,10 @@ public sealed class QuoteStore(NpgsqlDataSource dataSource) : IQuoteStore
     public DateTimeOffset CalculatedAt { get; set; }
 
     public string PickupAddress { get; set; } = string.Empty;
+
+    /// Пусто у предложений, выпущенных до решения по Q-010: условия
+    /// отклонения они не несли (R-059).
+    public decimal? PriceTolerancePercent { get; set; }
   }
 
   private sealed class LineRow

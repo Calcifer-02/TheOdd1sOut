@@ -12,7 +12,7 @@
  * загруженное.
  *
  * @req: R-049
- * @supports: R-008, R-050, R-051, R-052, R-054
+ * @supports: R-050, R-051, R-052, R-054
  * @adr: ADR-0006
  */
 import { Notice, Skeleton, useStyles } from '@/shared/ui';

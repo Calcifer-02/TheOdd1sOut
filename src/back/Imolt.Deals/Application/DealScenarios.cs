@@ -21,6 +21,7 @@ public sealed class DealScenarios(
     IDocumentServiceCatalog catalog,
     IQuoteDocumentWriter writer,
     IPriceValidity validity,
+    IPriceTolerance tolerance,
     IClock clock)
 {
   /// Выпуск предложения. Повторный вызов возвращает уже выпущенное: на номер
@@ -72,7 +73,11 @@ public sealed class DealScenarios(
         calculation.PickupAddress,
         request?.CustomerName,
         calculation.Lines,
-        total);
+        total,
+        // Отклонение закрепляется в снимке вместе с ценами: это условие
+        // выпуска, и смена настройки не вправе задним числом менять то, что
+        // клиент уже прочитал в документе (R-059).
+        tolerance.Percent);
 
     var quote = new Quote(
         id,
@@ -80,8 +85,10 @@ public sealed class DealScenarios(
         issuedAt,
         document.ValidUntil,
         total,
-        // Признак предварительности истинен всегда: допустимое отклонение
-        // финальной цены заказчиком не названо (R-059, Q-010).
+        // Признак предварительности истинен всегда: расчёт ведётся по
+        // справочным ценам, и окончательная стоимость подтверждается при
+        // согласовании вывоза. Насколько она вправе отличаться, называет
+        // отклонение выше (R-059).
         true,
         DocumentPathOf(id));
 

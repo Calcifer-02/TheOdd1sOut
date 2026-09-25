@@ -62,7 +62,11 @@ export type SubscriptionRequestInput = {
   role: SubscriberRole;
   companyName: string;
   inn: string;
+  /** Необязателен: обратный канал у менеджера есть и в мессенджере (R-051). */
+  phone?: string;
   registeredInAisOssig?: boolean;
+  hasTransportLicense?: boolean;
+  hasSanitaryConclusion?: boolean;
 };
 
 export type SubscriptionRequestAccepted = {

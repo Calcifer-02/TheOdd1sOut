@@ -140,6 +140,11 @@ public sealed class AccessScenarios(
   private static Regex InnPattern { get; } =
       new(@"^[0-9]{10}$|^[0-9]{12}$", RegexOptions.Compiled);
 
+  /// Образец телефона — оттуда же. Канонический вид один: «+7» и десять цифр.
+  /// Принимать запись в любом виде значило бы хранить один номер несколькими
+  /// строками, и база перевозчиков перестала бы искаться по номеру (R-051).
+  private static Regex PhonePattern { get; } = new(@"^\+7[0-9]{10}$", RegexOptions.Compiled);
+
   // Форма запроса проверяется до правил предметной области: промах по образцу
   // ИНН — ошибка запроса (400), а не нарушенное правило (422).
   private static SubscriptionRequestInput Checked(SubscriptionRequestInput? input)
@@ -158,10 +163,19 @@ public sealed class AccessScenarios(
       throw new ArgumentOutOfRangeException(nameof(input), "название компании обязательно");
     }
 
-    return InnPattern.IsMatch(request.Inn ?? string.Empty)
+    if (!InnPattern.IsMatch(request.Inn ?? string.Empty))
+    {
+      throw new ArgumentOutOfRangeException(
+          nameof(input), request.Inn, "ИНН записывается десятью либо двенадцатью цифрами");
+    }
+
+    // Телефон необязателен: участник пришёл из мессенджера, и обратный канал
+    // у менеджера есть и без него. А вот названный телефон обязан быть
+    // разборчивым — иначе он бесполезен именно тогда, когда понадобится.
+    return request.Phone is null || PhonePattern.IsMatch(request.Phone)
         ? request
         : throw new ArgumentOutOfRangeException(
-            nameof(input), request.Inn, "ИНН записывается десятью либо двенадцатью цифрами");
+            nameof(input), request.Phone, "телефон записывается как +7 и десять цифр");
   }
 }
 

@@ -12,13 +12,24 @@ namespace Imolt.Api;
 /// Перевод формы к форме — единственное, что здесь происходит; предметных
 /// правил нет.
 ///
-/// @supports: R-017, R-018, R-019, R-048
+/// @supports: R-016, R-017, R-018, R-019, R-048
 /// @adr: ADR-0005
 public sealed class CalculationReferences(
     IWasteGroupCatalog catalog,
     ILandfillRegistry registry,
-    IDataFreshnessSource freshness) : IReferenceData
+    IDataFreshnessSource freshness,
+    IAddressDirectory addresses) : IReferenceData
 {
+  public async Task<string?> PickupAreaAsync(
+      string? suggestionId,
+      string? value,
+      CancellationToken cancellationToken)
+  {
+    var address = await addresses.FindAsync(suggestionId, value, cancellationToken);
+
+    return address?.Area;
+  }
+
   public async Task<WasteGroupPricing?> WasteGroupAsync(
       string wasteGroupId,
       CancellationToken cancellationToken)
@@ -69,6 +80,11 @@ public sealed class CalculationReferences(
             landfill.Id,
             landfill.Name,
             landfill.Address,
+            // Координаты области «справочники» переносятся в свой тип области
+            // «расчёт»: общий тип связал бы две области напрямую (ADR-0001).
+            new Imolt.Calculations.Contracts.Coordinates(
+                landfill.Coordinates.Latitude,
+                landfill.Coordinates.Longitude),
             landfill.Status,
             landfill.StatusUpdatedAt,
             tariff.DisposalPricePerTon);

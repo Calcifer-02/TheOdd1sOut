@@ -124,6 +124,13 @@ public sealed class ImoltReferenceEditorStand : IAsyncLifetime
   /// Группа отходов устаревающего предпросмотра (AC-045d).
   public const string StalePreviewGroupId = "proverka-import-ustarevanie";
 
+  /// Группа отходов книги в записи табличного редактора (AC-045h). Отдельная
+  /// от прочих: эта проверка проходит оба шага и меняет вместе с ценой
+  /// название, а соседние критерии закрепляют свои величины.
+  public const string EditorWrittenGroupId = "proverka-import-zapis-redaktora";
+
+  public const string EditorWrittenGroupPrice = "36.00";
+
   /// Группа отходов со столбцом кодов ФККО (AC-045f).
   public const string FkkoImportGroupId = "proverka-import-fkko";
 
@@ -330,7 +337,8 @@ public sealed class ImoltReferenceEditorStand : IAsyncLifetime
                 ('{WrittenPriceGroupId}',     'Проверочная группа цены словом',               31.00, 1.0000, date '{SeedDate}'),
                 ('{FormulaGroupId}',          'Проверочная группа формулы',                   33.00, 1.0000, date '{SeedDate}'),
                 ('{SyncRunFirstGroupId}',     'Проверочная группа прогона первая',            34.00, 1.0000, date '{SeedDate}'),
-                ('{SyncRunSecondGroupId}',    'Проверочная группа прогона вторая',            35.00, 1.0000, date '{SeedDate}')
+                ('{SyncRunSecondGroupId}',    'Проверочная группа прогона вторая',            35.00, 1.0000, date '{SeedDate}'),
+                ('{EditorWrittenGroupId}',    'Проверочная группа записи редактора', {EditorWrittenGroupPrice}, 1.0000, date '{SeedDate}')
             on conflict (id) do nothing;
 
             -- Коды ФККО двум группам: AC-042b наблюдает их сохранность при

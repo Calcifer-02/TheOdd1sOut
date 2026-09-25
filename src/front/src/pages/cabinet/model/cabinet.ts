@@ -125,6 +125,15 @@ export function useProfile(identified: boolean): ProfileState {
 
   const applySubscription = useCallback((subscription: SubscriptionStanding) => {
     setProfile(current => (current === null ? current : { ...current, subscription }));
+
+    // Реквизиты заявки перечитываются у службы, а не переписываются с экрана:
+    // набранное и принятое — разные вещи, и показывать первое вместо второго
+    // значило бы обещать, что служба приняла именно это (R-051). Неудача
+    // обновления экран не ломает: состояние подписки уже показано, а
+    // реквизиты появятся при следующем входе.
+    getProfile()
+      .then(next => setProfile(next))
+      .catch(() => undefined);
   }, []);
 
   return { profile, failure, loading, applySubscription };

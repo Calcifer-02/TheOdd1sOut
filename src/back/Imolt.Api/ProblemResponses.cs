@@ -169,6 +169,19 @@ public static class ProblemResponses
                 []);
             break;
 
+          // Зону адреса вывоза назвать нечем. Отдельный код от прочих отказов
+          // разбора: пользователю тут нужно выбрать адрес из подсказок, а не
+          // исправлять остальную форму (R-012, R-016).
+          case PickupAreaUnknownException area:
+            await WriteAsync(
+                context,
+                StatusCodes.Status422UnprocessableEntity,
+                Problems.AddressOutsideServiceArea,
+                "Адрес вне зоны обслуживания",
+                area.Message,
+                []);
+            break;
+
           case StalePreviewException stale:
             await WriteAsync(
                 context,

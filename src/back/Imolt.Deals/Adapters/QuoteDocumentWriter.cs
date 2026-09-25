@@ -17,9 +17,13 @@ namespace Imolt.Deals.Adapters;
 /// Документ собирается из снимка цен, а не из справочников: пересчитанный при
 /// скачивании, он разошёлся бы с тем, что клиент уже видел.
 ///
+/// Реквизиты исполнителя приходят настройкой службы (решение по Q-012): в
+/// другом развёртывании документ выпускает другая компания, и запись имени в
+/// код сделала бы документ непереносимым.
+///
 /// @req: R-036, R-037, R-038, R-059, R-061
 /// @adr: ADR-0005
-public sealed class QuoteDocumentWriter : IQuoteDocumentWriter
+public sealed class QuoteDocumentWriter(QuoteIssuer issuer) : IQuoteDocumentWriter
 {
   private const double Margin = 48;
 
@@ -58,6 +62,12 @@ public sealed class QuoteDocumentWriter : IQuoteDocumentWriter
       y += LineHeight;
     }
 
+    // Шапка исполнителя идёт первой строкой: документ уходит наружу, и
+    // читатель должен узнать отправителя раньше, чем цену (R-037, Q-012).
+    Write(issuer.Name, bold);
+    Write($"{issuer.City} · {issuer.Phone} · {issuer.Email}", regular);
+    y += LineHeight / 2;
+
     Write($"Коммерческое предложение {model.Number}", bold);
     y += LineHeight / 2;
 
@@ -95,8 +105,15 @@ public sealed class QuoteDocumentWriter : IQuoteDocumentWriter
     y += LineHeight / 2;
 
     // Отметка о предварительности обязательна: молчание о ней в документе с
-    // ценами читается как окончательная смета (R-059).
-    Write("Цена предварительная. Окончательная стоимость уточняется при согласовании вывоза.", regular);
+    // ценами читается как окончательная смета (R-059). Отклонение называется
+    // числом, если предложение выпущено с этим условием: «предварительная» без
+    // величины не говорит читателю, чего ждать.
+    Write(
+        model.PriceTolerancePercent is { } tolerance
+            ? "Цена предварительная: окончательная стоимость может отличаться не более чем на "
+              + Percent(tolerance) + " и уточняется при согласовании вывоза."
+            : "Цена предварительная. Окончательная стоимость уточняется при согласовании вывоза.",
+        regular);
 
     using var stream = new MemoryStream();
     document.Save(stream);
@@ -109,6 +126,11 @@ public sealed class QuoteDocumentWriter : IQuoteDocumentWriter
   private static string Amount(decimal value) => value.ToString("0.###", Russian);
 
   private static string Rubles(decimal value) => value.ToString("N2", Russian) + " ₽";
+
+  /// Проценты без хвоста нулей: «10 %», а не «10,00 %». Число приходит из
+  /// настройки и может быть дробным, поэтому дробная часть печатается, когда
+  /// она есть.
+  private static string Percent(decimal value) => value.ToString("0.##", Russian) + " %";
 
   private static string Unit(string unit) => unit == "m3" ? "м³" : "т";
 }

@@ -39,6 +39,12 @@ public sealed record Quote(
 
 /// Всё, что нужно напечатать в документе. Отдельно от ответа операции: ответ
 /// объявлен договором, а состав документа — требованием R-037.
+///
+/// Допустимое отклонение хранится вместе со снимком цен, а не берётся
+/// настройкой при скачивании: это условие, на котором предложение выпущено, и
+/// документ, пересчитанный по сегодняшней настройке, назвал бы клиенту другое
+/// (R-059). У предложений, выпущенных до решения по Q-010, его нет — тогда
+/// отметка о предварительности печатается без числа.
 public sealed record QuoteDocumentModel(
     string Number,
     DateTimeOffset IssuedAt,
@@ -47,7 +53,16 @@ public sealed record QuoteDocumentModel(
     string PickupAddress,
     string? CustomerName,
     IReadOnlyList<QuoteLine> Lines,
-    Money Total);
+    Money Total,
+    decimal? PriceTolerancePercent = null);
+
+/// Исполнитель, от чьего имени выпущено предложение (R-037, решение по Q-012).
+///
+/// Реквизиты — настройка службы, а не запись в коде: то же решение в другом
+/// развёртывании назовёт другую компанию. Логотипа, подписи и печати здесь
+/// нет намеренно — прав на них никто не передавал, а подпись в автоматическом
+/// документе была бы обязательством, которого никто не брал.
+public sealed record QuoteIssuer(string Name, string Phone, string Email, string City);
 
 public sealed record PickupRequestInput(
     string? CalculationId,
@@ -102,18 +117,27 @@ public sealed record Profile(
     string? Role,
     string? CompanyName,
     string? Inn,
+    string? Phone,
     bool? RegisteredInAisOssig,
+    bool? HasTransportLicense,
+    bool? HasSanitaryConclusion,
     SubscriptionState Subscription);
 
 /// Сессия участника. Срок жизни маркера объявлен полем: клиент не угадывает
 /// его по опыту.
 public sealed record Session(string AccessToken, int ExpiresIn, Profile Profile);
 
+/// Что участник сообщает о себе, подавая заявку (R-051). Признаки допускают
+/// пустое значение и после правки остаются пустыми: «не сообщил» и «сообщил,
+/// что документа нет» — разные ответы, и по второму перевозчику откажут.
 public sealed record SubscriptionRequestInput(
     string Role,
     string CompanyName,
     string Inn,
-    bool? RegisteredInAisOssig);
+    string? Phone,
+    bool? RegisteredInAisOssig,
+    bool? HasTransportLicense,
+    bool? HasSanitaryConclusion);
 
 public sealed record SubscriptionRequest(
     string Id,
