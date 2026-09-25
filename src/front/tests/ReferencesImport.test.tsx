@@ -110,6 +110,53 @@ describe('импорт справочника на рабочем месте', (
     );
   });
 
+  /** @supports: R-046 */
+  it('книга, заводящая записи, называет их до применения и после', async () => {
+    // Служба вернула предпросмотр с заводимой записью: у неё нет текущих
+    // значений, и по одним расхождениям менеджер данных не отличил бы
+    // заведение полигона от правки его адреса (R-046).
+    служба.answerWith('POST /v1/reference-imports', {
+      status: 201,
+      body: {
+        id: '7d1f0a6e-0f2a-4f7a-9a1e-2b6c1d4e5f60',
+        kind: 'landfills',
+        changes: [
+          {
+            entityId: 'novyy-poligon',
+            field: 'name',
+            currentValue: null,
+            fileValue: 'Объект из официального перечня',
+          },
+        ],
+        rejectedRows: [],
+        additions: ['novyy-poligon'],
+      },
+    });
+
+    служба.answerWith('POST /v1/reference-imports/:id/confirmation', {
+      status: 200,
+      body: {
+        id: '7d1f0a6e-0f2a-4f7a-9a1e-2b6c1d4e5f60',
+        appliedChanges: 1,
+        addedEntities: 1,
+        updatedAt: '2026-09-25T09:20:03+03:00',
+      },
+    });
+
+    const пользователь = userEvent.setup();
+    render(<ReferencesPage />);
+    await screen.findByRole('button', { name: new RegExp(`^${ТАРИФ_ИКША}:`) });
+
+    await пользователь.click(screen.getByRole('button', { name: 'Импорт из Excel' }));
+    await пользователь.upload(screen.getByLabelText('Книга Excel'), книга());
+
+    expect(await screen.findByText(/Будет заведено записей: 1/)).toBeInTheDocument();
+
+    await пользователь.click(screen.getByRole('button', { name: /^Применить изменения/ }));
+
+    expect(await screen.findByText(/Заведено записей: 1/)).toBeInTheDocument();
+  });
+
   it('устаревший предпросмотр не применяется, объясняет причину и предлагает пересобрать', async () => {
     служба.answerWith('POST /v1/reference-imports/:id/confirmation', {
       status: 409,

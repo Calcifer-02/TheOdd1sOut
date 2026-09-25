@@ -80,6 +80,7 @@ const APPLIED: ImportState = {
   result: {
     id: PREVIEW.preview?.id ?? '',
     appliedChanges: 2,
+    addedEntities: 0,
     updatedAt: '2026-09-18T09:20:00+03:00',
   },
 };

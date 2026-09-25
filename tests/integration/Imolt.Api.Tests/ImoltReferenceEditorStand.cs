@@ -131,6 +131,26 @@ public sealed class ImoltReferenceEditorStand : IAsyncLifetime
 
   public const string EditorWrittenGroupPrice = "36.00";
 
+  /// Полигон, которого в реестре нет: книга заводит его (AC-046a). Координаты
+  /// настоящие — деревня Тимохово Богородского городского округа, — но сам
+  /// объект проверочный: заводить в набор данных несуществующий полигон с
+  /// правдоподобным именем значило бы засорить демонстрацию.
+  public const string NewLandfillId = "proverka-import-novyy-poligon";
+
+  public const string NewLandfillName = "Проверочный объект приёма из перечня";
+
+  public const string NewLandfillAddress = "Московская обл., проверочный адрес объекта";
+
+  public const double NewLandfillLatitude = 55.6789;
+
+  public const double NewLandfillLongitude = 38.1234;
+
+  /// Полигон, у строки которого в книге нет координат (AC-046b).
+  public const string IncompleteLandfillId = "proverka-import-bez-koordinat";
+
+  /// Полигон, которого заводят между разбором и подтверждением (AC-046c).
+  public const string RaceLandfillId = "proverka-import-gonka";
+
   /// Группа отходов со столбцом кодов ФККО (AC-045f).
   public const string FkkoImportGroupId = "proverka-import-fkko";
 
@@ -269,6 +289,30 @@ public sealed class ImoltReferenceEditorStand : IAsyncLifetime
     }
 
     return (long)(await command.ExecuteScalarAsync(CancellationToken.None))!;
+  }
+
+  /// Заведение полигона в обход импорта. Через хранилище, а не через точку
+  /// договора: операции заведения полигона договор не объявляет вовсе — в том
+  /// и состоит R-046, — а критерий AC-046c требует, чтобы запись появилась
+  /// между разбором книги и её подтверждением.
+  public async Task AddLandfillAsync(string id, string name)
+  {
+    await using var connection = new NpgsqlConnection(ConnectionString);
+    await connection.OpenAsync(CancellationToken.None);
+
+    await using var command = new NpgsqlCommand(
+        """
+        insert into landfill (id, name, address, latitude, longitude,
+                              status, status_source, status_updated_at)
+        values (@id, @name, 'Московская обл., адрес чужой записи', 55.5, 38.5,
+                'active', 'manual', current_date)
+        on conflict (id) do nothing
+        """,
+        connection);
+    command.Parameters.AddWithValue("id", id);
+    command.Parameters.AddWithValue("name", name);
+
+    await command.ExecuteNonQueryAsync(CancellationToken.None);
   }
 
   /// Приведение хранилища к предусловию «прогонов обновления не записано»

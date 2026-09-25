@@ -1895,13 +1895,25 @@ components:
             properties:
               row: { type: integer }
               reason: { type: string }
+        additions:
+          type: array
+          description: |
+            Записи, которых в справочнике нет и которые заведёт подтверждение
+            (R-046). Их поля перечислены в changes с пустым currentValue:
+            «поля ещё нет» и «записи ещё нет» — разные вещи, и вторую
+            менеджер данных обязан видеть до применения. Новые записи заводит
+            только справочник полигонов.
+          items: { type: string }
 
     ReferenceImportResult:
       type: object
-      required: [id, appliedChanges, updatedAt]
+      required: [id, appliedChanges, addedEntities, updatedAt]
       properties:
         id: { type: string }
         appliedChanges: { type: integer }
+        addedEntities:
+          type: integer
+          description: сколько записей заведено подтверждением (R-046)
         updatedAt: { type: string, format: date-time }
 
     AmountConversionRequest:
