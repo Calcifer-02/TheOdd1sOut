@@ -16,10 +16,22 @@
  * @adr: ADR-0008
  */
 import { useState } from 'react';
-import { Button, DataTable, DateStamp, Field, Notice, Popover, Skeleton, Tabs, Toolbar, useStyles } from '@/shared/ui';
+import {
+  Button,
+  DataTable,
+  DateStamp,
+  Field,
+  Notice,
+  Popover,
+  Skeleton,
+  SortControl,
+  Tabs,
+  Toolbar,
+  useStyles,
+} from '@/shared/ui';
 import { StatusBadge } from '@/entities/landfill';
 import { ImportPanel } from '@/features/reference-import';
-import type { Landfill } from '@/shared/api/references';
+import { LANDFILL_SORTS, type Landfill } from '@/shared/api/references';
 import type { WasteGroup } from '@/shared/api/contracts';
 import { formatDate, formatMoney, formatNumber } from '@/shared/lib/formatting';
 import { latestTariffDate, selectionCaption, tariffCellKey, tariffOf, transportCellKey } from '../model/editor';
@@ -179,6 +191,17 @@ export function ReferencesDesktop({ editor, route, importing }: ReferencesViewPr
         {/* Счётчик принадлежит выборке, а не полю: он стоит над поиском и
             называет показанное из найденного. Область сообщения нужна, чтобы
             смена числа доходила и без взгляда на таблицу. */}
+        {/* То же управление порядком, что на расчёте и в справочнике полигонов:
+            вторая его реализация разошлась бы с первой молча (R-088). */}
+        <SortControl
+          name="references-sort"
+          options={LANDFILL_SORTS}
+          value={editor.sort}
+          direction={editor.order}
+          onPick={editor.sortBy}
+          onToggle={editor.toggleOrder}
+        />
+
         <div className="imolt-references-selection">
           <p className="imolt-references-count" role="status">
             {selectionCaption(

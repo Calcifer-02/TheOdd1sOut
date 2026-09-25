@@ -12,7 +12,7 @@
  * @req: R-013, R-019, R-023, R-048, R-058, R-061
  * @adr: ADR-0008
  */
-import { Button, Field, Notice, PhoneField, RadioPills, Sheet, Skeleton } from '@/shared/ui';
+import { Button, Field, Notice, PhoneField, RadioPills, Sheet, Skeleton, SortControl } from '@/shared/ui';
 import { Combobox } from '@/shared/ui/combobox';
 import { OptionCard, RouteDetails, badgeStatus } from '@/entities/landfill';
 import { AllocationPanel, SummaryBar } from '@/widgets/selection-summary';
@@ -161,26 +161,14 @@ export function CalculatorMobile({ model }: { model: CalculatorModel }) {
             ))}
           </div>
 
-          <div className="imolt-sorts-line">
-            <RadioPills
-              className="imolt-sorts"
-              name="sort"
-              label="Сортировка"
-              value={view.sort}
-              options={SORTS.map(sort => ({ value: sort.field, label: sort.label }))}
-              onPick={field => model.applyView({ sort: field })}
-            />
-            {/* Общая кнопка, а не своя разметка: вторая реализация того же
-                управления расходится с первой молча, а резерв под вторую
-                подпись держит ширину при смене порядка (R-024). */}
-            <Button
-              kind="tertiary"
-              reserve={view.order === 'asc' ? 'По убыванию' : 'По возрастанию'}
-              onClick={model.toggleOrder}
-            >
-              {view.order === 'asc' ? 'По возрастанию' : 'По убыванию'}
-            </Button>
-          </div>
+          <SortControl
+            name="sort"
+            options={SORTS.map(sort => ({ value: sort.field, label: sort.label }))}
+            value={view.sort}
+            direction={view.order}
+            onPick={field => model.applyView({ sort: field })}
+            onToggle={model.toggleOrder}
+          />
 
           <div className="imolt-chips" aria-label="Фильтр расстояния">
             <button

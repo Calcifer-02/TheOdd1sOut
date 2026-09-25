@@ -25,9 +25,9 @@
  * @adr: ADR-0008
  */
 import { useEffect, useState } from 'react';
-import { Button, Chip, Field, Select } from '@/shared/ui';
+import { Button, Chip, Field, Select, SortControl } from '@/shared/ui';
 import { isWide, useViewport } from '@/shared/lib/viewport';
-import type { WasteGroup } from '@/shared/api/references';
+import { LANDFILL_SORTS, type LandfillSort, type WasteGroup } from '@/shared/api/references';
 
 /**
  * Подпись отбора по группе — она же доступное имя группы чипов: второй текст
@@ -39,18 +39,28 @@ export function LandfillsFilters({
   groups,
   query,
   wasteGroupId,
+  sort,
+  order,
   filtered,
   onSearch,
   onToggleGroup,
+  onSortBy,
+  onToggleOrder,
   onReset,
 }: {
   groups: WasteGroup[];
   query: string;
   wasteGroupId: string;
+  /** поле порядка списка */
+  sort: LandfillSort;
+  /** направление порядка */
+  order: 'asc' | 'desc';
   /** отбор задан: только тогда есть что сбрасывать */
   filtered: boolean;
   onSearch: (query: string) => void;
   onToggleGroup: (wasteGroupId: string) => void;
+  onSortBy: (sort: LandfillSort) => void;
+  onToggleOrder: () => void;
   onReset: () => void;
 }) {
   const [text, setText] = useState(query);
@@ -123,6 +133,17 @@ export function LandfillsFilters({
             />
           )}
         </div>
+
+        {/* То же управление порядком, что на экране расчёта: вторая его
+            реализация разошлась бы с первой молча (R-088). */}
+        <SortControl
+          name="landfills-sort"
+          options={LANDFILL_SORTS}
+          value={sort}
+          direction={order}
+          onPick={onSortBy}
+          onToggle={onToggleOrder}
+        />
 
         {filtered ? (
           <Button kind="tertiary" onClick={onReset}>

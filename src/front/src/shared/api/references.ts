@@ -109,9 +109,27 @@ function withQuery(path: string, parameters: URLSearchParams): string {
  *
  * @supports: R-040, R-048
  */
+/**
+ * Поля порядка реестра полигонов — ровно те, что объявляет договор (R-088).
+ *
+ * Перечень живёт рядом с обращением к точке, а не на экране: его читают и
+ * справочник полигонов, и редактор цен, и второй перечень на втором экране
+ * разошёлся бы с договором молча.
+ */
+export const LANDFILL_SORTS = [
+  { value: 'name' as const, label: 'По названию' },
+  { value: 'tariff' as const, label: 'По тарифу' },
+  { value: 'status' as const, label: 'По статусу' },
+  { value: 'updatedAt' as const, label: 'По дате' },
+];
+
+export type LandfillSort = (typeof LANDFILL_SORTS)[number]['value'];
+
 export function listLandfills(query: {
   query?: string;
   wasteGroupId?: string;
+  sort?: LandfillSort;
+  order?: 'asc' | 'desc';
   limit?: number;
   offset?: number;
 }): Promise<Page<Landfill>> {
