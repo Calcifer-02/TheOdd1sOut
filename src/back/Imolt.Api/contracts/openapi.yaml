@@ -2329,9 +2329,27 @@ components:
         role: { $ref: '#/components/schemas/SubscriberRole' }
         companyName: { type: string }
         inn: { type: string, pattern: '^[0-9]{10}$|^[0-9]{12}$' }
+        phone:
+          type: string
+          pattern: '^\+7[0-9]{10}$'
+          description: |
+            Телефон перевозчика в каноническом виде: «+7» и десять цифр
+            (R-051). Необязателен — участник пришёл из мессенджера, и
+            обратный канал у менеджера есть и без телефона.
         registeredInAisOssig:
           type: boolean
           description: транспорт зарегистрирован в АИС ОССиГ (R-051)
+        hasTransportLicense:
+          type: boolean
+          description: |
+            Лицензия на транспортирование отходов I–IV классов опасности
+            (R-051). Пусто означает «не сообщил», а false — «сообщил, что
+            лицензии нет»: по второму ответу перевозчику откажут.
+        hasSanitaryConclusion:
+          type: boolean
+          description: |
+            Санитарно-эпидемиологическое заключение (R-051) — условие выдачи
+            лицензии с 01.09.2026, но у выданных раньше его может не быть.
       additionalProperties: false
 
     SubscriptionRequest:
@@ -2374,7 +2392,10 @@ components:
           nullable: true
         companyName: { type: string, nullable: true }
         inn: { type: string, nullable: true }
+        phone: { type: string, nullable: true }
         registeredInAisOssig: { type: boolean, nullable: true }
+        hasTransportLicense: { type: boolean, nullable: true }
+        hasSanitaryConclusion: { type: boolean, nullable: true }
         subscription: { $ref: '#/components/schemas/SubscriptionState' }
 
     Session:
