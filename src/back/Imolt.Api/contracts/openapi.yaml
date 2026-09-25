@@ -268,7 +268,7 @@ paths:
         статусом и датой его актуальности. Режим «Справочник цен» в интерфейсе
         и редактор данных читают один и тот же список.
       x-область: справочники
-      x-требования: [R-040, R-004, R-028, R-048]
+      x-требования: [R-040, R-004, R-028, R-048, R-088]
       x-экран: [Э-03, Э-11]
       x-состояние: реализовано
       parameters:
@@ -281,6 +281,28 @@ paths:
           in: query
           description: оставить полигоны с этим статусом
           schema: { $ref: '#/components/schemas/LandfillStatus' }
+        - name: sort
+          in: query
+          description: |
+            Поле порядка. Порядок считает служба, а не экран: выдача
+            постраничная, и список, упорядоченный на клиенте, переставил бы
+            только показанную страницу (R-088).
+
+            `tariff` упорядочивает по тарифу утилизации выбранной группы
+            отходов, а без выбранной группы — по наименьшему тарифу
+            полигона: полигон без тарифов идёт последним в любом направлении,
+            потому что отсутствие цены — не самая низкая цена.
+          schema:
+            type: string
+            default: name
+            enum: [name, status, updatedAt, tariff]
+        - name: order
+          in: query
+          description: направление порядка
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: asc
         - $ref: '#/components/parameters/Limit'
         - $ref: '#/components/parameters/Offset'
       responses:

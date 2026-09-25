@@ -23,7 +23,7 @@
  */
 import type * as Leaflet from 'leaflet';
 import type { Coordinates } from '@/shared/api/contracts';
-import { routeTone, space, stroke } from '@/shared/ui/tokens';
+import { routeTone, space } from '@/shared/ui/tokens';
 import type { RouteShape } from './routeGeometry';
 
 /** Растровые тайлы OpenStreetMap: ключа не требуют. */
@@ -84,7 +84,7 @@ export type MapFailure = 'tiles' | 'library';
  * полигонов бывает пять, и в общей мере она среди них терялась (AC-033g).
  */
 function pinSize(point: RoutePoint): [number, number] {
-  const side = point.kind === 'pickup' ? space.l : space.m + stroke.emphasis;
+  const side = point.kind === 'pickup' ? space.xl : space.l;
 
   return [side, side];
 }

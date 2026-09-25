@@ -61,9 +61,13 @@ export function LandfillsPage() {
         groups={screen.groups}
         query={screen.filters.query}
         wasteGroupId={screen.filters.wasteGroupId}
+        sort={screen.filters.sort}
+        order={screen.filters.order}
         filtered={screen.filters.query !== '' || screen.filters.wasteGroupId !== ''}
         onSearch={screen.search}
         onToggleGroup={screen.toggleGroup}
+        onSortBy={screen.sortBy}
+        onToggleOrder={screen.toggleOrder}
         onReset={screen.reset}
       />
 

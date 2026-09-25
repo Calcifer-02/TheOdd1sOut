@@ -19,6 +19,7 @@ import {
   type DataFreshness,
   type Landfill,
   type WasteGroup,
+  type LandfillSort,
 } from '@/shared/api/references';
 import { navigate, replaceRoute, useRoute } from '@/shared/lib/routing';
 import { LANDFILLS_PATH, PAGE_SIZE, filtersQuery, parseFilters, type LandfillsFilters } from './filters';
@@ -50,6 +51,10 @@ export type LandfillsScreen = {
   retry: () => void;
   search: (query: string) => void;
   toggleGroup: (wasteGroupId: string) => void;
+  /** Сменить поле порядка списка (R-088). */
+  sortBy: (sort: LandfillSort) => void;
+  /** Переключить направление порядка. */
+  toggleOrder: () => void;
   showMore: () => void;
   reset: () => void;
   openLandfill: (landfillId: string) => void;
@@ -101,7 +106,7 @@ export function useLandfillsScreen(): LandfillsScreen {
     };
   }, [attempt]);
 
-  const { query, wasteGroupId, limit } = filters;
+  const { query, wasteGroupId, sort, order, limit } = filters;
 
   useEffect(() => {
     let cancelled = false;
@@ -112,6 +117,11 @@ export function useLandfillsScreen(): LandfillsScreen {
         const page = await listLandfills({
           query: query || undefined,
           wasteGroupId: wasteGroupId || undefined,
+          // Порядок уходит в запрос, а не применяется к полученной странице:
+          // выдача постраничная, и перестановка на клиенте соврала бы о порядке
+          // остальных записей (R-088).
+          sort,
+          order,
           limit,
         });
 
@@ -140,7 +150,7 @@ export function useLandfillsScreen(): LandfillsScreen {
     return () => {
       cancelled = true;
     };
-  }, [query, wasteGroupId, limit, attempt]);
+  }, [query, wasteGroupId, sort, order, limit, attempt]);
 
   const apply = useCallback(
     (next: Partial<LandfillsFilters>) => {
@@ -167,6 +177,10 @@ export function useLandfillsScreen(): LandfillsScreen {
     retry: () => setAttempt(value => value + 1),
     search: (value: string) => apply({ query: value.trim(), limit: PAGE_SIZE }),
     toggleGroup: (id: string) => apply({ wasteGroupId: filters.wasteGroupId === id ? '' : id, limit: PAGE_SIZE }),
+    // Смена порядка возвращает показ к первой странице: после перестановки
+    // догруженные запись принадлежат другому списку.
+    sortBy: (sort: LandfillSort) => apply({ sort, limit: PAGE_SIZE }),
+    toggleOrder: () => apply({ order: filters.order === 'asc' ? 'desc' : 'asc', limit: PAGE_SIZE }),
     showMore: () => apply({ limit: filters.limit + PAGE_SIZE }),
     // Сброс снимает отбор, но открытую карточку не закрывает: она не часть
     // выборки, и закрывать её заодно пользователь не просил.

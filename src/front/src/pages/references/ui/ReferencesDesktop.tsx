@@ -16,10 +16,22 @@
  * @adr: ADR-0008
  */
 import { useState } from 'react';
-import { Button, DataTable, DateStamp, Field, Notice, Popover, Skeleton, Tabs, Toolbar, useStyles } from '@/shared/ui';
+import {
+  Button,
+  DataTable,
+  DateStamp,
+  Field,
+  Notice,
+  Popover,
+  Skeleton,
+  SortControl,
+  Tabs,
+  Toolbar,
+  useStyles,
+} from '@/shared/ui';
 import { StatusBadge } from '@/entities/landfill';
 import { ImportPanel } from '@/features/reference-import';
-import type { Landfill } from '@/shared/api/references';
+import { LANDFILL_SORTS, type Landfill } from '@/shared/api/references';
 import type { WasteGroup } from '@/shared/api/contracts';
 import { formatDate, formatMoney, formatNumber } from '@/shared/lib/formatting';
 import { latestTariffDate, selectionCaption, tariffCellKey, tariffOf, transportCellKey } from '../model/editor';
@@ -33,7 +45,12 @@ import type { ReferencesViewProps } from './props';
 /** Столбцы, общие для обеих вкладок: имя записи слева, дата справа. */
 const NAME_COLUMN = { key: 'name', title: 'Полигон и юридическое лицо' };
 
-const STATUS_COLUMN = { key: 'status', title: 'Статус полигона', width: '260px' };
+/**
+ * Столбец статуса шире прочих: в нём стоят значок состояния, дата
+ * актуальности и кнопка подтверждения — три вещи, а не одно число
+ * (замечание заказчика от 25.09.2026).
+ */
+const STATUS_COLUMN = { key: 'status', title: 'Статус полигона', width: '300px' };
 
 /**
  * В ячейке стоит дата, на которую известны цены полигона, а не признак
@@ -44,6 +61,12 @@ const DATE_COLUMN = { key: 'updatedAt', title: 'Дата актуальност�
 
 /** Мера тарифа утилизации в заголовке столбца группы отходов: рубли за тонну. */
 const TARIFF_UNIT = '₽/т';
+
+/**
+ * Ширина столбца тарифа. Считана по содержимому: «12 345,00 ₽» с полями
+ * ячейки укладывается в эту меру, а название группы в заголовке переносится.
+ */
+const TARIFF_COLUMN_WIDTH = '132px';
 
 const WASTE_GROUP_COLUMNS = [
   { key: 'name', title: 'Группа отходов' },
@@ -168,6 +191,17 @@ export function ReferencesDesktop({ editor, route, importing }: ReferencesViewPr
         {/* Счётчик принадлежит выборке, а не полю: он стоит над поиском и
             называет показанное из найденного. Область сообщения нужна, чтобы
             смена числа доходила и без взгляда на таблицу. */}
+        {/* То же управление порядком, что на расчёте и в справочнике полигонов:
+            вторая его реализация разошлась бы с первой молча (R-088). */}
+        <SortControl
+          name="references-sort"
+          options={LANDFILL_SORTS}
+          value={editor.sort}
+          direction={editor.order}
+          onPick={editor.sortBy}
+          onToggle={editor.toggleOrder}
+        />
+
         <div className="imolt-references-selection">
           <p className="imolt-references-count" role="status">
             {selectionCaption(
@@ -198,10 +232,15 @@ export function ReferencesDesktop({ editor, route, importing }: ReferencesViewPr
             // Под именем группы стоит тариф утилизации в рублях за тонну:
             // одно имя группы этого не называло, и заголовок расходился с
             // содержимым (второй пакет замечаний заказчика).
+            // Ширина столбца задана содержимым, а не заголовком: в ячейке
+            // стоит цена в пять-шесть знаков, а название группы длинное, и по
+            // заголовку столбец растягивался втрое (замечание заказчика от
+            // 25.09.2026). Заголовок переносится по словам.
             ...editor.wasteGroups.map(group => ({
               key: `group:${group.id}`,
               title: `${group.name}, ${TARIFF_UNIT}`,
               align: 'end' as const,
+              width: TARIFF_COLUMN_WIDTH,
             })),
             STATUS_COLUMN,
             DATE_COLUMN,

@@ -1,3 +1,5 @@
+import { LANDFILL_SORTS, type LandfillSort } from '@/shared/api/references';
+
 /**
  * Состояние отбора справочника полигонов живёт в адресе страницы.
  *
@@ -30,6 +32,8 @@ const MAX_QUERY_LENGTH = 200;
 /** Вид идентификатора справочника: «beton-lom», «vostok-timohovo». */
 const ID_PATTERN = /^[a-z0-9][a-z0-9-]{0,63}$/;
 
+const SORT_VALUES: LandfillSort[] = LANDFILL_SORTS.map(sort => sort.value);
+
 export type LandfillsFilters = {
   /** поиск по названию полигона; пустая строка — поиск не задан */
   query: string;
@@ -37,6 +41,10 @@ export type LandfillsFilters = {
   wasteGroupId: string;
   /** открытая карточка полигона; пустая строка — открыт список */
   landfillId: string;
+  /** поле порядка списка; порядок считает служба, а не экран (R-088) */
+  sort: LandfillSort;
+  /** направление порядка */
+  order: 'asc' | 'desc';
   limit: number;
 };
 
@@ -69,8 +77,17 @@ export function parseFilters(query: URLSearchParams): LandfillsFilters {
     query: textOf(query.get('q')),
     wasteGroupId: identifierOf(query.get('group')),
     landfillId: identifierOf(query.get('landfill')),
+    sort: sortOf(query.get('sort')),
+    order: query.get('order') === 'desc' ? 'desc' : 'asc',
     limit: limitOf(query.get('limit')),
   };
+}
+
+/** Поле порядка из адреса; чужое значение не берётся. */
+function sortOf(raw: string | null): LandfillSort {
+  const value = raw === null ? '' : raw.trim();
+
+  return SORT_VALUES.includes(value as LandfillSort) ? (value as LandfillSort) : 'name';
 }
 
 /** Сборка адреса. Значение по умолчанию не пишется: ссылка не обрастает шумом. */
@@ -82,6 +99,12 @@ export function filtersQuery(filters: LandfillsFilters): URLSearchParams {
   }
   if (filters.wasteGroupId) {
     parameters.set('group', filters.wasteGroupId);
+  }
+  if (filters.sort !== 'name') {
+    parameters.set('sort', filters.sort);
+  }
+  if (filters.order !== 'asc') {
+    parameters.set('order', filters.order);
   }
   if (filters.limit !== PAGE_SIZE) {
     parameters.set('limit', String(filters.limit));

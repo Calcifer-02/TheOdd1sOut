@@ -21,7 +21,7 @@
  * @supports: R-039, R-040, R-048
  */
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { LandfillsPage } from '@/pages/landfills';
 import { DESKTOP_WIDTH, setViewportWidth } from './viewport';
@@ -105,15 +105,16 @@ describe('справочник полигонов, широкий экран', (
 });
 
 describe('отбор справочника по группе отходов', () => {
+  // На широком экране группа выбирается чипом, на телефоне — закрытым
+  // списком (R-085). Предметное поведение одно, и проверяется оно для обоих.
   it('выбор группы попадает в адрес и оставляет только принимающие её полигоны', async () => {
     const пользователь = userEvent.setup();
     render(<LandfillsPage />);
 
-    const чип = await screen.findByRole('button', {
-      name: 'Древесина от разборки',
-      pressed: false,
-    });
-    await пользователь.click(чип);
+    // На телефоне группа выбирается закрытым списком: длинные названия
+    // чипами вставали столбиком разной длины (R-085).
+    const список = await screen.findByLabelText('Группа отходов');
+    await пользователь.selectOptions(список, 'drevesina');
 
     expect(window.location.hash).toContain('group=drevesina');
     expect(служба.lastTo('GET /v1/landfills').query.get('wasteGroupId')).toBe('drevesina');
@@ -125,7 +126,9 @@ describe('отбор справочника по группе отходов', (
   });
 
   it('адрес с выбранной группой восстанавливает ту же выборку при открытии экрана', async () => {
+    setViewportWidth(DESKTOP_WIDTH);
     открыть('#/landfills?group=drevesina');
+
     render(<LandfillsPage />);
 
     await screen.findByRole('button', { name: 'Древесина от разборки', pressed: true });
@@ -275,5 +278,52 @@ describe('состояния справочника', () => {
     await screen.findByRole('list', { name: ВСЕ_ГРУППЫ });
 
     expect(служба.unexpected()).toEqual([]);
+  });
+});
+
+describe('порядок списка справочника', () => {
+  // Порядок считает служба: выдача постраничная, и перестановка на клиенте
+  // соврала бы о порядке остальных записей (R-088, AC-088a).
+  it('выбранное поле уходит в запрос службы, а не применяется к странице', async () => {
+    const пользователь = userEvent.setup();
+    setViewportWidth(DESKTOP_WIDTH);
+    render(<LandfillsPage />);
+
+    await screen.findByRole('search', { name: 'Поиск полигона' });
+    await пользователь.click(screen.getByRole('radio', { name: 'По тарифу' }));
+
+    await waitFor(() => {
+      expect(служба.lastTo('GET /v1/landfills').query.get('sort')).toBe('tariff');
+    });
+
+    expect(window.location.hash, 'порядок не попал в адрес').toContain('sort=tariff');
+  });
+
+  it('направление переключается и тоже уходит в запрос', async () => {
+    const пользователь = userEvent.setup();
+    setViewportWidth(DESKTOP_WIDTH);
+    render(<LandfillsPage />);
+
+    await screen.findByRole('search', { name: 'Поиск полигона' });
+    await пользователь.click(screen.getByRole('button', { name: 'По возрастанию' }));
+
+    await waitFor(() => {
+      expect(служба.lastTo('GET /v1/landfills').query.get('order')).toBe('desc');
+    });
+
+    expect(screen.getByRole('button', { name: 'По убыванию' })).toBeInTheDocument();
+  });
+
+  it('адрес с порядком восстанавливает его при открытии экрана', async () => {
+    setViewportWidth(DESKTOP_WIDTH);
+    открыть('#/landfills?sort=tariff&order=desc');
+    render(<LandfillsPage />);
+
+    await waitFor(() => {
+      expect(служба.lastTo('GET /v1/landfills').query.get('sort')).toBe('tariff');
+    });
+
+    expect(служба.lastTo('GET /v1/landfills').query.get('order')).toBe('desc');
+    expect(screen.getByRole('radio', { name: 'По тарифу' })).toBeChecked();
   });
 });

@@ -129,6 +129,8 @@ export function useCalculator() {
   const [pickupDone, setPickupDone] = useState<string | null>(null);
   const [pickupPhoneError, setPickupPhoneError] = useState<string | undefined>(undefined);
   const [pickupLandfillQuery, setPickupLandfillQuery] = useState('');
+  /** Окно маршрута, названное адресом, но ещё не открытое: ждём варианты. */
+  const [pendingRoute, setPendingRoute] = useState<string | null>(null);
   const [filterDraft, setFilterDraft] = useState<string | null>(null);
 
   // Адрес подсказывает служба, и набранная строка сама по себе расчёту не
@@ -208,6 +210,11 @@ export function useCalculator() {
         if (group) {
           void loadOptions(restoredCalculation.id, next, 0);
         }
+        // Окно маршрута открывается сразу, если адрес его называет: ссылка на
+        // маршрут ведёт на него, а перезагрузка страницы его не закрывает
+        // (замечание заказчика от 25.09.2026). Перечень полигонов приходит
+        // следом за списком вариантов, поэтому окно ждёт его в соседнем отрезке.
+        setPendingRoute(opened.route ?? null);
       })
       .catch((error: unknown) => {
         if (error instanceof ApiProblem) {
@@ -557,6 +564,9 @@ export function useCalculator() {
    * заранее не требуется и остальные выбранные в окно не попадают (R-033).
    */
   async function openRoute(option: PlacementOption) {
+    // Открытое окно кладётся в адрес: ссылка на маршрут открывает его же, а
+    // перезагрузка не закрывает (ADR-0008, инвариант 5).
+    applyView({ route: option.landfillId });
     await loadRoute('landfill', [option]);
   }
 
@@ -566,10 +576,12 @@ export function useCalculator() {
    * их все, а не первый из них (R-032).
    */
   async function openSelectionRoute() {
+    applyView({ route: 'selection' });
     await loadRoute('selection', selectedOptions());
   }
 
   function closeRoute() {
+    applyView({ route: undefined });
     setRoute(null);
   }
 
@@ -675,6 +687,30 @@ export function useCalculator() {
   // Список ещё не пришёл, а расчёт уже есть: это ожидание, а не пустой
   // результат. Разница видна пользователю (Э-12), поэтому она названа здесь.
   const loadingOptions = busy || (calculation !== null && shown === null);
+
+  // Окно маршрута, названное адресом, открывается, как только пришли
+  // варианты размещения: до них показывать нечего. Открывается ровно
+  // один раз: признак снимается сразу, иначе закрытое окно открывалось бы снова.
+  useEffect(() => {
+    if (pendingRoute === null || shown === null) {
+      return;
+    }
+
+    setPendingRoute(null);
+
+    if (pendingRoute === 'selection') {
+      void openSelectionRoute();
+      return;
+    }
+
+    const wanted = shown.items.find(item => item.landfillId === pendingRoute);
+
+    if (wanted !== undefined) {
+      void openRoute(wanted);
+    }
+    // Зависимости названы точко: пересобранные на каждой отрисовке
+    // стрелки открытия запускали бы этот отрезок бесконечно.
+  }, [pendingRoute, shown]);
 
   return {
     view,

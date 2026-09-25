@@ -670,8 +670,8 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
    (AC-033g). Цвета те же, что и были: оранжевый — марка сервиса, и на карте
    он читался действием (замечание заказчика от 25.09.2026). */
 .imolt-map-pin {
-  width: ${space.l}px;
-  height: ${space.l}px;
+  width: ${space.xl}px;
+  height: ${space.xl}px;
   border-radius: ${radius.pill}px;
   border: ${stroke.emphasis}px solid ${colors.bgSurface};
   box-shadow: ${layout.shadow};
@@ -681,8 +681,8 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
 /* Полигон отличается от адреса вывоза не только цветом: он мельче, у него
    своя рамка и своя подпись в перечне меток под картой (разд. 4.6). */
 .imolt-map-pin[data-point='landfill'] {
-  width: ${space.m + stroke.emphasis}px;
-  height: ${space.m + stroke.emphasis}px;
+  width: ${space.l}px;
+  height: ${space.l}px;
   background: ${colors.accentPrimary};
   border-color: ${colors.accentDark};
   cursor: pointer;
@@ -963,7 +963,11 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
    строк перестаёт быть названной. Разделитель нарисован внутренней тенью, а
    не границей: у липкой ячейки граница отрисовывается по исходному месту
    таблицы и на прокрутке отстаёт от самой шапки. */
+/* Заголовок столбца переносится по словам: длинное название группы
+   отходов иначе задаёт ширину столбца вместо содержимого (замечание
+   заказчика от 25.09.2026). */
 .imolt-table thead th {
+  overflow-wrap: anywhere;
   position: sticky;
   top: 0;
   z-index: ${zIndex.stickyHead};

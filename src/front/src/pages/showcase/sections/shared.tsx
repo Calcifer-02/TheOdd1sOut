@@ -27,6 +27,7 @@ import {
   RadioPills,
   Modal,
   Select,
+  SortControl,
   Sheet,
   Skeleton,
   Stat,
@@ -114,6 +115,8 @@ export function SharedSection() {
   const [detachedOpen, setDetachedOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [phone, setPhone] = useState('');
+  const [sortField, setSortField] = useState('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [limitOpen, setLimitOpen] = useState(false);
   const [tab, setTab] = useState<'concrete' | 'wood'>('concrete');
   const [near, setNear] = useState(false);
@@ -445,6 +448,22 @@ export function SharedSection() {
             setGroupQuery(item);
           }}
           onDismiss={() => setGroupQuery(groupChoice ?? '')}
+        />
+      </Section>
+
+      <Section title="Порядок списка">
+        {/* Одно управление на три экрана: сравнение полигонов, справочник
+            и редактор цен (R-088). */}
+        <SortControl
+          name="showcase-sort"
+          options={[
+            { value: 'name', label: 'По названию' },
+            { value: 'tariff', label: 'По тарифу' },
+          ]}
+          value={sortField}
+          direction={sortOrder}
+          onPick={setSortField}
+          onToggle={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
         />
       </Section>
 

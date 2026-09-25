@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Net;
 using System.Text.Json;
 using Xunit;
 
@@ -22,7 +23,7 @@ namespace Imolt.Api.Tests;
 ///
 ///   dotnet test tests/integration/Imolt.Api.Tests
 ///
-/// @ac: AC-040a, AC-040b, AC-040c, AC-041a, AC-048b
+/// @ac: AC-040a, AC-040b, AC-040c, AC-041a, AC-048b, AC-088a
 [Collection(ImoltReferencesCollection.Name)]
 public sealed class LandfillEndpointsTests(ImoltReferencesStand stand)
 {
@@ -66,6 +67,72 @@ public sealed class LandfillEndpointsTests(ImoltReferencesStand stand)
     // отрицательное — ответ «весь реестр».
     Assert.Contains("vostok-timohovo", ids);
     Assert.DoesNotContain("iksha", ids);
+  }
+
+  /// @ac: AC-088a
+  [Fact(DisplayName = "реестр упорядочивается по тарифу утилизации в обе стороны")]
+  public async Task RegistryIsOrderedByDisposalTariffBothWays()
+  {
+    // Порядок считает служба: выдача постраничная, и список, упорядоченный
+    // на клиенте, переставил бы только показанную страницу (R-088).
+    var cheapFirst = await stand.Client.GetAsync(
+        "/v1/landfills?wasteGroupId=beton-lom&sort=tariff&order=asc&limit=50");
+    using var cheapDocument = await ReferenceChecks.OkAsync(cheapFirst, "listLandfills");
+    var cheap = ReferenceChecks.Ids(cheapDocument.RootElement);
+
+    var dearFirst = await stand.Client.GetAsync(
+        "/v1/landfills?wasteGroupId=beton-lom&sort=tariff&order=desc&limit=50");
+    using var dearDocument = await ReferenceChecks.OkAsync(dearFirst, "listLandfills");
+    var dear = ReferenceChecks.Ids(dearDocument.RootElement);
+
+    Assert.NotEmpty(cheap);
+    Assert.Equal(cheap.Count, dear.Count);
+
+    // Самый дешёвый и самый дорогой — разные полигоны: порядок,
+    // пропускающий направление, дал бы один и тот же список.
+    Assert.NotEqual(cheap[0], dear[0]);
+
+    // Цены идут не убывая в одну сторону и не возрастая в другую. Сравниваются
+    // сами тарифы, а не идентификаторы: порядок — утверждение о ценах.
+    var ascending = TariffsOf(cheapDocument.RootElement, "beton-lom");
+    var descending = TariffsOf(dearDocument.RootElement, "beton-lom");
+
+    Assert.Equal(ascending.OrderBy(price => price).ToArray(), ascending);
+    Assert.Equal(descending.OrderByDescending(price => price).ToArray(), descending);
+  }
+
+  /// Тарифы названной группы по порядку записей ответа; полигон без тарифа
+  /// этой группы в перечень не попадает — о его месте говорит правило
+  /// «полигон без цены идёт последним», а не число.
+  private static decimal[] TariffsOf(JsonElement page, string wasteGroupId)
+  {
+    var prices = new List<decimal>();
+
+    foreach (var landfill in page.GetProperty("items").EnumerateArray())
+    {
+      foreach (var tariff in landfill.GetProperty("tariffs").EnumerateArray())
+      {
+        if (tariff.GetProperty("wasteGroupId").GetString() == wasteGroupId)
+        {
+          prices.Add(decimal.Parse(
+              tariff.GetProperty("disposalPricePerTon").GetProperty("amount").GetString() ?? "0",
+              CultureInfo.InvariantCulture));
+        }
+      }
+    }
+
+    return [.. prices];
+  }
+
+  /// @ac: AC-088a
+  [Fact(DisplayName = "неизвестное поле порядка отклоняется, а не подменяется умолчанием")]
+  public async Task UnknownSortFieldIsRejected()
+  {
+    // Молчаливый возврат к умолчанию выглядит как работающая сортировка,
+    // показывающая не тот порядок.
+    var response = await stand.Client.GetAsync("/v1/landfills?sort=цена");
+
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
   }
 
   [Fact(DisplayName = "реестр отбирается по статусу и не приносит заблокированный полигон")]

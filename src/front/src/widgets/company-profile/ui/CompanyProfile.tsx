@@ -22,6 +22,8 @@ import { useStyles } from '@/shared/ui';
 import { Illustration } from '@/shared/ui/illustrations';
 import { formatDate } from '@/shared/lib/formatting';
 import {
+  PROJECT_PHOTOS,
+  PROJECT_PHOTOS_NOTE,
   COMPANY_CLIENTS_NOTE,
   COMPANY_CLIENT_LOGOS,
   COMPANY_CONTACTS,
@@ -31,6 +33,9 @@ import {
   COMPANY_SOURCE_DATE,
 } from '../model/company';
 import { COMPANY_CSS } from './styles';
+
+/** Происхождение показанных снимков без повторов: один автор — одна запись. */
+const PHOTO_CREDITS = [...new Set(Object.values(PROJECT_PHOTOS).filter(photo => photo !== undefined))];
 
 export function CompanyProfile() {
   useStyles('company-profile', COMPANY_CSS);
@@ -65,9 +70,15 @@ export function CompanyProfile() {
         <ul className="imolt-company-projects">
           {COMPANY_PROJECTS.map(project => (
             <li className="imolt-company-project" key={project.name}>
-              {/* Рисунок сопровождает подпись, а не заменяет её: смысл несёт
-                  название проекта и объём работ рядом (разд. 4.5). */}
-              <Illustration kind={project.drawing} />
+              {/* Снимок иллюстративный и смысла не несёт: он снят на другом
+                  объекте, а что сделано здесь — говорят название и объём рядом.
+                  Пустой alt убирает его из дерева доступности (разд. 4.5). Снимка
+                  нет — остаётся контурный рисунок. */}
+              {PROJECT_PHOTOS[project.drawing] === undefined ? (
+                <Illustration kind={project.drawing} />
+              ) : (
+                <img className="imolt-company-photo" src={PROJECT_PHOTOS[project.drawing]?.src} alt="" loading="lazy" />
+              )}
               <strong>{project.name}</strong>
               <span className="imolt-company-amount">{project.amount}</span>
               <span className="imolt-lead">{project.client}</span>
@@ -75,6 +86,21 @@ export function CompanyProfile() {
             </li>
           ))}
         </ul>
+        {/* Лицензии CC BY-SA требуют назвать автора и лицензию, а честность — сказать,
+            что снимки сделаны не на этих объектах (Q-026). */}
+        <p className="imolt-company-source">
+          {PROJECT_PHOTOS_NOTE} Авторы и лицензии:{' '}
+          {PHOTO_CREDITS.map((photo, index) => (
+            <span key={photo.src}>
+              {index > 0 ? ', ' : ''}
+              <a className="imolt-link" href={photo.source} rel="noreferrer noopener" target="_blank">
+                {photo.author}
+              </a>{' '}
+              ({photo.license})
+            </span>
+          ))}
+          .
+        </p>
       </section>
 
       <section className="imolt-company-block" aria-labelledby="company-clients">

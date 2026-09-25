@@ -10,6 +10,7 @@
 export { Notice, Field, SuggestList, Sheet, RadioPills } from './controls';
 export { PhoneField, isPhoneComplete } from './phoneField';
 export { Button, Toolbar, type ButtonKind } from './buttons';
+export { SortControl, type SortDirection, type SortOption } from './sortControl';
 export { Checkbox, Select } from './forms';
 export { Tabs, Chip, Pager } from './navigation';
 export { DataTable, type TableColumn, type TableSort } from './table';

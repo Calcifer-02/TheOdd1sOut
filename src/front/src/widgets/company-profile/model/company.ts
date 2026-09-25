@@ -194,3 +194,57 @@ export const COMPANY_CLIENT_LOGOS: string[] = [
   '/clients/client-14.jpg',
   '/clients/client-15.gif',
 ];
+
+/**
+ * Иллюстративный снимок для карточки проекта.
+ *
+ * Фотографий своих объектов компания не передавала, и на её сайте их нет
+ * (Q-026). Поэтому снимки взяты с Викисклада по свободной лицензии и
+ * объявлены иллюстративными прямо на экране: выдать чужой снимок за
+ * фотографию выполненного проекта — ложное утверждение о работе.
+ *
+ * Лицензии CC BY-SA требуют назвать автора и лицензию, поэтому они названы
+ * здесь и показаны под перечнем проектов.
+ */
+export type ProjectPhoto = {
+  /** путь в статике сервиса */
+  src: string;
+  author: string;
+  license: string;
+  source: string;
+};
+
+export const PROJECT_PHOTOS: Record<IllustrationKind, ProjectPhoto | undefined> = {
+  transport: undefined,
+  route: undefined,
+  statuses: undefined,
+  demolition: {
+    src: '/projects/demolition.jpg',
+    author: 'Gareth James',
+    license: 'CC BY-SA 2.0',
+    source: 'https://commons.wikimedia.org/wiki/File:Erith_high_reach_demolition_excavator_(geograph_7696618).jpg',
+  },
+  interior: {
+    src: '/projects/interior.jpg',
+    author: 'Wistula',
+    license: 'CC BY-SA 4.0',
+    source: 'https://commons.wikimedia.org/wiki/File:Demolition_of_part_of_the_NBP_building_8-2025_(2).jpg',
+  },
+  excavation: {
+    src: '/projects/excavation.jpg',
+    author: 'Ibex73',
+    license: 'CC BY-SA 4.0',
+    source: 'https://commons.wikimedia.org/wiki/File:Diesel_poullution_,_excavator_(1).jpg',
+  },
+  metal: {
+    src: '/projects/metal.jpg',
+    author: 'Syced',
+    license: 'CC0',
+    source: 'https://commons.wikimedia.org/wiki/File:Old_wooden_building_demolition_in_Ebisu_2.jpg',
+  },
+};
+
+/** Подпись под перечнем проектов: снимки не выдаются за съёмку объектов. */
+export const PROJECT_PHOTOS_NOTE =
+  'Фотографии иллюстративные: сняты на других объектах, источник — Викисклад. ' +
+  'Снимки самих объектов передаёт компания.';

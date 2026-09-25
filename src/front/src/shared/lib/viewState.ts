@@ -27,6 +27,14 @@ export type ViewState = {
   order: SortOrder;
   distanceMode: DistanceMode;
   distanceKm: number;
+  /**
+   * Открытое окно маршрута: `selection` — по всему выбору,
+   * идентификатор полигона — по одной строке таблицы. Окно живёт в
+   * адресе, потому что его содержимое — предмет разговора: ссылка на
+   * маршрут обязана открыть его же, а перезагрузка — не закрывать
+   * (замечание заказчика от 25.09.2026; ADR-0008, инвариант 5).
+   */
+  route?: string;
 };
 
 const SORT_FIELDS: SortField[] = ['total', 'transport', 'disposal', 'distance'];
@@ -61,6 +69,7 @@ export function parseViewState(hash: string): ViewState {
     order: pick(SORT_ORDERS, parameters.get('order'), DEFAULT_VIEW_STATE.order),
     distanceMode: pick(DISTANCE_MODES, parameters.get('mode'), DEFAULT_VIEW_STATE.distanceMode),
     distanceKm: Number.isFinite(km) && km >= 0 && km <= 1000 ? km : DEFAULT_VIEW_STATE.distanceKm,
+    route: parameters.get('route') ?? undefined,
   };
 }
 
@@ -83,6 +92,10 @@ export function viewStateToHash(state: ViewState): string {
   if (state.order !== DEFAULT_VIEW_STATE.order) {
     parameters.set('order', state.order);
   }
+  if (state.route) {
+    parameters.set('route', state.route);
+  }
+
   if (state.distanceMode !== DEFAULT_VIEW_STATE.distanceMode) {
     parameters.set('mode', state.distanceMode);
   }

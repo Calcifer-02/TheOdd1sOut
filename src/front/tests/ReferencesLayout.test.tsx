@@ -86,7 +86,9 @@ describe('левая вертикаль редактора цен', () => {
       заголовок: leftInset(screen.getByRole('heading', { level: 1 }), корень),
       пояснение: leftInset(screen.getByText(/из официального перечня/), корень),
       обновление: leftInset(узел('.imolt-references-sync-text'), корень),
-      отбор: leftInset(screen.getByRole('toolbar', { name: 'Отбор записей справочника' }), корень),
+      // Сама полоса отбора идёт от края, как таблица: вертикаль держит текст
+      // внутри неё — счётчик выборки и поле поиска.
+      отбор: leftInset(узел('.imolt-references-selection'), корень),
     }).toEqual({
       заголовок: вертикаль,
       пояснение: вертикаль,
@@ -183,5 +185,35 @@ describe('полоса отбора редактора цен', () => {
     // Показано стало меньше, найдено службой — столько же: счётчик описывает
     // выборку, а не содержимое поля.
     await waitFor(() => expect(узел('.imolt-references-count').textContent).toBe('Показано полигонов: 1 из 2'));
+  });
+});
+
+describe('порядок списка в редакторе цен', () => {
+  // Управление порядком — одно на три экрана: вторая его реализация
+  // разошлась бы с первой молча (R-088, AC-088c).
+  it('выбранное поле уходит в запрос справочника', async () => {
+    const пользователь = userEvent.setup();
+    setViewportWidth(DESKTOP_WIDTH);
+    render(<ReferencesPage />);
+
+    await screen.findByRole('button', { name: new RegExp(`^${ТАРИФ_ИКША}:`) });
+    await пользователь.click(screen.getByRole('radio', { name: 'По тарифу' }));
+
+    await waitFor(() => {
+      expect(служба.lastTo('GET /v1/landfills').query.get('sort')).toBe('tariff');
+    });
+  });
+
+  it('направление переключается тем же управлением', async () => {
+    const пользователь = userEvent.setup();
+    setViewportWidth(DESKTOP_WIDTH);
+    render(<ReferencesPage />);
+
+    await screen.findByRole('button', { name: new RegExp(`^${ТАРИФ_ИКША}:`) });
+    await пользователь.click(screen.getByRole('button', { name: 'По возрастанию' }));
+
+    await waitFor(() => {
+      expect(служба.lastTo('GET /v1/landfills').query.get('order')).toBe('desc');
+    });
   });
 });

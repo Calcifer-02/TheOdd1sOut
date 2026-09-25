@@ -34,7 +34,7 @@ import { Modal, Notice, Skeleton } from '@/shared/ui';
 import { useRouteLandfills } from '../model/routeLandfills';
 import { drawRouteMap, type MapFailure, type RouteMapHandle, type RoutePoint } from '../model/routeMap';
 import { roadShape, type RouteShape } from '../model/routeGeometry';
-import { routeRows, type RouteScope } from '../model/routeSummary';
+import type { RouteScope } from '../model/routeSummary';
 import { RouteDetails } from './RouteDetails';
 import { StatusBadge } from './StatusBadge';
 
@@ -241,12 +241,6 @@ export function RouteModal({
     };
   }, [points, pickup.coordinates]);
 
-  // Перечень меток под картой идёт в порядке самой сводки: перечень и карта
-  // говорят об одном выборе, и разный порядок пришлось бы сверять глазами.
-  const shownLandfills = routeRows(options, summary)
-    .map(row => row.option)
-    .filter(one => cards[one.landfillId] !== undefined);
-
   const lost = missing.map(
     landfillId => options.find(one => one.landfillId === landfillId)?.landfillName ?? landfillId,
   );
@@ -299,45 +293,26 @@ export function RouteModal({
             </div>
 
             <div className="imolt-route-list-side">
-              {/* Метки названы словами рядом с картой: на самой карте подпись
-                  видна не всем, а при отказе тайлов её не видно вовсе. Тот же
-                  перечень и выбирает полигон: второй перечень рядом говорил бы
-                  об одном и том же дважды. */}
-              <ul className="imolt-map-legend" aria-label="Метки на карте">
-                <li className="imolt-map-legend-item">
-                  <span className="imolt-map-pin" data-point="pickup" aria-hidden="true" />
-                  Адрес вывоза: {pickup.value}
-                </li>
-                {shownLandfills.map((one, index) => {
-                  const openCard = cards[one.landfillId];
+              {/* Адрес вывоза назван словами над перечнем: на самой карте
+                  подпись видна не всем, а при отказе тайлов её не видно вовсе.
+                  Полигоны названы самим перечнем маршрута ниже: второй перечень
+                  говорил бы об одном и том же дважды. */}
+              <p className="imolt-map-legend-item">
+                <span className="imolt-map-pin" data-point="pickup" aria-hidden="true" />
+                Адрес вывоза: {pickup.value}
+              </p>
 
-                  return (
-                    <li key={one.landfillId}>
-                      <button
-                        type="button"
-                        className="imolt-map-legend-item imolt-map-legend-pick"
-                        aria-pressed={factsFor === one.landfillId}
-                        onClick={() => showFacts(one.landfillId)}
-                      >
-                        {/* Точка строки повторяет цвет линии этого полигона на
-                            карте: так видно, какой путь куда ведёт (AC-033g). */}
-                        <span
-                          className="imolt-map-pin"
-                          data-point="landfill"
-                          style={{ borderColor: routeTone(index) }}
-                          aria-hidden="true"
-                        />
-                        Полигон: {one.landfillName}
-                      </button>
-                      {factsFor === one.landfillId && openCard !== undefined && (
-                        <LandfillFacts card={openCard} groups={groups} />
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-
-              <RouteDetails option={options} summary={summary} scope={scope} unavailable={unavailable} />
+              <RouteDetails
+                option={options}
+                summary={summary}
+                scope={scope}
+                unavailable={unavailable}
+                activeId={factsFor}
+                onPick={showFacts}
+                facts={landfillId =>
+                  cards[landfillId] === undefined ? null : <LandfillFacts card={cards[landfillId]} groups={groups} />
+                }
+              />
             </div>
           </div>
         ))}

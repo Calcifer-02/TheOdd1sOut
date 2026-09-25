@@ -16,7 +16,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { DataFreshness, LandfillStatus, WasteGroup } from '@/shared/api/contracts';
 import { formatNumber, type Money } from '@/shared/lib/formatting';
-import { type Landfill, getDataFreshness, listLandfills, listWasteGroups } from '@/shared/api/references';
+import {
+  type Landfill,
+  type LandfillSort,
+  getDataFreshness,
+  listLandfills,
+  listWasteGroups,
+} from '@/shared/api/references';
 import {
   type LandfillTariff,
   type Refusal,
@@ -141,6 +147,12 @@ export type ReferenceEditor = {
   /** Правка разрешена, пока служба не ответила отказом по праву или сессии. */
   editable: boolean;
   visibleLandfills(query: string): Landfill[];
+  /** Поле порядка списка записей (R-088). */
+  sort: LandfillSort;
+  /** Направление порядка. */
+  order: 'asc' | 'desc';
+  sortBy(sort: LandfillSort): void;
+  toggleOrder(): void;
   visibleWasteGroups(query: string): WasteGroup[];
   saveTariff(landfillId: string, wasteGroupId: string, text: string): Promise<boolean>;
   saveTransportPrice(wasteGroupId: string, text: string): Promise<boolean>;
@@ -173,12 +185,17 @@ export function useReferenceEditor(): ReferenceEditor {
   const [saving, setSaving] = useState<string | null>(null);
   const [cellRefusal, setCellRefusal] = useState<{ key: string; title: string } | null>(null);
 
+  const [sort, setSort] = useState<LandfillSort>('name');
+  const [order, setOrder] = useState<'asc' | 'desc'>('asc');
+
   const reload = useCallback(async () => {
     setLoading(true);
 
     try {
       const [landfillPage, groupPage, dates] = await Promise.all([
-        listLandfills({ limit: PAGE_LIMIT }),
+        // Порядок считает служба — та же, что и для справочника полигонов:
+        // второе правило порядка разошлось бы с первым молча (R-088).
+        listLandfills({ sort, order, limit: PAGE_LIMIT }),
         listWasteGroups({ limit: PAGE_LIMIT }),
         getDataFreshness(),
       ]);
@@ -194,7 +211,7 @@ export function useReferenceEditor(): ReferenceEditor {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [sort, order]);
 
   const readSyncRun = useCallback(async () => {
     try {
@@ -373,6 +390,10 @@ export function useReferenceEditor(): ReferenceEditor {
       cellRefusal,
       editable: maintenanceRefusal === null,
       visibleLandfills,
+      sort,
+      order,
+      sortBy: setSort,
+      toggleOrder: () => setOrder(current => (current === 'asc' ? 'desc' : 'asc')),
       visibleWasteGroups,
       saveTariff,
       saveTransportPrice,
@@ -395,6 +416,8 @@ export function useReferenceEditor(): ReferenceEditor {
       saving,
       cellRefusal,
       visibleLandfills,
+      sort,
+      order,
       visibleWasteGroups,
       saveTariff,
       saveTransportPrice,

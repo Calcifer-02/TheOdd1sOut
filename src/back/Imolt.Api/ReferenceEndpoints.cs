@@ -47,6 +47,8 @@ public static class ReferenceEndpoints
         [FromQuery] string? query,
         [FromQuery] string? wasteGroupId,
         [FromQuery] string? status,
+        [FromQuery] string? sort,
+        [FromQuery] string? order,
         [FromQuery] int? limit,
         [FromQuery] int? offset,
         [FromServices] ILandfillRegistry registry,
@@ -60,7 +62,25 @@ public static class ReferenceEndpoints
             nameof(status), status, "статус полигона — active, blocked либо unconfirmed");
       }
 
-      var filter = new LandfillFilter(query, wasteGroupId, status);
+      // Поле порядка вне объявленного перечня — ошибка запроса, а не молчаливый
+      // возврат к порядку по умолчанию: иначе опечатка выглядит как работающая
+      // сортировка, показывающая не тот порядок (R-088).
+      var sortField = sort switch
+      {
+        null or "" or "name" => LandfillSort.Name,
+        "status" => LandfillSort.Status,
+        "updatedAt" => LandfillSort.UpdatedAt,
+        "tariff" => LandfillSort.Tariff,
+        _ => throw new ArgumentOutOfRangeException(
+            nameof(sort), sort, "поле порядка — name, status, updatedAt либо tariff"),
+      };
+
+      if (order is not null and not ("asc" or "desc"))
+      {
+        throw new ArgumentOutOfRangeException(nameof(order), order, "направление порядка — asc либо desc");
+      }
+
+      var filter = new LandfillFilter(query, wasteGroupId, status, sortField, order == "desc");
 
       return Results.Ok(await registry.SearchAsync(filter, PageRequest.Create(limit, offset), cancellationToken));
     });

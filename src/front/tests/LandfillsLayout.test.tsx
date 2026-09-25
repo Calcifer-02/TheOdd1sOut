@@ -160,6 +160,10 @@ describe('длинные значения справочника', () => {
 describe('полоса отбора справочника', () => {
   it('разводит поиск и отбор по группе на две строки одной плашки', async () => {
     window.history.replaceState(null, '', `#/landfills?q=${encodeURIComponent('Восток')}`);
+    // Чипы групп — вид рабочего места: на телефоне группа выбирается
+    // закрытым списком (R-085).
+    setViewportWidth(DESKTOP_WIDTH);
+    setViewportWidth(DESKTOP_WIDTH);
     render(<LandfillsPage />);
 
     const поиск = await screen.findByRole('search', { name: 'Поиск полигона' });
@@ -185,6 +189,9 @@ describe('полоса отбора справочника', () => {
 
   it('держит управления полосы отбора одной высоты', async () => {
     window.history.replaceState(null, '', `#/landfills?q=${encodeURIComponent('Восток')}`);
+    // Чипы групп — вид рабочего места: на телефоне группа выбирается
+    // закрытым списком (R-085).
+    setViewportWidth(DESKTOP_WIDTH);
     render(<LandfillsPage />);
 
     const поиск = await screen.findByRole('search', { name: 'Поиск полигона' });
@@ -193,7 +200,9 @@ describe('полоса отбора справочника', () => {
     // Общую высоту управлений задаёт общий слой; экран обязан её не
     // перебивать. В плашке стоят поле, «Найти», чипы групп и сброс — мера у
     // них одна, иначе полоса снова читается набором разнородных управлений.
-    const меры = [...плашка.querySelectorAll('input, button')].map(высотаУправления);
+    // Скрытый переключатель внутри «таблетки» — механизм доступности, а не
+    // видимое управление: его меру никто не видит, и в полосу она не считается.
+    const меры = [...плашка.querySelectorAll('input:not([type="radio"]), button')].map(высотаУправления);
     expect(меры.length).toBeGreaterThan(4);
     expect([...new Set(меры)]).toEqual([layout.controlHeight]);
 
@@ -201,6 +210,7 @@ describe('полоса отбора справочника', () => {
   });
 
   it('называет отбор по группе видимой подписью, а не одним доступным именем', async () => {
+    setViewportWidth(DESKTOP_WIDTH);
     render(<LandfillsPage />);
 
     await screen.findByRole('search', { name: 'Поиск полигона' });
@@ -302,5 +312,30 @@ describe('название полигона в таблице', () => {
 
     expect(правило).toContain('background: none;');
     expect(правило).toContain('text-decoration-thickness:');
+  });
+});
+
+describe('отбор по группе на телефоне', () => {
+  // Названия групп длинные, и в узкой колонке каждый чип вставал своей
+  // строкой — столбик разной длины вместо полосы отбора (замечание
+  // заказчика от 24.09.2026).
+  it('выбирается закрытым списком, а не столбиком чипов', async () => {
+    render(<LandfillsPage />);
+
+    await screen.findByRole('search', { name: 'Поиск полигона' });
+
+    expect(screen.getByLabelText('Группа отходов').tagName).toBe('SELECT');
+    expect(screen.queryByRole('group', { name: 'Группа отходов' }), 'чипы остались в дереве страницы').toBeNull();
+  });
+
+  it('список несёт все группы и снятие отбора', async () => {
+    render(<LandfillsPage />);
+
+    await screen.findByRole('search', { name: 'Поиск полигона' });
+
+    const список = screen.getByLabelText('Группа отходов') as HTMLSelectElement;
+
+    expect([...список.options][0]?.textContent, 'снять отбор списком нечем').toBe('Все группы');
+    expect(список.options.length).toBeGreaterThan(1);
   });
 });
