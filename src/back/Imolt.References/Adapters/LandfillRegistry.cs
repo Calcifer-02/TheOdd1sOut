@@ -50,7 +50,7 @@ public sealed class LandfillRegistry(NpgsqlDataSource dataSource) : ILandfillReg
         cancellationToken: cancellationToken));
 
     var rows = await connection.QueryAsync<LandfillRow>(new CommandDefinition(
-        $"{Columns} {Filter} order by l.id limit @limit offset @offset",
+        $"{Columns} {Filter} {OrderBy(filter)} limit @limit offset @offset",
         parameters,
         cancellationToken: cancellationToken));
 
@@ -273,6 +273,38 @@ public sealed class LandfillRegistry(NpgsqlDataSource dataSource) : ILandfillReg
 
   // Строки выборки: средство доступа к данным заполняет их свойствами, а не
   // доводами конструктора, поэтому это классы, а не записи.
+  /// Порядок списка по выбранному полю (R-088).
+  ///
+  /// Выражение собирается из перечисления, а не из строки запроса: подстановка
+  /// текста клиента в «order by» — путь к внедрению SQL, и никакая проверка на
+  /// стороне ручки этого не отменяет.
+  ///
+  /// Тариф берётся по выбранной группе отходов, а без неё — наименьший тариф
+  /// полигона. Полигон без тарифов идёт последним в любом направлении:
+  /// отсутствие цены — не самая низкая цена, и ставить такой полигон первым в
+  /// списке «от дешёвых» значило бы соврать.
+  private static string OrderBy(LandfillFilter filter)
+  {
+    var direction = filter.Descending ? "desc" : "asc";
+
+    var field = filter.Sort switch
+    {
+      LandfillSort.Status => "l.status",
+      LandfillSort.UpdatedAt => "l.status_updated_at",
+      LandfillSort.Tariff => """
+        (select min(t.disposal_price_per_ton)
+           from landfill_tariff t
+          where t.landfill_id = l.id
+            and (@wasteGroupId is null or t.waste_group_id = @wasteGroupId))
+        """,
+      _ => "l.name",
+    };
+
+    // Идентификатор в конце: у двух полигонов совпадают и статус, и дата, и
+    // без него порядок страниц разошёлся бы между запросами.
+    return $"order by {field} {direction} nulls last, l.id";
+  }
+
   private sealed class LandfillRow
   {
     public string Id { get; set; } = string.Empty;
