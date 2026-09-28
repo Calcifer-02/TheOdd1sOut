@@ -43,14 +43,10 @@ public sealed class AccessScenarios(
           "Срок давности стартовых параметров истёк: откройте мини-приложение заново");
     }
 
-    // Согласие проверяется до записи: завести учётную запись и отказать —
-    // худший из исходов, снаружи он неотличим от честного отказа (R-054).
-    if (!request!.PersonalDataConsent)
-    {
-      throw new ConsentMissingException(
-          "Без согласия на обработку персональных данных сессия не создаётся");
-    }
-
+    // Отдельного согласия вход не спрашивает: основанием служит соглашение
+    // платформы MAX, принятое до запуска мини-приложения (решение заказчика
+    // от 28.09.2026). Отправка заявки и заказ услуги согласие требуют, и оно
+    // объявлено в их собственных запросах (R-054).
     var profile = await subscribers.EnrolAsync(parameters.MaxUserId, parameters.DisplayName, cancellationToken);
 
     await ApplyGrantsAsync(profile.Id, parameters.MaxUserId, cancellationToken);

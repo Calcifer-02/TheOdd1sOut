@@ -39,16 +39,16 @@ internal static class AccessChecks
 
   /// Обмен стартовых параметров на сессию — как есть, без сверки с договором:
   /// отказ тоже проверяется этим вызовом.
-  public static Task<HttpResponseMessage> CreateSessionAsync(
-      HttpClient client,
-      string initData,
-      bool personalDataConsent = true)
+  ///
+  /// В запросе только строка параметров: отдельного признака согласия у входа
+  /// нет с 28.09.2026, и подставлять его сюда значило бы проверять договор,
+  /// которого больше не существует (R-054).
+  public static Task<HttpResponseMessage> CreateSessionAsync(HttpClient client, string initData)
       => client.PostAsync(
           SessionsPath,
           Body($$"""
               {
-                "initData": "{{initData}}",
-                "personalDataConsent": {{(personalDataConsent ? "true" : "false")}}
+                "initData": "{{initData}}"
               }
               """));
 

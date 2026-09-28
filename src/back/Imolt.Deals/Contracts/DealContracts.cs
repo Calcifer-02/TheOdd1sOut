@@ -95,7 +95,7 @@ public sealed record DocumentService(
 /// Строка стартовых параметров мини-приложения как есть, без разбора на
 /// стороне клиента: проверять подпись можно только по исходной строке
 /// (ADR-0006).
-public sealed record SessionRequest(string InitData, bool PersonalDataConsent);
+public sealed record SessionRequest(string InitData);
 
 /// Состояние подписки (R-008, R-049). «pending» — нормальный исход, а не
 /// ошибка: оплата идёт вне сервиса.
