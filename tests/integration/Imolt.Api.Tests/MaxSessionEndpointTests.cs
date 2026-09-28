@@ -28,7 +28,7 @@ namespace Imolt.Api.Tests;
 ///
 ///   dotnet test tests/integration/Imolt.Api.Tests
 ///
-/// @ac: AC-049a, AC-049b, AC-049c, AC-050b, AC-054b, AC-056c
+/// @ac: AC-049a, AC-049b, AC-049c, AC-049e, AC-050b, AC-056c
 [Collection(ImoltAccessCollection.Name)]
 public sealed class MaxSessionEndpointTests(ImoltAccessStand stand)
 {
@@ -126,29 +126,24 @@ public sealed class MaxSessionEndpointTests(ImoltAccessStand stand)
         $"отказ не назвал причиной срок давности стартовых параметров: {detail ?? "причина не указана"}");
   }
 
-  [Fact(DisplayName = "без согласия на обработку персональных данных сессии нет")]
-  public async Task WithoutPersonalDataConsentNoSessionIsCreated()
+  [Fact(DisplayName = "запрос с одной строкой параметров заводит сессию и учётную запись")]
+  public async Task RequestCarryingOnlyLaunchParametersIssuesASession()
   {
     const long maxUserId = 812348;
 
-    var response = await AccessChecks.CreateSessionAsync(
-        stand.Client, AccessChecks.FreshInitData(maxUserId), personalDataConsent: false);
+    // AC-049e: в теле только строка параметров, признака согласия в нём нет.
+    // Основанием обработки служит соглашение платформы MAX, принятое до
+    // запуска мини-приложения (решение заказчика от 28.09.2026), и спрашивать
+    // согласие второй раз на входе незачем.
+    var response = await AccessChecks.CreateSessionAsync(stand.Client, AccessChecks.FreshInitData(maxUserId));
 
-    // AC-054b: 422, а не 400 — запрос разобран и по форме верен, подпись
-    // сошлась, но правило R-054 запрещает заводить по нему учётную запись.
-    using var problem = await ReferenceChecks.ProblemAsync(
-        response, HttpStatusCode.UnprocessableContent, Validation);
+    using var session = await ReferenceChecks.SuccessAsync(response, "createSession", HttpStatusCode.Created);
 
-    // Причиной названо именно отсутствие согласия: общий «запрос не прошёл
-    // проверку» не подсказывает, какой флажок не отмечен.
-    var detail = problem.RootElement.TryGetProperty("detail", out var value) ? value.GetString() : null;
-    Assert.True(
-        detail is not null && detail.Contains("соглас", StringComparison.OrdinalIgnoreCase),
-        $"отказ не назвал причиной отсутствие согласия: {detail ?? "причина не указана"}");
+    Assert.False(string.IsNullOrWhiteSpace(session.RootElement.GetProperty("accessToken").GetString()));
 
-    // Учётная запись в хранилище не заведена. Сохранить персональные данные и
-    // отказать — худший из исходов, и снаружи он от честного отказа неотличим.
-    Assert.Equal(0L, await AccessChecks.SubscriberCountAsync(stand, maxUserId));
+    // Учётная запись заведена: вход и есть та самая регистрация. Проверка
+    // падает, если барьер согласия вернут — тело запроса его не несёт.
+    Assert.Equal(1L, await AccessChecks.SubscriberCountAsync(stand, maxUserId));
   }
 
   [Fact(DisplayName = "ключ бота и подпись параметров не покидают сервер")]

@@ -22,7 +22,7 @@
  *
  *   npx vitest run tests/CabinetEntry.test.tsx
  *
- * @supports: R-049, R-050, R-052, R-085
+ * @ac: AC-085a
  */
 import { configure, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -152,7 +152,7 @@ describe('слова о входе', () => {
   it('обещают возможность теми же словами, какими её называет сам раздел', async () => {
     setViewportWidth(MOBILE_WIDTH);
     window.WebApp = { initData: СТАРТОВЫЕ_ПАРАМЕТРЫ };
-    await signIn(true);
+    await signIn();
     render(<CabinetPage />);
 
     const раздел = await screen.findByRole('region', { name: 'Расчёты' });
