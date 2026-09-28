@@ -9,20 +9,20 @@
  * токенам, и переписывать их сюда значило бы завести второй источник.
  *
  * Проверки фальсифицируемы: верните подвалу прижатый к верху флажок, сузьте
- * адрес отдельной шириной, оставьте карточку объяснения из одного текста —
- * они упадут.
+ * адрес отдельной шириной, оставьте карточку объяснения из одного текста,
+ * выровняйте строку объёма на телефоне по нижнему краю — они упадут.
  *
  *   npx vitest run tests/CalculatorFormLayout.test.tsx
  *
- * @supports: R-058
- * @bug: BUG-005, BUG-006, BUG-011
+ * @bug: BUG-005, BUG-006, BUG-011, BUG-031
  */
 import { render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { App } from '@/app/App';
 import type { ApiStub } from './apiStub';
 import { installApiStub } from './apiStub';
-import { DESKTOP_WIDTH, setViewportWidth } from './viewport';
+import { layout } from '@/shared/ui/tokens';
+import { DESKTOP_WIDTH, MOBILE_WIDTH, setViewportWidth } from './viewport';
 
 let stub: ApiStub;
 
@@ -63,7 +63,6 @@ function ячейкаФормы(label: string): HTMLElement {
   return ячейка as HTMLElement;
 }
 
-/** @supports: R-058 */
 describe('подвал формы расчёта на широком экране', () => {
   it('ставит флажок утилизации и кнопку расчёта в один ряд', () => {
     render(<App />);
@@ -88,7 +87,6 @@ describe('подвал формы расчёта на широком экран�
   });
 });
 
-/** @supports: R-058 */
 describe('вертикаль формы расчёта на широком экране', () => {
   it('ставит адрес вывоза и тип отходов в одну колонку сетки', () => {
     // Иначе поля начинаются на одной линии, а заканчиваются на разных, и
@@ -102,7 +100,6 @@ describe('вертикаль формы расчёта на широком эк�
   });
 });
 
-/** @supports: R-058 */
 describe('карточки-объяснения до первого расчёта', () => {
   /** Список объяснений по его доступному имени. */
   function объяснения(): HTMLElement {
@@ -198,5 +195,43 @@ describe('строка типа отходов и меры объёма', () => 
     // потому от неё не двигается.
     expect(поля[0]).not.toBe(блок);
     expect(блок?.classList.contains('imolt-field--amount')).toBe(true);
+  });
+});
+
+/**
+ * Та же строка на телефоне. Заказчик 28.09.2026: «в калькуляторе поплыла
+ * верстка у объема в тоннах и метрах на мобилках». Замер живого стенда на
+ * ширине 390 до правки: поле объёма по вертикали 409..457, таблетки меры —
+ * 429..477, то есть на 20 px ниже поля.
+ */
+describe('строка объёма на телефоне', () => {
+  /** Строка количества и меры: найдена от поля объёма вверх по разметке. */
+  function строка(): HTMLElement {
+    const узел = screen.getByRole('textbox', { name: 'Объём' }).closest('.imolt-row');
+
+    expect(узел, 'строка количества и меры не найдена').not.toBeNull();
+
+    return узел as HTMLElement;
+  }
+
+  it('выравнивает поле объёма и меру по верху, а не по нижнему краю', () => {
+    // По нижнему краю строка выравнивалась вместе с местом, занятым под
+    // подсказку пересчёта, и таблетки меры опускались под поле.
+    setViewportWidth(MOBILE_WIDTH);
+    render(<App />);
+
+    expect(getComputedStyle(строка()).alignItems).toBe('start');
+  });
+
+  it('сдвигает меру объёма на высоту подписи, чтобы таблетки встали в строку поля', () => {
+    // У меры объёма подписи нет, а у поля рядом есть: без сдвига таблетки
+    // встают на строку подписи «Объём», а не на строку ввода.
+    setViewportWidth(MOBILE_WIDTH);
+    render(<App />);
+
+    const мера = screen.getByRole('radiogroup', { name: 'Мера объёма' });
+
+    expect(мера.parentElement).toBe(строка());
+    expect(getComputedStyle(мера).marginTop).toBe(`${layout.labelBlock}px`);
   });
 });

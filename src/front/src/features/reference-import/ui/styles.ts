@@ -18,6 +18,15 @@ export const IMPORT_CSS = `
   padding: ${space.l}px;
 }
 
+/* Шаги импорта показываются на телефоне и стоят в ряду плашек экрана вместе
+   с карточкой записи и полосой обновления. Боковое поле у них общее: с полем
+   плашки рабочего места текст импорта стоял правее всего остального на
+   экране (BUG-034). */
+.imolt-import--steps {
+  padding-left: ${space.s}px;
+  padding-right: ${space.s}px;
+}
+
 .imolt-import-head {
   display: flex;
   align-items: flex-start;

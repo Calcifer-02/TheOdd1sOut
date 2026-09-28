@@ -206,9 +206,17 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
 /* Количество и мера стоят в одной строке. Поле количества узкое намеренно:
    в него вводят две-три цифры, и растянутое на всю колонку оно обещает
    ввод, которого не будет. Остаток строки занимает переключатель меры. */
-.imolt-row { display: flex; gap: ${space.xs}px; align-items: flex-end; }
+.imolt-row { display: flex; gap: ${space.xs}px; align-items: start; }
 .imolt-row > .imolt-field--amount { flex: 0 0 ${layout.amountWidth}px; }
 .imolt-row > * { min-width: 0; }
+
+/* Мера объёма подписи не имеет и стоит рядом с подписанным полем: без сдвига
+   на высоту подписи таблетки встают на строку подписи, а не на строку поля.
+   Выравнивание по верху, а не по нижнему краю: под полем количества
+   появляется пересчёт в тонны, и по низу он уводил бы таблетки вниз на высоту
+   подсказки. На рабочем месте то же правило действует с 24.09.2026, на
+   телефоне строка оставалась прежней (BUG-031). */
+.imolt-row > .imolt-units { margin-top: ${layout.labelBlock}px; }
 .imolt-grow { flex: 1; }
 
 .imolt-units { display: flex; gap: ${space.xxs}px; }
@@ -372,7 +380,17 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
   flex-wrap: wrap;
 }
 
-.imolt-sorts-line { display: flex; align-items: center; gap: ${space.xs}px; flex-wrap: wrap; }
+/* Полоса порядка несёт прокручиваемую ленту переключателей. Без права
+   сжаться она держит ширину всей ленты и растягивает по ней экран: на
+   справочнике полигонов замер живого стенда дал документ 438 px при окне
+   375 px (BUG-032). */
+.imolt-sorts-line {
+  display: flex;
+  align-items: center;
+  gap: ${space.xs}px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
 
 .imolt-tabs, .imolt-sorts, .imolt-chips {
   display: flex;

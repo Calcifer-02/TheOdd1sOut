@@ -16,10 +16,10 @@
  *
  *   npx vitest run tests/ReferencesLayout.test.tsx
  *
- * Критерия приёмки на раскладку редактора в пакете аналитики нет, поэтому
- * ссылка на требования.
+ * Критерия приёмки на раскладку редактора в пакете аналитики нет: проверки
+ * держат найденные дефекты, и трасс-цель у них — их номера.
  *
- * @supports: R-042, R-058, R-085
+ * @bug: BUG-003, BUG-011, BUG-034
  */
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
@@ -27,7 +27,6 @@ import userEvent from '@testing-library/user-event';
 import { ReferencesPage } from '@/pages/references';
 import { DESKTOP_WIDTH, setViewportWidth } from './viewport';
 import { installThemeStyles, leftInset } from './layout';
-import { stroke } from '@/shared/ui/tokens';
 import { installMaintenanceStub, type MaintenanceStub } from './stubs/maintenance';
 
 const ТАРИФ_ИКША = 'Тариф утилизации, Площадка «Икша», Лом бетона и железобетона';
@@ -58,6 +57,19 @@ function экран(): Element {
     throw new Error('Экран редактора не отрисован');
   }
   return узел;
+}
+
+/**
+ * Боковое поле узла в числах. Отсутствие правила и объявленный ноль читаются
+ * по-разному — «0» и «0px», — а означают одно и то же.
+ */
+function боковоеПоле(узел: Element): { слева: number; справа: number } {
+  const стиль = getComputedStyle(узел);
+
+  return {
+    слева: Number.parseFloat(стиль.paddingLeft) || 0,
+    справа: Number.parseFloat(стиль.paddingRight) || 0,
+  };
 }
 
 function узел(селектор: string): Element {
@@ -97,8 +109,8 @@ describe('левая вертикаль редактора цен', () => {
     // своей, ни внешней.
     const выборка = узел('.imolt-references-selection');
     expect(leftInset(выборка, корень)).toBe(0);
-    expect(getComputedStyle(выборка).paddingLeft).toBe('0px');
-    expect(getComputedStyle(выборка).paddingRight).toBe('0px');
+    expect(боковоеПоле(выборка).слева).toBe(0);
+    expect(боковоеПоле(выборка).справа).toBe(0);
   });
 
   it('на рабочем месте ставит название полигона и юридическое лицо разными строками ячейки', async () => {
@@ -115,7 +127,34 @@ describe('левая вертикаль редактора цен', () => {
     expect(имя.querySelector('.imolt-references-card-entity')).not.toBeNull();
   });
 
-  it('на телефоне держит заголовок, вкладки и карточку записи на одной вертикали', async () => {
+  it('на телефоне ведёт блоки экрана от края, а текст плашек — от их собственного поля', async () => {
+    // Заказчик 28.09.2026: «у импорта из excel, полигонов, групп отходов
+    // поплыла верстка и у поиска по полигону тоже padding лишний на
+    // телефоне». Замер живого стенда на ширине 390 до правки: вкладки и
+    // карточки шли 16..359, а заголовок, счётчик и поле поиска — 28..347.
+    render(<ReferencesPage />);
+
+    await screen.findByRole('button', { name: 'Править полигон: Площадка «Икша»' });
+
+    const корень = экран();
+
+    // Таблицы на телефоне нет, и отбивать блоки внутрь не подо что: вкладки и
+    // плашки записей идут от края экрана, а поля экрана держит оболочка.
+    expect({
+      заголовок: leftInset(screen.getByRole('heading', { level: 1 }), корень),
+      пояснение: leftInset(screen.getByText(/Менеджер данных ИМОЛТ/), корень),
+      вкладки: leftInset(узел('.imolt-tabs'), корень),
+      выборка: leftInset(узел('.imolt-references-selection'), корень),
+      карточки: leftInset(узел('.imolt-references-cards'), корень),
+    }).toEqual({ заголовок: 0, пояснение: 0, вкладки: 0, выборка: 0, карточки: 0 });
+
+    // Боковое поле блока выборки складывалось с собственным полем строки
+    // ввода, и поиск стоял правее всего остального на экране.
+    expect(боковоеПоле(узел('.imolt-references-selection')).слева).toBe(0);
+    expect(боковоеПоле(узел('.imolt-references-selection')).справа).toBe(0);
+  });
+
+  it('на телефоне ставит текст всех плашек на одну вертикаль', async () => {
     render(<ReferencesPage />);
 
     await screen.findByRole('button', { name: 'Править полигон: Площадка «Икша»' });
@@ -123,23 +162,21 @@ describe('левая вертикаль редактора цен', () => {
     const корень = экран();
     const вертикаль = leftInset(узел('.imolt-references-card .imolt-references-card-name'), корень);
 
+    // Плашки отбивают текст внутрь своим полем: нулевая вертикаль означала бы,
+    // что сравнивать не с чем.
     expect(вертикаль).toBeGreaterThan(0);
 
-    expect({
-      заголовок: leftInset(screen.getByRole('heading', { level: 1 }), корень),
-      // У вкладки меряется подпись: таблетка стоит на вертикали плашек, и её
-      // подпись отстоит от вертикали текста на толщину собственной рамки.
-      вкладки: leftInset(screen.getAllByRole('tab')[0] as HTMLElement, корень) - stroke.hairline,
-      // У поля меряется подпись: собственное поле ввода — часть управления,
-      // а на вертикали экрана стоит блок поля целиком.
-      поиск: leftInset(узел('label[for="references-query-mobile"]'), корень),
-      обновление: leftInset(узел('.imolt-references-sync-text'), корень),
-    }).toEqual({
-      заголовок: вертикаль,
-      вкладки: вертикаль,
-      поиск: вертикаль,
-      обновление: вертикаль,
-    });
+    expect(leftInset(узел('.imolt-references-sync-text'), корень)).toBe(вертикаль);
+
+    // Шаги импорта — такая же плашка экрана, и поле у неё то же: с полем
+    // плашки рабочего места её текст стоял правее соседей.
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Импорт из Excel' }));
+
+    const шаги = await screen.findByText('Импорт справочника из книги');
+    const плашка = шаги.closest('.imolt-import');
+
+    expect(плашка, 'шаги импорта не открылись').not.toBeNull();
+    expect(getComputedStyle(плашка as Element).paddingLeft).toBe(`${вертикаль}px`);
   });
 });
 

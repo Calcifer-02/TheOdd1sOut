@@ -91,7 +91,7 @@ export function ReferencesDesktop({ editor, route, importing }: ReferencesViewPr
     editor.cellRefusal !== null && editor.cellRefusal.key === key ? editor.cellRefusal.title : null;
 
   return (
-    <div className="imolt-references">
+    <div className="imolt-references imolt-references--desk">
       <div className="imolt-references-head">
         <div className="imolt-references-head-text">
           <h1 className="imolt-references-title">Цены и справочники</h1>
@@ -202,7 +202,7 @@ export function ReferencesDesktop({ editor, route, importing }: ReferencesViewPr
           onToggle={editor.toggleOrder}
         />
 
-        <div className="imolt-references-selection imolt-references-selection--flush">
+        <div className="imolt-references-selection">
           <p className="imolt-references-count" role="status">
             {selectionCaption(
               route.tab,
