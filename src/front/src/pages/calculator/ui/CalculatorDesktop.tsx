@@ -42,13 +42,6 @@ import { SORTS, type CalculatorModel } from '../model/useCalculator';
 import { emptyResultTitle } from '../model/emptyResult';
 
 /** Колонка «Объём и мера»: узкое поле количества плюс переключатель меры. */
-/**
- * Высота подписи поля вместе с её отбивкой. Типографика в токены не вынесена,
- * поэтому строка подписи названа здесь: правило `.imolt-label` объявляет
- * `line-height: 16px` и отбивку `space.xxs`.
- */
-const LABEL_BLOCK = 16 + space.xxs;
-
 const AMOUNT_COLUMN = 280;
 
 const DESKTOP_CSS = `
@@ -86,12 +79,12 @@ const DESKTOP_CSS = `
    Строка при этом выровнена по верху: у кубометров под полем появляется
    пересчёт в тонны, и выравнивание по низу уводило бы «Тип отходов» вниз на
    высоту этой подсказки (R-014, R-015). */
-.imolt-desk-line .imolt-units { margin-top: ${LABEL_BLOCK}px; }
+.imolt-desk-line .imolt-units { margin-top: ${layout.labelBlock}px; }
 
 /* Кнопка «Убрать» — третья колонка строки и подписи не имеет: без того же
    сдвига она вставала на строку подписей, а не на строку полей (замечание
    заказчика от 24.09.2026). */
-.imolt-desk-line > .imolt-button--tertiary { margin-top: ${LABEL_BLOCK}px; }
+.imolt-desk-line > .imolt-button--tertiary { margin-top: ${layout.labelBlock}px; }
 .imolt-desk-divider { height: 1px; background: ${colors.borderDivider}; }
 .imolt-desk-form-foot {
   display: flex;

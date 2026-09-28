@@ -12,7 +12,7 @@
  *
  *   npx vitest run tests/CabinetSubscription.test.tsx
  *
- * @supports: R-049, R-051, R-052, R-054
+ * @ac: AC-051a, AC-052a, AC-054c
  */
 import { configure, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -31,7 +31,7 @@ let служба: CabinetStub;
 async function опознать(раздел: string): Promise<void> {
   window.history.replaceState(null, '', `#/cabinet?tab=${раздел}`);
   window.WebApp = { initData: СТАРТОВЫЕ_ПАРАМЕТРЫ };
-  await signIn(true);
+  await signIn();
 }
 
 beforeEach(() => {

@@ -43,14 +43,10 @@ public sealed class AccessScenarios(
           "Срок давности стартовых параметров истёк: откройте мини-приложение заново");
     }
 
-    // Согласие проверяется до записи: завести учётную запись и отказать —
-    // худший из исходов, снаружи он неотличим от честного отказа (R-054).
-    if (!request!.PersonalDataConsent)
-    {
-      throw new ConsentMissingException(
-          "Без согласия на обработку персональных данных сессия не создаётся");
-    }
-
+    // Отдельного согласия вход не спрашивает: основанием служит соглашение
+    // платформы MAX, принятое до запуска мини-приложения (решение заказчика
+    // от 28.09.2026). Отправка заявки и заказ услуги согласие требуют, и оно
+    // объявлено в их собственных запросах (R-054).
     var profile = await subscribers.EnrolAsync(parameters.MaxUserId, parameters.DisplayName, cancellationToken);
 
     await ApplyGrantsAsync(profile.Id, parameters.MaxUserId, cancellationToken);
@@ -180,6 +176,8 @@ public sealed class AccessScenarios(
 }
 
 /// Роли подписчика, объявленные договором.
+///
+/// @supports: R-049, R-050, R-054
 public static class SubscriberRoles
 {
   public const string Carrier = "carrier";
@@ -190,6 +188,8 @@ public static class SubscriberRoles
 /// Настройки личности от платформы. Ключ бота и срок давности стартовых
 /// параметров приходят из окружения: ключ — секрет, который не место в коде
 /// (R-056), а срок договором не назван и остаётся решением развёртывания.
+///
+/// @supports: R-049, R-050, R-054
 public sealed record MaxIdentitySettings(string BotToken, TimeSpan InitDataLifetime)
 {
   /// Срок давности по умолчанию. Помечен демонстрационным: заказчик его не
@@ -206,6 +206,8 @@ public sealed record MaxIdentitySettings(string BotToken, TimeSpan InitDataLifet
 ///
 /// Это решение развёртывания, а не заказчика: владельца данных заказчик не
 /// назначал (Q-013), и выдавать список за утверждённую политику нельзя.
+///
+/// @supports: R-049, R-050, R-054
 public sealed record DataManagerSettings(IReadOnlyList<string> Subjects)
 {
   public static DataManagerSettings None { get; } = new([]);

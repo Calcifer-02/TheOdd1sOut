@@ -1285,7 +1285,6 @@ paths:
             schema: { $ref: '#/components/schemas/SessionRequest' }
             example:
               initData: 'auth_date=1758067200&query_id=AAH…&user=%7B%22id%22%3A812345%7D&hash=0f3c…'
-              personalDataConsent: true
       responses:
         '201':
           description: сессия создана
@@ -2375,7 +2374,7 @@ components:
 
     SessionRequest:
       type: object
-      required: [initData, personalDataConsent]
+      required: [initData]
       properties:
         initData:
           type: string
@@ -2385,9 +2384,12 @@ components:
             разбора на стороне клиента: сервер сам разбирает её и проверяет
             подпись поля `hash`. Разобранный клиентом объект не принимается —
             проверять подпись можно только по исходной строке.
-        personalDataConsent:
-          type: boolean
-          description: явное согласие на обработку персональных данных (R-054)
+
+            Отдельного признака согласия на обработку персональных данных
+            здесь нет: основанием служит соглашение платформы MAX, принятое
+            до запуска мини-приложения (решение заказчика от 28.09.2026).
+            Отправка заявки и заказ услуги согласие по-прежнему требуют — оно
+            объявлено в их собственных запросах (R-054).
       additionalProperties: false
 
     Profile:

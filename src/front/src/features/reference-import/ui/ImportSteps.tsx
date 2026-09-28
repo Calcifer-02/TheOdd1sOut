@@ -41,7 +41,7 @@ export function ImportSteps({
   const additions = state.preview?.additions ?? [];
 
   return (
-    <Card className="imolt-import">
+    <Card className="imolt-import imolt-import--steps">
       <span className="imolt-import-step">{stepLabel(state.stage)}</span>
       <h2 className="imolt-import-title">Импорт справочника из книги</h2>
 
