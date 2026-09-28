@@ -14,7 +14,7 @@
  *
  *   npx vitest run tests/ShellProfile.test.tsx
  *
- * @supports: R-049
+ * @ac: AC-049a
  */
 import { act, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -70,7 +70,7 @@ async function опознать(): Promise<void> {
   // Опознание меняет состояние вне React: обёртка нужна, чтобы отрисовка
   // ответа на него случилась до проверки.
   await act(async () => {
-    await signIn(true);
+    await signIn();
   });
 }
 

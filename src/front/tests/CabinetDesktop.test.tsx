@@ -9,7 +9,7 @@
  *
  *   npx vitest run tests/CabinetDesktop.test.tsx
  *
- * @supports: R-008, R-049
+ * @ac: AC-085a
  */
 import { configure, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -34,7 +34,7 @@ let служба: CabinetStub;
 
 async function опознать(): Promise<void> {
   window.WebApp = { initData: СТАРТОВЫЕ_ПАРАМЕТРЫ };
-  await signIn(true);
+  await signIn();
 }
 
 /** Расчёты числом больше страницы: иначе «показать ещё» проверять нечем. */

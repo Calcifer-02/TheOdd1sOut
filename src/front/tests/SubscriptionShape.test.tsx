@@ -12,7 +12,7 @@
  *
  *   npx vitest run tests/SubscriptionShape.test.tsx
  *
- * @supports: R-050
+ * @ac: AC-051a
  */
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
@@ -50,7 +50,7 @@ async function опознать(state: SubscriptionState, activeUntil: string | 
     })) as typeof globalThis.fetch;
 
   window.WebApp = { initData: СТАРТОВЫЕ_ПАРАМЕТРЫ };
-  await signIn(true);
+  await signIn();
 }
 
 describe('состояние подписки в шапке сервиса', () => {

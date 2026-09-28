@@ -8,14 +8,16 @@
  *
  *   npx vitest run tests/Cabinet.test.tsx
  *
- * @supports: R-049, R-050
+ * @ac: AC-050b, AC-085c
  */
 import { configure, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { App } from '@/app/App';
 import { CabinetPage } from '@/pages/cabinet';
 import { CABINET_CSS } from '@/pages/cabinet/ui/styles';
 import { forget, signIn } from '@/entities/participant';
+import { forgetIdentification } from '@/features/identify-from-chat';
 import { installCabinetStub, отказ, АДРЕС_ВЫВОЗА, СТАРТОВЫЕ_ПАРАМЕТРЫ, type CabinetStub } from './stubs/cabinet';
 
 // Прогон идёт в несколько потоков на одной машине, и ожидание по
@@ -28,7 +30,7 @@ let служба: CabinetStub;
 /** Опознание участника: без него кабинет данных не показывает (ADR-0006). */
 async function опознать(): Promise<void> {
   window.WebApp = { initData: СТАРТОВЫЕ_ПАРАМЕТРЫ };
-  await signIn(true);
+  await signIn();
 }
 
 /** Адрес страницы до отрисовки: раздел кабинета живёт в нём (PRACT-016). */
@@ -42,6 +44,7 @@ beforeEach(() => {
 
 afterEach(() => {
   forget();
+  forgetIdentification();
   delete window.WebApp;
   служба.restore();
 });
@@ -70,21 +73,27 @@ describe('кабинет на телефоне', () => {
     expect(screen.queryByRole('button', { name: /Получить код/ })).toBeNull();
   });
 
-  it('открытое из переписки приложение открывает кабинет после согласия', async () => {
-    const пользователь = userEvent.setup();
+  it('открытое из переписки приложение открывает кабинет само, ничего не спрашивая', async () => {
+    // Заказчик 28.09.2026: «на вкладке кабинет тоже какое-то доп соглашение,
+    // оно тоже подразумевается при открытии приложения». Приложение
+    // отрисовывается целиком: обмен ведёт карточка опознания над экраном.
+    открытьАдрес('#/cabinet');
     window.WebApp = { initData: СТАРТОВЫЕ_ПАРАМЕТРЫ };
-    render(<CabinetPage />);
-
-    await пользователь.click(screen.getByRole('checkbox', { name: 'Согласен на обработку персональных данных' }));
-    await пользователь.click(screen.getByRole('button', { name: 'Открыть кабинет' }));
+    render(<App />);
 
     expect(await screen.findByRole('link', { name: `Открыть расчёт: ${АДРЕС_ВЫВОЗА}` })).toBeInTheDocument();
+
+    // Ни флажка согласия, ни кнопки входа на пути нет: кабинет открылся сам.
+    expect(screen.queryByRole('checkbox', { name: /персональных данных/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Открыть кабинет' })).toBeNull();
 
     // Строка уходит как есть: подпись проверяется только по исходной строке,
     // и разобранный браузером объект личностью не считается (ADR-0006).
     const тело = служба.bodyOf('POST /v1/auth/sessions');
     expect(тело.initData).toBe(СТАРТОВЫЕ_ПАРАМЕТРЫ);
-    expect(тело.personalDataConsent).toBe(true);
+
+    // Признака согласия в запросе нет: договор его больше не объявляет.
+    expect(тело.personalDataConsent).toBeUndefined();
   });
 
   it('после опознания показывает сохранённые расчёты карточками, а не таблицей', async () => {

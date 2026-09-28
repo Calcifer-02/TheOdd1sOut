@@ -278,7 +278,7 @@ user=%s' "$AUTH_DATE" "$POLZOVATEL")
 ' | sed 's/../%&/g')
   INIT_DATA="auth_date=${AUTH_DATE}&user=${USER_KOD}&hash=${PODPIS}"
 
-  SESSIYA=$(curl -s --max-time 20 -X POST -H 'Content-Type: application/json'     -d "{\"initData\":\"${INIT_DATA}\",\"personalDataConsent\":true}"     "http://localhost:${API_PORT}/v1/auth/sessions" 2>/dev/null)
+  SESSIYA=$(curl -s --max-time 20 -X POST -H 'Content-Type: application/json'     -d "{\"initData\":\"${INIT_DATA}\"}"     "http://localhost:${API_PORT}/v1/auth/sessions" 2>/dev/null)
   MARKER=$(printf '%s' "$SESSIYA" | grep -o '"accessToken":"[^"]*"' | cut -d'"' -f4)
 
   if [ -n "$MARKER" ]; then
@@ -288,7 +288,7 @@ user=%s' "$AUTH_DATE" "$POLZOVATEL")
     OSHIBKI=$((OSHIBKI + 1))
   fi
 
-  PODDELKA=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 -X POST     -H 'Content-Type: application/json'     -d "{\"initData\":\"auth_date=${AUTH_DATE}&user=${USER_KOD}&hash=0000\",\"personalDataConsent\":true}"     "http://localhost:${API_PORT}/v1/auth/sessions" 2>/dev/null)
+  PODDELKA=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 -X POST     -H 'Content-Type: application/json'     -d "{\"initData\":\"auth_date=${AUTH_DATE}&user=${USER_KOD}&hash=0000\"}"     "http://localhost:${API_PORT}/v1/auth/sessions" 2>/dev/null)
   if [ "$PODDELKA" = "401" ]; then
     soobshchit "доступ: подделанная подпись отвергнута" "ок (401)"
   else
