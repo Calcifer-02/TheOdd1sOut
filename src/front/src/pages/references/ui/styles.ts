@@ -11,10 +11,15 @@
 import { colors, layout, radius, space } from '@/shared/ui/tokens';
 
 /**
- * Левая вертикаль экрана — та же, что у столбца таблицы: общий слой отбивает
- * ячейку и подпись таблицы внутрь плашки на боковое поле `space.s`. Всё
- * остальное на экране встаёт по ней же, иначе заголовок страницы и заголовок
- * таблицы стоят на разных вертикалях (BUG-003, BUG-011).
+ * Левая вертикаль рабочего места — та же, что у столбца таблицы: общий слой
+ * отбивает ячейку и подпись таблицы внутрь плашки на боковое поле `space.s`.
+ * Остальные блоки рабочего места встают по ней же, иначе заголовок страницы и
+ * заголовок таблицы стоят на разных вертикалях (BUG-003, BUG-011).
+ *
+ * На телефоне таблицы нет, а есть плашки: карточка записи, полоса обновления
+ * и вкладки идут от края экрана, и повторная отбивка уводила заголовок, поле
+ * поиска и кнопку импорта на 12 px правее них (BUG-034). Поэтому правила
+ * отбивки названы через признак рабочего места.
  */
 const INSET = space.s;
 
@@ -24,21 +29,21 @@ const RHYTHM = space.l;
 export const REFERENCES_CSS = `
 .imolt-references { display: flex; flex-direction: column; gap: ${RHYTHM}px; }
 
-/* Блоки экрана отбиваются на общую вертикаль: у заголовка, пояснения, полосы
-   отбора, поля поиска и кнопки возврата собственного поля нет вовсе, а у
-   отказа, карточки и пустого состояния оно своё и с вертикалью столбца не
+/* Блоки рабочего места отбиваются на общую вертикаль: у заголовка, пояснения,
+   полосы отбора, поля поиска и кнопки возврата собственного поля нет вовсе, а
+   у отказа, карточки и пустого состояния оно своё и с вертикалью столбца не
    совпадает. */
-.imolt-references > .imolt-card,
-.imolt-references-cards > .imolt-empty,
-.imolt-references > .imolt-references-head,
-.imolt-references > .imolt-references-title,
-.imolt-references > .imolt-references-subtitle,
-.imolt-references > .imolt-references-status,
-.imolt-references > .imolt-references-card-entity,
-.imolt-references > .imolt-references-actions,
-.imolt-references > .imolt-grow,
-.imolt-references > .imolt-notice,
-.imolt-references > .imolt-button {
+.imolt-references--desk > .imolt-card,
+.imolt-references--desk .imolt-references-cards > .imolt-empty,
+.imolt-references--desk > .imolt-references-head,
+.imolt-references--desk > .imolt-references-title,
+.imolt-references--desk > .imolt-references-subtitle,
+.imolt-references--desk > .imolt-references-status,
+.imolt-references--desk > .imolt-references-card-entity,
+.imolt-references--desk > .imolt-references-actions,
+.imolt-references--desk > .imolt-grow,
+.imolt-references--desk > .imolt-notice,
+.imolt-references--desk > .imolt-button {
   padding-left: ${INSET}px;
   padding-right: ${INSET}px;
 }
@@ -46,14 +51,14 @@ export const REFERENCES_CSS = `
 /* Полоса отбора идёт от края, как и таблица под ней: внутри неё стоят вкладки
    со своим полем и поле поиска, и внешнее поле складывалось с ними дважды
    (замечание заказчика от 25.09.2026). */
-.imolt-references > .imolt-references-filters {
+.imolt-references--desk > .imolt-references-filters {
   padding-left: 0;
   padding-right: 0;
 }
 
 /* Вкладка — таблетка со своим боковым полем: отбивка экрана сложилась бы с ним
    дважды и увела подпись правее остального текста. */
-.imolt-references > .imolt-tabs {
+.imolt-references--desk > .imolt-tabs {
   padding-left: 0;
   padding-right: 0;
 }
@@ -96,31 +101,22 @@ export const REFERENCES_CSS = `
    как три решения подряд (второй пакет замечаний заказчика, 24.09.2026).
    Правило перекрывает раскладку полосы управлений общего слоя, поэтому
    названо через предка. */
-.imolt-references > .imolt-references-filters {
+.imolt-references--desk > .imolt-references-filters {
   display: grid;
   gap: ${space.s}px;
   align-items: start;
 }
 
 /* Счётчик и поиск — один блок выборки: счётчик стоит над полем и называет
-   показанное из найденного, а не длину строки ввода. Отбивку блок несёт сам,
-   а не берёт от общего правила: на рабочем месте её снимает соседний
-   признак, и внешнее правило спорило бы с ним по весу. */
+   показанное из найденного, а не длину строки ввода. Блок идёт от края в
+   обоих представлениях: на рабочем месте — как полоса отбора и таблица под
+   ним (замечание заказчика от 26.09.2026), на телефоне — как вкладки и
+   карточки записей. Боковое поле у поля поиска складывалось с его
+   собственным, и строка ввода стояла правее всего остального (BUG-034). */
 .imolt-references-selection {
   display: grid;
   gap: ${space.xxs}px;
   min-width: 0;
-  padding-left: ${INSET}px;
-  padding-right: ${INSET}px;
-}
-
-/* На рабочем месте блок выборки идёт от края, как полоса отбора и таблица под
-   ним (замечание заказчика от 26.09.2026). На телефоне боковое поле остаётся:
-   без него поле поиска упёрлось бы в края экрана, а отбивка телефона — общее
-   правило дизайн-договора, а не украшение этого экрана. */
-.imolt-references-selection--flush {
-  padding-left: 0;
-  padding-right: 0;
 }
 
 .imolt-references-sync {
