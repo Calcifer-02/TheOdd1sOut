@@ -22,8 +22,7 @@
  * Критерия приёмки на раскладку справочника в реестре нет: AC-085a требует
  * двух деревьев разметки, а не одной вертикали. Поэтому ссылка на требования.
  *
- * @supports: R-039, R-040, R-058, R-085
- * @bug: BUG-032
+ * @bug: BUG-003, BUG-011, BUG-032
  */
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';

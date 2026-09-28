@@ -14,7 +14,6 @@
  *
  *   npx vitest run tests/CalculatorFormLayout.test.tsx
  *
- * @supports: R-058
  * @bug: BUG-005, BUG-006, BUG-011, BUG-031
  */
 import { render, screen, within } from '@testing-library/react';
@@ -64,7 +63,6 @@ function ячейкаФормы(label: string): HTMLElement {
   return ячейка as HTMLElement;
 }
 
-/** @supports: R-058 */
 describe('подвал формы расчёта на широком экране', () => {
   it('ставит флажок утилизации и кнопку расчёта в один ряд', () => {
     render(<App />);
@@ -89,7 +87,6 @@ describe('подвал формы расчёта на широком экран�
   });
 });
 
-/** @supports: R-058 */
 describe('вертикаль формы расчёта на широком экране', () => {
   it('ставит адрес вывоза и тип отходов в одну колонку сетки', () => {
     // Иначе поля начинаются на одной линии, а заканчиваются на разных, и
@@ -103,7 +100,6 @@ describe('вертикаль формы расчёта на широком эк�
   });
 });
 
-/** @supports: R-058 */
 describe('карточки-объяснения до первого расчёта', () => {
   /** Список объяснений по его доступному имени. */
   function объяснения(): HTMLElement {

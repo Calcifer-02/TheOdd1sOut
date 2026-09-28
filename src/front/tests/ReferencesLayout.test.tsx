@@ -16,10 +16,10 @@
  *
  *   npx vitest run tests/ReferencesLayout.test.tsx
  *
- * Критерия приёмки на раскладку редактора в пакете аналитики нет, поэтому
- * ссылка на требования.
+ * Критерия приёмки на раскладку редактора в пакете аналитики нет: проверки
+ * держат найденные дефекты, и трасс-цель у них — их номера.
  *
- * @supports: R-042, R-058, R-085
+ * @bug: BUG-003, BUG-011, BUG-034
  */
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
