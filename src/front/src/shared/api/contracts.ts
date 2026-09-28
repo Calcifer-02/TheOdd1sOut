@@ -215,4 +215,4 @@ export type Profile = {
 
 export type Session = { accessToken: string; expiresIn: number; profile: Profile };
 
-export type SessionRequest = { initData: string; personalDataConsent: boolean };
+export type SessionRequest = { initData: string };

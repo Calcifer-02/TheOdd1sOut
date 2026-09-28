@@ -194,18 +194,9 @@ export function installCabinetStub(): CabinetStub {
 
   function defaultAnswer(key: RouteKey | undefined, request: RecordedRequest): StubResponse {
     if (key === 'POST /v1/auth/sessions') {
-      const body = (request.body ?? {}) as { personalDataConsent?: boolean };
-
-      // Без согласия сессии нет: служба отвечает 422, а не заводит учётную
-      // запись и отказывает потом (AC-054b).
-      if (body.personalDataConsent !== true) {
-        return {
-          status: 422,
-          headers: { 'content-type': PROBLEM_TYPE },
-          body: отказ('consent-required', 'Нужно согласие на обработку персональных данных', 422),
-        };
-      }
-
+      // Отдельного согласия вход не спрашивает: основанием служит соглашение
+      // платформы MAX, принятое до запуска мини-приложения (решение заказчика
+      // от 28.09.2026, AC-049d). Согласие осталось у заявки и заказа услуги.
       return {
         status: 201,
         headers: { 'content-type': JSON_TYPE },

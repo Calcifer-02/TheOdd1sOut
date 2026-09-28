@@ -34,7 +34,7 @@ let служба: CabinetStub;
 
 async function опознать(): Promise<void> {
   window.WebApp = { initData: СТАРТОВЫЕ_ПАРАМЕТРЫ };
-  await signIn(true);
+  await signIn();
 }
 
 /** Расчёты числом больше страницы: иначе «показать ещё» проверять нечем. */

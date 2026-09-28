@@ -1,18 +1,22 @@
 /**
  * Опознание участника, пришедшего из переписки с чат-ботом (R-071).
  *
- * Проверка фальсифицируема: она падает, если карточка появится без стартовых
- * параметров платформы, если согласие на обработку персональных данных
- * подставится за пользователя, если строка стартовых параметров уйдёт
- * разобранной, а не как есть, и если отказ службы останется без объяснения.
+ * Заказчик 28.09.2026: «на главном экране уведомление "открыто из чат-бота",
+ * это лишнее соглашение, если приложение открыли, значит согласны и профиль
+ * подтягивается сразу и сам, без подтверждений, это есть в соглашении max».
+ *
+ * Проверка фальсифицируема: она падает, если обмен пойдёт без стартовых
+ * параметров платформы, если на входе снова появится вопрос к участнику, если
+ * строка стартовых параметров уйдёт разобранной, а не как есть, если в теле
+ * запроса снова окажется признак согласия и если отказ службы останется без
+ * объяснения.
  *
  *   npx vitest run tests/ChatIdentity.test.tsx
  */
-import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ChatIdentity } from '@/features/identify-from-chat';
-import { forget } from '@/entities/participant';
+import { ChatIdentity, forgetIdentification } from '@/features/identify-from-chat';
+import { forget, participant } from '@/entities/participant';
 
 /** Строка стартовых параметров: сервер разбирает её сам, клиент — никогда. */
 const СТАРТОВЫЕ = 'auth_date=1790000000&user=%7B%22id%22%3A812345%7D&hash=0f3c';
@@ -45,55 +49,49 @@ beforeEach(() => {
 
 afterEach(() => {
   forget();
+  forgetIdentification();
   delete window.WebApp;
   vi.restoreAllMocks();
 });
 
 /** @ac: AC-071a */
 describe('опознание из переписки', () => {
-  it('без стартовых параметров платформы карточка не показывается', () => {
+  it('без стартовых параметров платформы обмена не начинает', () => {
     render(<ChatIdentity />);
 
-    expect(
-      screen.queryByText(/Открыто из чат-бота/),
-      'карточка опознания показана приложению, открытому не из переписки',
-    ).toBeNull();
-  });
-
-  it('согласие не подставляется за участника', async () => {
-    window.WebApp = { initData: СТАРТОВЫЕ };
-    render(<ChatIdentity />);
-
-    const кнопка = screen.getByRole('button', { name: 'Получать извещения в чате' });
-
-    expect(кнопка, 'кнопка доступна до отметки согласия').toBeDisabled();
-    expect(обращения, 'сессия создана без согласия участника').toEqual([]);
+    expect(обращения, 'сессия заведена приложению, открытому не из переписки').toEqual([]);
+    expect(document.body.textContent, 'приложение без переписки показало карточку опознания').toBe('');
   });
 
   /** @ac: AC-071a */
-  it('после согласия участник опознан и извещён об этом', async () => {
-    const пользователь = userEvent.setup();
+  it('открытое из переписки приложение опознаёт участника само и молча', async () => {
     window.WebApp = { initData: СТАРТОВЫЕ };
     render(<ChatIdentity />);
 
-    await пользователь.click(screen.getByRole('checkbox'));
-    await пользователь.click(screen.getByRole('button', { name: 'Получать извещения в чате' }));
+    await waitFor(() => expect(participant(), 'участник не опознан').not.toBeNull());
 
-    expect(await screen.findByText(/Извещения о заявке придут в чат/)).toBeInTheDocument();
     expect(обращения).toHaveLength(1);
     expect(обращения[0]?.url).toContain('/v1/auth/sessions');
 
-    const тело = обращения[0]?.body as { initData: string; personalDataConsent: boolean };
+    const тело = обращения[0]?.body as { initData: string; personalDataConsent?: boolean };
 
     // Строка уходит как есть: подпись проверяется только по исходной строке,
     // и разобранный браузером объект личностью не считается (ADR-0006).
     expect(тело.initData, 'стартовые параметры ушли не исходной строкой').toBe(СТАРТОВЫЕ);
-    expect(тело.personalDataConsent).toBe(true);
+
+    // Признака согласия в запросе нет: договор его больше не объявляет, а
+    // основанием обработки служит соглашение платформы MAX.
+    expect(тело.personalDataConsent, 'признак согласия вернулся в запрос').toBeUndefined();
+
+    // Спрашивать нечего, и показывать удачное опознание тоже: кто пришёл,
+    // называет оболочка приложения.
+    expect(screen.queryByRole('checkbox'), 'на входе снова спрашивают согласие').toBeNull();
+    expect(screen.queryByRole('button'), 'на входе снова ждут нажатия').toBeNull();
+    expect(document.body.textContent, 'удачное опознание показано второй надписью').toBe('');
   });
 
   /** @ac: AC-071b */
   it('несошедшаяся подпись объясняется участнику, а не молчит', async () => {
-    const пользователь = userEvent.setup();
     window.WebApp = { initData: СТАРТОВЫЕ };
     ответ = {
       status: 401,
@@ -105,8 +103,6 @@ describe('опознание из переписки', () => {
     };
 
     render(<ChatIdentity />);
-    await пользователь.click(screen.getByRole('checkbox'));
-    await пользователь.click(screen.getByRole('button', { name: 'Получать извещения в чате' }));
 
     // Показывается заголовок отказа, а не код причины: код — внутреннее имя.
     const отказ = await screen.findByRole('alert');

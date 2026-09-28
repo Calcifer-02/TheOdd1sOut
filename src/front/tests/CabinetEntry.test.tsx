@@ -152,7 +152,7 @@ describe('слова о входе', () => {
   it('обещают возможность теми же словами, какими её называет сам раздел', async () => {
     setViewportWidth(MOBILE_WIDTH);
     window.WebApp = { initData: СТАРТОВЫЕ_ПАРАМЕТРЫ };
-    await signIn(true);
+    await signIn();
     render(<CabinetPage />);
 
     const раздел = await screen.findByRole('region', { name: 'Расчёты' });

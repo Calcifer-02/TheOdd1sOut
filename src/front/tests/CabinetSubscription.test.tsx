@@ -31,7 +31,7 @@ let служба: CabinetStub;
 async function опознать(раздел: string): Promise<void> {
   window.history.replaceState(null, '', `#/cabinet?tab=${раздел}`);
   window.WebApp = { initData: СТАРТОВЫЕ_ПАРАМЕТРЫ };
-  await signIn(true);
+  await signIn();
 }
 
 beforeEach(() => {

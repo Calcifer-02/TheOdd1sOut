@@ -50,7 +50,7 @@ async function опознать(state: SubscriptionState, activeUntil: string | 
     })) as typeof globalThis.fetch;
 
   window.WebApp = { initData: СТАРТОВЫЕ_ПАРАМЕТРЫ };
-  await signIn(true);
+  await signIn();
 }
 
 describe('состояние подписки в шапке сервиса', () => {

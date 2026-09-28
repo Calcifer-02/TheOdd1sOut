@@ -70,7 +70,7 @@ async function опознать(): Promise<void> {
   // Опознание меняет состояние вне React: обёртка нужна, чтобы отрисовка
   // ответа на него случилась до проверки.
   await act(async () => {
-    await signIn(true);
+    await signIn();
   });
 }
 

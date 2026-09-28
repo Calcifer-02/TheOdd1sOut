@@ -53,7 +53,7 @@ let перечень: HistoryStub;
 /** Опознание участника: без него перечень недоступен (ADR-0006). */
 async function опознать(): Promise<void> {
   window.WebApp = { initData: СТАРТОВЫЕ_ПАРАМЕТРЫ };
-  await signIn(true);
+  await signIn();
 }
 
 /**
