@@ -8,7 +8,7 @@
  *
  *   npx vitest run tests/Cabinet.test.tsx
  *
- * @supports: R-049, R-050
+ * @ac: AC-050b, AC-085c
  */
 import { configure, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';

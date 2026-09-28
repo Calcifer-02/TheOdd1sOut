@@ -176,6 +176,8 @@ public sealed class AccessScenarios(
 }
 
 /// Роли подписчика, объявленные договором.
+///
+/// @supports: R-049, R-050, R-054
 public static class SubscriberRoles
 {
   public const string Carrier = "carrier";
@@ -186,6 +188,8 @@ public static class SubscriberRoles
 /// Настройки личности от платформы. Ключ бота и срок давности стартовых
 /// параметров приходят из окружения: ключ — секрет, который не место в коде
 /// (R-056), а срок договором не назван и остаётся решением развёртывания.
+///
+/// @supports: R-049, R-050, R-054
 public sealed record MaxIdentitySettings(string BotToken, TimeSpan InitDataLifetime)
 {
   /// Срок давности по умолчанию. Помечен демонстрационным: заказчик его не
@@ -202,6 +206,8 @@ public sealed record MaxIdentitySettings(string BotToken, TimeSpan InitDataLifet
 ///
 /// Это решение развёртывания, а не заказчика: владельца данных заказчик не
 /// назначал (Q-013), и выдавать список за утверждённую политику нельзя.
+///
+/// @supports: R-049, R-050, R-054
 public sealed record DataManagerSettings(IReadOnlyList<string> Subjects)
 {
   public static DataManagerSettings None { get; } = new([]);

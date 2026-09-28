@@ -22,7 +22,7 @@
  *
  *   npx vitest run tests/CabinetEntry.test.tsx
  *
- * @supports: R-049, R-050, R-052, R-085
+ * @ac: AC-085a
  */
 import { configure, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';

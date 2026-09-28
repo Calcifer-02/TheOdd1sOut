@@ -14,7 +14,7 @@
  *
  *   npx vitest run tests/ShellProfile.test.tsx
  *
- * @supports: R-049
+ * @ac: AC-049a
  */
 import { act, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';

@@ -19,6 +19,7 @@ namespace Imolt.Api.Tests;
 /// клиента: клиент на стенде один на весь класс проверок, и общий заголовок
 /// сделал бы гостевой запрос соседней проверки запросом участника.
 ///
+/// @ac: AC-049a, AC-049b, AC-049c, AC-049e, AC-050b
 internal static class AccessChecks
 {
   public const string SessionsPath = "/v1/auth/sessions";

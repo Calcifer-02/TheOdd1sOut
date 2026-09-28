@@ -12,7 +12,7 @@
  *
  *   npx vitest run tests/SubscriptionShape.test.tsx
  *
- * @supports: R-050
+ * @ac: AC-051a
  */
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';

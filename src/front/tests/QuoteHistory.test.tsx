@@ -10,7 +10,6 @@
  *   npx vitest run tests/QuoteHistory.test.tsx
  *
  * @ac: AC-036h
- * @supports: R-036, R-049, R-050, R-085
  */
 import { configure, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';

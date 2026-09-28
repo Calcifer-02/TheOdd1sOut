@@ -16,18 +16,20 @@
  * Состояние живёт в памяти модуля, а не в состоянии React: обмен начинается
  * раньше, чем кабинет успевает отрисоваться, и переживает переход между
  * экранами.
- *
- * @req: R-071
- * @adr: ADR-0009
  */
 import { useSyncExternalStore } from 'react';
 import { signIn } from '@/entities/participant';
 import { ApiProblem } from '@/shared/api/http';
 import { openedFromChat } from '@/shared/lib/platform';
 
-/** Этап опознания: от «ещё не начинали» до исхода. */
+/**
+ * Этап опознания: от «ещё не начинали» до исхода.
+ *
+ * @req: R-071
+ */
 export type IdentificationStage = 'idle' | 'running' | 'done' | 'refused';
 
+/** @req: R-071 */
 export type Identification = {
   stage: IdentificationStage;
   /** Заголовок отказа службы или `null`, если отказа не было. */
@@ -62,7 +64,11 @@ function snapshot(): Identification {
   return current;
 }
 
-/** Исход опознания с подпиской на его смену. */
+/**
+ * Исход опознания с подпиской на его смену.
+ *
+ * @req: R-071
+ */
 export function useIdentification(): Identification {
   return useSyncExternalStore(subscribe, snapshot, () => IDLE);
 }
@@ -70,6 +76,8 @@ export function useIdentification(): Identification {
 /**
  * Опознать участника, если приложение открыто из переписки. Повторный вызов
  * ничего не делает: обмен идёт один раз за жизнь вкладки.
+ *
+ * @req: R-071
  */
 export async function identifyAsync(): Promise<void> {
   if (started || !openedFromChat()) {
@@ -92,7 +100,11 @@ export async function identifyAsync(): Promise<void> {
   }
 }
 
-/** Забыть исход опознания. Нужно проверкам: состояние живёт в памяти модуля. */
+/**
+ * Забыть исход опознания. Нужно проверкам: состояние живёт в памяти модуля.
+ *
+ * @req: R-071
+ */
 export function forgetIdentification(): void {
   started = false;
   announce(IDLE);

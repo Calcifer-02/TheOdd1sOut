@@ -14,6 +14,9 @@ namespace Imolt.Deals.Contracts;
 public sealed record QuoteRequest(string? CustomerName, string? Comment);
 
 /// Строка снимка предложения: цена, закреплённая на момент выпуска (R-036).
+///
+/// @shared: imolt-deals
+/// @adr: ADR-0005
 public sealed record QuoteLine(
     string LandfillId,
     string LandfillName,
@@ -28,6 +31,9 @@ public sealed record QuoteLine(
 
 /// Коммерческое предложение. Выпуск и скачивание разделены намеренно:
 /// повторное скачивание не выпускает второго номера (R-036).
+///
+/// @shared: imolt-deals
+/// @adr: ADR-0005
 public sealed record Quote(
     string Id,
     string Number,
@@ -45,6 +51,9 @@ public sealed record Quote(
 /// документ, пересчитанный по сегодняшней настройке, назвал бы клиенту другое
 /// (R-059). У предложений, выпущенных до решения по Q-010, его нет — тогда
 /// отметка о предварительности печатается без числа.
+///
+/// @shared: imolt-deals
+/// @adr: ADR-0005
 public sealed record QuoteDocumentModel(
     string Number,
     DateTimeOffset IssuedAt,
@@ -62,8 +71,13 @@ public sealed record QuoteDocumentModel(
 /// развёртывании назовёт другую компанию. Логотипа, подписи и печати здесь
 /// нет намеренно — прав на них никто не передавал, а подпись в автоматическом
 /// документе была бы обязательством, которого никто не брал.
+///
+/// @shared: imolt-deals
+/// @adr: ADR-0005
 public sealed record QuoteIssuer(string Name, string Phone, string Email, string City);
 
+/// @shared: imolt-deals
+/// @adr: ADR-0005
 public sealed record PickupRequestInput(
     string? CalculationId,
     string? LandfillId,
@@ -71,6 +85,8 @@ public sealed record PickupRequestInput(
     string Phone,
     bool PersonalDataConsent);
 
+/// @shared: imolt-deals
+/// @adr: ADR-0005
 public sealed record PickupRequest(
     string Id,
     DateTimeOffset CreatedAt,
@@ -83,6 +99,9 @@ public sealed record PickupRequest(
 /// Услуга каталога по документации (R-052). Цена названа «от» либо не названа
 /// вовсе — тогда услуга считается по запросу. Оба состояния сразу карточке
 /// запрещены: она перестаёт что-либо сообщать клиенту.
+///
+/// @shared: imolt-deals
+/// @adr: ADR-0005
 public sealed record DocumentService(
     string Id,
     string Name,
@@ -95,10 +114,16 @@ public sealed record DocumentService(
 /// Строка стартовых параметров мини-приложения как есть, без разбора на
 /// стороне клиента: проверять подпись можно только по исходной строке
 /// (ADR-0006).
+///
+/// @shared: imolt-deals
+/// @adr: ADR-0005
 public sealed record SessionRequest(string InitData);
 
 /// Состояние подписки (R-008, R-049). «pending» — нормальный исход, а не
 /// ошибка: оплата идёт вне сервиса.
+///
+/// @shared: imolt-deals
+/// @adr: ADR-0005
 public sealed record SubscriptionState(string State, DateOnly? ActiveUntil)
 {
   public const string None = "none";
@@ -110,6 +135,9 @@ public sealed record SubscriptionState(string State, DateOnly? ActiveUntil)
 
 /// Профиль участника. Учётная запись платформы названа обязательно: по ней
 /// пользователь опознан, и без неё профиль ничей (R-049, R-051).
+///
+/// @shared: imolt-deals
+/// @adr: ADR-0005
 public sealed record Profile(
     string Id,
     string MaxUserId,
@@ -125,11 +153,17 @@ public sealed record Profile(
 
 /// Сессия участника. Срок жизни маркера объявлен полем: клиент не угадывает
 /// его по опыту.
+///
+/// @shared: imolt-deals
+/// @adr: ADR-0005
 public sealed record Session(string AccessToken, int ExpiresIn, Profile Profile);
 
 /// Что участник сообщает о себе, подавая заявку (R-051). Признаки допускают
 /// пустое значение и после правки остаются пустыми: «не сообщил» и «сообщил,
 /// что документа нет» — разные ответы, и по второму перевозчику откажут.
+///
+/// @shared: imolt-deals
+/// @adr: ADR-0005
 public sealed record SubscriptionRequestInput(
     string Role,
     string CompanyName,
@@ -139,18 +173,24 @@ public sealed record SubscriptionRequestInput(
     bool? HasTransportLicense,
     bool? HasSanitaryConclusion);
 
+/// @shared: imolt-deals
+/// @adr: ADR-0005
 public sealed record SubscriptionRequest(
     string Id,
     DateTimeOffset CreatedAt,
     SubscriptionState Subscription,
     string Message);
 
+/// @shared: imolt-deals
+/// @adr: ADR-0005
 public sealed record DocumentServiceOrderInput(
     string ServiceId,
     string ObjectAddress,
     string? Comment,
     bool PersonalDataConsent);
 
+/// @shared: imolt-deals
+/// @adr: ADR-0005
 public sealed record DocumentServiceOrder(
     string Id,
     string ServiceId,
@@ -163,4 +203,7 @@ public sealed record DocumentServiceOrder(
 
 /// Участник, опознанный по маркеру доступа. Роли областей о нём не знают —
 /// они получают идентификатор доводом (ADR-0001).
+///
+/// @shared: imolt-deals
+/// @adr: ADR-0005
 public sealed record Participant(string Id, string MaxUserId);
