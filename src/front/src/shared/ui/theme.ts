@@ -380,7 +380,17 @@ h2.imolt-section { font-size: 20px; line-height: 26px; font-weight: 700; margin:
   flex-wrap: wrap;
 }
 
-.imolt-sorts-line { display: flex; align-items: center; gap: ${space.xs}px; flex-wrap: wrap; }
+/* Полоса порядка несёт прокручиваемую ленту переключателей. Без права
+   сжаться она держит ширину всей ленты и растягивает по ней экран: на
+   справочнике полигонов замер живого стенда дал документ 438 px при окне
+   375 px (BUG-032). */
+.imolt-sorts-line {
+  display: flex;
+  align-items: center;
+  gap: ${space.xs}px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
 
 .imolt-tabs, .imolt-sorts, .imolt-chips {
   display: flex;
